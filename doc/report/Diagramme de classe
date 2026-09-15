@@ -1,0 +1,71 @@
+Certaines classes contiennent les attributs des objets qui sont utilisés pour les méthodes présentes dans les classes DAO et Services. Ces classes définissent les business object qui sont les objets manipulés pour construire l'application.
+
+classDiagram
+    class Utilisateur {
+        -id_user: int
+        -pseudo: str
+        -email: str
+        -password_hash: str
+        -bio: str
+    }
+
+    class Livre {
+        -id_work: str
+        -titre: str
+        -auteurs: str
+        -cover_url: str
+    }
+
+    class Abonnement {
+        -id_follower: int
+        -id_followed: int
+        -date_abonnement: datetime
+    }
+
+    class Lecture {
+        -id_lecture: int
+        -id_user: int
+        -id_livre: str
+        -statut: str
+        -date_ajout: date
+        -date_lu: date
+    }
+
+    class Critique {
+        -id_critique: int
+        -id_lecture: int
+        -texte: str
+        -date_publication: datetime
+    }
+
+    class Like {
+        -id_user: int
+        -id_critique: int
+        -date_like: datetime
+    }
+
+    Utilisateur "1" --> "0..*" Abonnement : suit (follower)
+    Utilisateur "1" <-- "0..*" Abonnement : est suivi (followed)
+    Utilisateur "1" -- "0..*" Lecture : possède
+    Livre "1" -- "0..*" Lecture : concerne
+    Lecture "1" *-- "0..1" Critique : rédige
+    Critique "1" *-- "0..*" Like : reçoit
+    Utilisateur "1" -- "0..*" Like : auteur du like
+
+Chaque classe de ce diagramme correspond à une entité identifiée dans notre modèle de données (BDD) : `Utilisateur`, `Livre`, `Lecture`, `Critique`, `Abonnement`, `Like`. Ce sont des classes qui ne contiennent que des attributs, aucune méthode métier. Ce choix découle directement de l'architecture en couches imposée par le projet (`business_object → dao → service → view`) : un business object représente une donnée et non un traitement. La logique (vérifications, calculs, orchestration) est déléguée aux services, ce qui évite de mélanger « ce que sont les données » et « ce qu'on en fait ».
+
+La classe "Livre" stocke les attributs récupérés sur le plateforme OpenLibrary et qui sont nécéssaires en même temps et ne peuvent pas être disponibles dans un temps limité à cause de la limite de trois requêtes par seconde qui est donnée par OpenLibrary.
+On récupère aussi l'url de la couverture du livre qui sera stockée en tant qu'url ou d'image en fonction de l'accessibilité du fichier.
+
+La classe "Lecture" permet de mettre un livre dans sa bibliothèque, de lui ajouter un statut (pas commencé, en cours, lu, abandonné) et de renseigner la date de l'ajout de la lecture et la date de la fin de la lecture. La date date_lu doit être postérieure à la date date_ajout.
+
+La classe "Utilisateur" contient les attributs liés à l'authentification des utilisateurs : l'applicaiton donne à chaque utilisateur un id unique. L'utilisateur renseigne son pseudo, son email (respect du format xxx@xx.xx), sa bio et son mot de passe en format hashable.
+
+Un utilisateur peut avoir plusieurs lecture, mais chaque lecture a un seul utilisateur. 
+
+Les utilisateurs peuvent s'abonner les uns aux autres. Cette information est renseignée dans la classe "Abonnement" qui à chaque id_abonnement associe un utilisateur qui s'abonne et un utilisateur à qui on s'abonne. Nous avons besoins de l'id_abonnement car un abonnement n'est pas forcément réciproque. L'abonnement permet d'avoir sur son fil d'actualité les nouvelles lectures des utilisateurs auxquels on s'est abonné.
+
+La classe "Critique" recense les critiques proposées par les utilisateurs pour une lecture (un livre qu'ils ont lu ou abandonné). La date de publication doit être postérieur à la date de début de lecture de la classe "Lecture". Un utilisateur peut rédiger plusieus critiques et une lecture peur recevoir plusieurs critiques. Une critique ne porte que sur une lecture.
+
+Quand un utilisateur (id_user) a lu ou abondonné une lecture, il peut en plus de mettre une critique, mettre un ' j'aime ' à cette critique (id_critique). Ces informations forment la classe "Critique".
+
