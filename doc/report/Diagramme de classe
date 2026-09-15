@@ -1,3 +1,6 @@
+
+# Diagramme de classe des business object
+
 Certaines classes contiennent les attributs des objets qui sont utilisés pour les méthodes présentes dans les classes DAO et Services. Ces classes définissent les business object qui sont les objets manipulés pour construire l'application.
 
 classDiagram
@@ -68,4 +71,113 @@ Les utilisateurs peuvent s'abonner les uns aux autres. Cette information est ren
 La classe "Critique" recense les critiques proposées par les utilisateurs pour une lecture (un livre qu'ils ont lu ou abandonné). La date de publication doit être postérieur à la date de début de lecture de la classe "Lecture". Un utilisateur peut rédiger plusieus critiques et une lecture peur recevoir plusieurs critiques. Une critique ne porte que sur une lecture.
 
 Quand un utilisateur (id_user) a lu ou abondonné une lecture, il peut en plus de mettre une critique, mettre un ' j'aime ' à cette critique (id_critique). Ces informations forment la classe "Critique".
+
+
+
+# Diagramme de classe pour l'authentification
+
+Pour s'authentifier, l'utilisateur va renseigner des informations qui correspond aux objets des classes "Utilisateur", "UtilisateurDao" et "UtilisateurService".
+
+classDiagram
+
+    class Utilisateur {
+        -int id
+        -str username
+        -str email
+        -str mdp_hash
+        -str bio
+        -int nb_livre
+    }
+
+
+    class UtilisateurDao {
+        +create(utilisateur) Utilisateur
+        +find_by_id(id) Utilisateur
+        +find_by_username(username) Utilisateur
+        +update(utilisateur) bool
+        +delete(id) bool
+    }
+
+    class UtilisateurService {
+        -UtilisateurDao utilisateur_dao
+        +creer_compte(username, email, mdp) Utilisateur
+        +authentifier(username, mdp) Utilisateur
+        +modifier_bio(id_utilisateur, bio) bool
+        +consulter_profil(id_utilisateur) Utilisateur
+    }
+
+    UtilisateurService --> UtilisateurDao
+    UtilisateurDao ..> Utilisateur
+
+
+La classe "UtilisateurDAO" permet de créer, de trouver, de modifier ou de supprimer un objet de la classe "Utilisateur". Cette classe est en lien avec les données stockées en local dans la BDD car ces informations ne relèvent pas de OpenLibrary. La méthode update permet de modifier toutes les informations d'un utilisateur.
+La classe "UtilisateurService" répond aux besoins métiers de l'application : les méthodes créer un compte, s'authentifier et consulter un profil renvoient l'objet Utilisateur et la méthode modifier_bio renvoie un booléen (False si l'utilisateur n'existe pas ou si la sauvegarde en base échoue).
+
+
+# Diagramme de classe pour les critiques
+
+classDiagram
+    class Utilisateur
+
+    class Critique {
+        -int id_critique
+        -str id_livre
+        -int id_utilisateur
+        -int note
+        -str texte
+        -datetime date_creation
+    }
+
+    class Like {
+        -int id_utilisateur
+        -int id_critique
+        -datetime date_like
+    }
+
+
+    class CritiqueDao {
+        +create(critique) Critique
+        +find_by_id(id_critique) Critique
+        +find_by_livre(id_livre) list~Critique~
+        +find_by_utilisateur(id_utilisateur) list~Critique~
+        +update(critique) bool
+        +delete(id_critique) bool
+    }
+
+    class LikeDao {
+        +create(like) Like
+        +delete(id_utilisateur, id_critique) bool
+        +count_by_critique(id_critique) int
+        +exists(id_utilisateur, id_critique) bool
+    }
+
+    class CritiqueService {
+        -CritiqueDao critique_dao
+        -LikeDao like_dao
+        +rediger_critique(id_utilisateur, id_livre, note, texte) Critique
+        +modifier_critique(id_critique, note, texte) bool
+        +supprimer_critique(id_critique) bool
+        +consulter_critiques(id_livre) list~Critique~
+        +liker(id_utilisateur, id_critique) bool
+        +disliker(id_utilisateur, id_critique) bool
+    }
+
+    CritiqueService --> CritiqueDao
+    CritiqueService --> LikeDao
+    CritiqueDao ..> Critique
+    LikeDao ..> Like
+    Utilisateur "1" --> "0..*" Critique : redige
+    Critique "1" --> "0..*" Like : recoit
+
+
+La classe "CritiqueDao" permet de faire le lien entre les objets de la classe "Critique" en mémoire et la table critique dans la base de données. La méthode ' create ' permet de créer une nouvelle critique dans la base, ' find_by_id' permet de récupérer une critiaue précise, ' find_by_livre ' permet de récupérer toutes les critiques d'un livre (toutes éditions confondues), ' update ' réécrit une critique existante (possibilité seulement pour l'utilisateur qui l'a écrite), et ' delate ' supprime la critique et tous ses likes avec.
+
+La classe "LikeDao" est l'équivalent de "CritiqueDao" mais pour la table like de la base de données. 'create' insère un nouveau like dans la base de données. 'delate' supprime un like précis (méthode appelée aussi quand un utilisateur passe du like au dislike ou vice versa). 'cont_by_critique' compte le nombre le like par critique. 'exists' vérifie si un utilisateur a déjà liké ou disliké une critique.
+
+La classe "CritiqueService" combine les données alors que "CritiqueDao" exécute seulement des requêtes. Elle s'appuie sur " CritiqueDao" et "LikeDao" pour proposer les fonctionnalités attendues dans l'application. ' Rediger_critique ' fait appel à CritiqueDao.create en vérifiant les contraintes métier (note entre 1 et 5). ' Modifier_critique ' et ' supprimer_critique ' vérifient aussi que l'action soit exécutée par l'utilisateur qui les a rédigées. 'Consulter_critique' fait appel à 'CritiqueDao.find_by_livre et à 'LikeDao.count_by_critique' pour renvoyer les critiques accompagnées du nombre de likes qui leur sont attribués. Enfin, les méthode 'like' et 'dislike' vérifient si il existe déjà un like ou un dislike avec 'LikeDao.exist' pour éviter les doublons (liker plusieurs fois ou liker et disliker).
+
+
+
+
+
 
