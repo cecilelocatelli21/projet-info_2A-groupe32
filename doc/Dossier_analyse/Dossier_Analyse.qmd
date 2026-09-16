@@ -49,6 +49,7 @@ header-includes:
 
 # Introduction {.unnumbered}
 
+<!--
 Depuis plusieurs années, le numérique a profondément transformé la manière dont nous consommons et partageons nos loisirs culturels. Le cinéma dispose de Letterboxd, la musique de Last.fm : des plateformes communautaires qui permettent à chacun de garder une trace de ses découvertes, de les noter et d'échanger avec d'autres passionnés. La lecture, pourtant, reste étonnamment mal servie sur ce plan. Le principal service existant, Goodreads, appartient à Amazon, ce qui pose des questions en matière d'indépendance éditoriale et d'exploitation des données personnelles des lecteurs.
 
 C'est de ce constat qu'est né le projet Ex-Libris : une application de suivi de lecture pensée comme un véritable réseau social pour les lecteurs. L'objectif n'est pas de reconstruire un catalogue de livres, un travail déjà accompli et maintenu par la plateforme collaborative Open Library, qui référence plusieurs millions d'ouvrages en accès libre. Ce qu'Open Library ne propose pas, en revanche, c'est la dimension humaine de la lecture : qui a lu quel livre, quand, avec quel avis, et quelles recommandations peuvent en être tirées. C'est précisément cette couche que notre application vient ajouter.
@@ -58,6 +59,18 @@ Concrètement, Ex-Libris doit permettre à un utilisateur de créer un compte, d
 D'un point de vue technique, le projet repose sur une API REST développée avec FastAPI, exploitant les données de l'API publique Open Library et s'appuyant sur une base de données PostgreSQL pour la persistance des données propres à notre application. Le langage retenu est Python, dans une logique de programmation orientée objet.
 
 Ce dossier présente dans un premier temps le cahier des charges du projet, les choix et arbitrages qui ont guidé nos réflexions, ainsi que l'organisation retenue au sein de notre équipe. Il détaille ensuite le modèle de conception élaboré pour répondre à ces besoins, à travers les différents diagrammes UML réalisés.
+-->
+
+Un ex-libris est cette marque, vignette, cachet ou tampon qu'un lecteur appose sur ses livres pour les personnaliser et y laisser une trace de son passage. À l'heure du numérique, comment conserver la mémoire de ses lectures, y imprimer sa propre marque et échanger autour d'elles ? Cette manière de s'approprier ses lectures a inspiré le nom de notre projet : Ex-Libris.
+
+Aujourd'hui, le cinéma dispose de Letterboxd, la musique de Last.fm. Ces plateformes communautaires permettent à chacun de garder une trace de ses découvertes, de les noter et d'échanger avec d'autres passionnés. La lecture, elle, reste étonnamment mal servie sur ce plan. Le principal service existant, Goodreads, appartient à Amazon, ce qui peut soulever des interrogations quant à l'indépendance de la plateforme et à l'utilisation des données des lecteurs.
+
+Notre objectif n'est pas de reconstruire un catalogue de livres : ce travail est déjà très bien réalisé par Open Library, plateforme collaborative qui référence plusieurs millions d'ouvrages en accès libre. En revanche, cette plateforme n'offre pas la dimension humaine et sociale de la lecture : qui a lu quel livre, quand, avec quel avis, et quelles recommandations peuvent en être tirées. Notre application s'appuie ainsi sur les données d'Open Library pour se concentrer sur ce qui manque réellement : le suivi des lectures et les interactions entre lecteurs.
+
+Concrètement, Ex-Libris permet à un utilisateur de créer un compte, de rechercher un livre et de l'ajouter à sa bibliothèque avec un statut de lecture. Il peut ensuite le noter et rédiger une critique, laissant ainsi sa propre marque sur chaque ouvrage. À cette gestion individuelle s'ajoute une dimension sociale : consulter le profil d'autres lecteurs, suivre leur activité et bénéficier de recommandations fondées sur les affinités entre utilisateurs.
+Sur le plan technique, le projet repose sur une API REST développée avec FastAPI, exploitant l'API publique d'Open Library et une base de données PostgreSQL, le tout en Python selon une approche orientée objet.
+
+Ce dossier revient d'abord sur le cahier des charges du projet (Partie 1), qui présente le fonctionnement d'Open Library, la manière dont nous exploitons ses données et le périmètre fonctionnel retenu. Il détaille ensuite l'organisation mise en place au sein de l'équipe, entre répartition des rôles et planning de travail (Partie 2). Enfin, il présente la conception de l'application (Partie 3) à travers les différents diagrammes UML élaborés, notamment le modèle de données, le diagramme de classes et les diagrammes de séquence, qui traduisent concrètement les choix effectués.
 
 \newpage
 
