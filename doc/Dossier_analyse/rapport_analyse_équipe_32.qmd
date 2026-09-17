@@ -307,7 +307,7 @@ Après avoir défini les besoins et les fonctionnalités attendues, place à la 
 
 La conception de la base de données repose sur la séparation entre les informations bibliographiques des livres et les données propres aux utilisateurs de l'application. Les informations générales concernant les livres sont récupérées à partir de l'API Open Library : il n'est donc pas nécessaire de reconstruire localement un catalogue complet. La base de données est principalement destinée à conserver les utilisateurs ainsi que leurs interactions avec les livres (lectures, critiques, appréciations) et les relations entre utilisateurs à travers le système d'abonnement.
  
-![Modèle de données](diag_BDD.png){#fig-BDD width="50%"}
+![Modèle de données](diag_BDD.png){width="50%"}
  
 La base est composée de six tables : Utilisateur, Livre, Lecture, Critique, Abonnement et Like.
  
@@ -342,7 +342,7 @@ Nous avons construit l'application en partant des **Business Object** : ce sont 
 
 ### Classes Business Object
 
-![Diagramme de classes : Business Object](classe_1.png){#fig-business_object width="50%"}
+![Diagramme de classes : Business Object](classe_1.png){width="50%"}
 
 <!--
 \begin{center}
@@ -371,7 +371,7 @@ Quand un utilisateur (`id_user`) consulte une critique, il peut mettre un ' j'ai
 
 ### Diagramme de classe pour les critiques
 
-![Diagramme de classes : critique](classe_3.png){#fig-classe_3 width="50%"}
+![Diagramme de classes : critique](classe_3.png){width="50%"}
 
 <!--
 \begin{center}
@@ -395,7 +395,7 @@ Les diagrammes de séquence suivants permettent de détailler la chronologie des
 
 ### Sélectionner un livre
 
-![Diagramme de séquence : sélectionner un livre](Diagramme_Sequence_Selectionner-livre_page-0001.jpg){#fig-seq_select width="90%"}
+![Diagramme de séquence : sélectionner un livre](Diagramme_Sequence_Selectionner-livre_page-0001.jpg){width="90%"}
 
 <!--
 \begin{center}
@@ -416,7 +416,7 @@ Le diagramme met également en évidence un choix important de conception : la c
 
 ### Demander des recommandations
 
-![Diagramme de séquence : demander des recommandations](Diagramme_Sequence_Demander-des-recommandations_page-0001.jpg){#fig-seq_reco width="90%"}
+![Diagramme de séquence : demander des recommandations](Diagramme_Sequence_Demander-des-recommandations_page-0001.jpg){width="90%"}
 
 <!--
 \begin{center}
