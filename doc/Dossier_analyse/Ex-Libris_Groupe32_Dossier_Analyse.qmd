@@ -90,7 +90,9 @@ Ce cahier des charges exprime le besoin initial auquel notre application doit r�
 
 Notre application repose entièrement sur les données fournies par Open Library, une base collaborative et gratuite qui référence plusieurs millions d'ouvrages. Il s'agit d'une API web : on l'interroge en construisant des adresses (URLs) spécifiques, et elle nous renvoie les données demandées au format JSON. Open Library utilise trois objets majeurs: l'**auteur**, l'**œuvre** (l'idée générale du livre : titre, résumé, thèmes) et l'**édition** (une publication matérielle précise de cette œuvre — une même œuvre pouvant compter des centaines d'éditions). Le langage courant confond ces deux derniers sous le même mot « livre ». 
 
+<!--
 ![Structure des données Open Library : oeuvre](work.png){#fig-openlibrary-work width="60%"}
+-->
 
 Nous avons choisi d'utiliser l'identifiant d'œuvre (id_work) comme référence unique dans l'application. Les lectures, notes et critiques sont ainsi associées à l'œuvre et non à une édition particulière. Une évolution future pourrait toutefois permettre de consulter les différentes éditions disponibles via Open Library, grâce à des requêtes effectuées dynamiquement auprès de l'API, sans modifier le modèle de données actuel.
 
