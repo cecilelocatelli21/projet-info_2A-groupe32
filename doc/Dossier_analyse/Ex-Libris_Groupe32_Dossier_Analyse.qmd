@@ -13,6 +13,8 @@ include-before-body:
   - text: |
       \includepdf[pages=-]{page_garde_removed.pdf}
       \clearpage
+      \setcounter{page}{1}
+
 
 header-includes:
   - '\usepackage{pdfpages}'
