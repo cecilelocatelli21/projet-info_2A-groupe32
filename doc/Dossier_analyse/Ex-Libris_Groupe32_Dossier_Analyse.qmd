@@ -217,19 +217,34 @@ Figure 11 – Dépot Github
 
 ## Diagramme de Gantt
 
-![Diagramme de Gantt](Gantt.png){#fig-gantt width="80%l"}
+Notre planning se découpe en deux grandes phases : la phase d'analyse, de fin août à fin septembre, suivie de la phase de code, d'octobre à début novembre.
 
-<!--
-\begin{center}
-\includegraphics[width=0.8\textwidth]{Gantt.png}
+\noindent
+\begin{tabular}{@{}p{0.60\textwidth}@{\hspace{0.03\textwidth}}p{0.35\textwidth}@{}}
+\vspace{0pt}
+\centering
+\includegraphics[width=\linewidth]{Gantt.png}
 
-Figure 11 – Diagramme de Gantt
-\end{center}
--->
+\small Figure 11 – Diagramme de Gantt
+&
+\vspace{0pt}
+\small
+Nous commençons par étudier l'API Open Library, puis nous réalisons
+l'ensemble de la modélisation UML afin de bien comprendre comment notre
+application va s'articuler et comment la construire.
 
-Notre planning se découpe en deux grandes phases. D'abord la phase d'analyse, de fin août à fin septembre : nous commençons par étudier l'API Open Library, puis nous réalisons l'ensemble de la modélisation UML afin de bien comprendre comment notre application va s'articuler et comment la construire.
+Nous avons choisi de développer les fonctionnalités par ordre de
+difficulté croissante : d'abord les classes de base, puis
+l'authentification et la recherche de livres (F1-F2), la bibliothèque
+avec les statuts de lecture (F3), les critiques (F4), et enfin notre
+fonctionnalité F5 (les recommandations), qui nécessitera davantage de
+temps du fait de sa complexité.
 
-Une fois cette base posée, nous passons à la phase de code, d'octobre à début novembre. Nous avons choisi de développer les fonctionnalités par ordre de difficulté croissante : d'abord les classes de base, puis l'authentification et la recherche de livres (F1-F2), la bibliothèque avec les statuts de lecture (F3), les critiques (F4), et enfin notre fonctionnalité F5 (les recommandations), qui nécessitera davantage de temps du fait de sa complexité. Les tests unitaires et le frontend interviendront en dernier, le frontend n'étant pas prioritaire, sera développé uniquement s'il nous reste du temps.
+Les tests unitaires et le frontend interviendront en dernier, le
+frontend n'étant pas prioritaire, sera développé uniquement s'il nous
+reste du temps.
+\end{tabular}
+
 
 
 # Maquette de l'application
