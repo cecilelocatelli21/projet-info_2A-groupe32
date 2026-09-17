@@ -181,13 +181,17 @@ Le diagramme ci-dessus offre une vue d'ensemble organisée par paquetage fonctio
 
 ## Diagrammes d'activités
 
+Les diagrammes d’activités suivants présentent l’enchaînement des actions que les utilisateurs peuvent effectuer et les différentes façons de naviguer sur le site. Il permet de visualiser les choix possibles à chaque étape.
+
+Un diagramme général correspond à l'arrivée sur la page d'acceuil du site et le choix des principales fonctionnalités. Les grandes fonctionnalités sont détaillées dans les diagrammes suivants.
+
 ![Diagramme d'activité: parcours utilisateur global](diagramme_activite_principal.png){#fig-activite_principal width="80%" height="30%"}
 
 ![Diagramme d'activité : gestion du profil personnel](diagramme_activite_profil_perso.png){#fig-activite_profil_perso width="40%"}
 
 ![Diagramme d'activité : consultation d'un livre](diagramme_activite_livre.png){#fig-activite_livre width="40%"}
 
-![Diagramme d'activité : inscription et authentification](diagramme_activite_utilisateur.png){#fig-activite_login width="40%"}
+![Diagramme d'activité : consultation du profil d'un utilisateur](diagramme_activite_utilisateur.png){#fig-activite_login width="40%"}
 
 
 
