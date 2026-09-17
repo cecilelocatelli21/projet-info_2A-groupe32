@@ -286,9 +286,9 @@ Cette table met en relation deux instances de la même entité `Utilisateur` sel
 
 ## Diagramme de classes
 
-### Classes Business Object
+Nous avons construit l'application en partant des **Business Object** : ce sont eux qui définissent les entités manipulées (attributs, sans logique métier). Les classes Controller/Service/DAO sont construites ensuite autour de ces BO, en couches (`controller → service → dao`) ; ces classes ne sont pas systématiquement détaillées ici, en particulier le Controller, couche de routage sans logique propre, est illustré dans les diagrammes de séquence plutôt que dans les diagrammes de classes. Nous présentons ci-dessous un exemple pour illustrer cette articulation : **les critiques**.
 
-Nous avons construit l'application en partant des **Business Object** : ce sont eux qui définissent les entités manipulées (attributs, sans logique métier). Les classes Controller/Service/DAO sont construites ensuite autour de ces BO, en couches (`controller → service → dao`) ; ces classes ne sont pas systématiquement détaillées ici, en particulier le Controller, couche de routage sans logique propre, est illustré dans les diagrammes de séquence plutôt que dans les diagrammes de classes. Nous présentons ci-dessous deux exemples pour illustrer cette articulation : l'authentification et les critiques.
+### Classes Business Object
 
 ![Diagramme de classes : Business Object](classe_1.png){#fig-business_object width="50%"}
 
@@ -334,7 +334,7 @@ La classe "LikeDao" est l'équivalent de "CritiqueDao" mais pour la table like d
 
 La classe "CritiqueService" combine les données alors que "CritiqueDao" exécute seulement des requêtes. Elle s'appuie sur " CritiqueDao" et "LikeDao" pour proposer les fonctionnalités attendues dans l'application. ' Rediger_critique ' fait appel à CritiqueDao.create en vérifiant les contraintes métier (note entre 1 et 5). ' Modifier_critique ' et ' supprimer_critique ' vérifient aussi que l'action soit exécutée par l'utilisateur qui les a rédigées. 'Consulter_critique' fait appel à 'CritiqueDao.find_by_livre et à 'LikeDao.count_by_critique' pour renvoyer les critiques accompagnées du nombre de likes qui leur sont attribués. Enfin, les méthode 'like' et 'dislike' vérifient si il existe déjà un like ou un dislike avec 'LikeDao.exist' pour éviter les doublons (liker plusieurs fois ou liker et disliker).
 
-Des diagrammes similaires représentent les classes relatives à l'abonnement, aux recommendations et à l'authentification. Nous n'avons les présenter ici faute de place.
+Des diagrammes similaires représentent les classes relatives à l'abonnement, aux recommendations et à l'authentification. Nous n'avons pu les présenter ici faute de place.
 
 \newpage
 
