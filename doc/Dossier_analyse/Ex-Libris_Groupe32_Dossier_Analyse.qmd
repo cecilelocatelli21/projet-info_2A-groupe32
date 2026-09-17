@@ -203,7 +203,7 @@ Le diagramme ci-dessous offre une vue d'ensemble organisée par paquetage foncti
 
 ## Diagrammes d'activités
 
-Les diagrammes d'activité présentent l’enchaînement des actions sur le site et les choix possibles à chaque étape pour l'utilisateur. Le diagramme général montre l’accès aux principales fonctionnalités depuis l’accueil ; les suivants les détaillent.
+Les diagrammes d'activité présentent l’enchaînement des actions sur l'application et les choix possibles à chaque étape pour l'utilisateur. Le diagramme général montre l’accès aux principales fonctionnalités depuis l’accueil ; les suivants les détaillent.
 
 ```{=latex}
 \begin{minipage}{\textwidth}
@@ -385,7 +385,6 @@ Figure 11 – Diagramme de classes :  critique
 Des diagrammes similaires représentent les classes relatives à l'abonnement, aux recommendations et à l'authentification. Nous n'avons pu les présenter ici faute de place.
 -->
 
-\newpage
 
 ## Diagrammes de séquence
 
