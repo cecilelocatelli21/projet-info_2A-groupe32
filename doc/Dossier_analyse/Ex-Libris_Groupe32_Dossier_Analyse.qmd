@@ -354,25 +354,13 @@ Figure 11 – Diagramme de séquence : sélectionner un livre
 -->
 Le but de cette séquence est d’afficher toutes les informations disponibles sur un livre sélectionné par un utilisateur.
 
-Celui-ci a par exemple effectué une recherche, a obtenu une liste de livres (correspondant à une liste de `id_work`, les identifiants stockés par **OpenLibrary**), il choisit l’un d’entre eux pour en afficher toutes les informations.
+Celui-ci a par exemple effectué une recherche, a obtenu une liste de livres (correspondant à une liste de `id_work`, les identifiants stockés par Open Library), il choisit l’un d’entre eux pour en afficher toutes les informations.
 
-La première étape est de récupérer les informations pertinentes fournies par **OpenLibrary** sur ce livre (titre, auteur, date, cover, etc. – la liste précise reste à définir), en se basant sur l’`id_work` considéré.
+Cette séquence met en évidence la combinaison de deux sources d'information : les données bibliographiques fournies par Open Library (titre, auteur, couverture, etc.) et les données communautaires propres à Ex-Libris (notes, critiques et réactions des utilisateurs).
 
-Ensuite, il s’agit de fournir les informations propres à notre application Ex-Libris.
+Lorsqu'un livre est déjà référencé dans Ex-Libris, l'application enrichit les informations récupérées auprès d'Open Library avec les éléments produits par la communauté, tels que la note moyenne et les critiques associées. Dans le cas contraire, l'utilisateur est invité à être le premier à enregistrer ce livre.
 
-Pour cela, le **Service** va utiliser l’`id_work` pour rechercher dans la base de données si un livre a déjà été enregistré associé à celui-ci. Si oui, il récupère l'`id_livre` correspondant.
-
-Sinon, il lui proposera d'être le premier à créer une fiche lecture.
-
-À partir de cet `id_livre`, le **Service** va récupérer toutes les notes mises par les utilisateurs à ce livre, pour ensuite en faire la moyenne.
-
-Il va ensuite rechercher les critiques (`critique`) associées à ce livre, leur nombre, et les likes/dislikes (`like`) associés. Si de nombreuses critiques ont été rédigées sur ce livre, il sera possible de n’en choisir que quelques-unes (par exemple, celles avec le plus grand nombre de likes), même si cela n’apparaît pas dans le diagramme pour éviter une surcharge visuelle.
-
-Le **Service** transmet donc au **Contrôleur** les informations suivantes : celles issues d’**OpenLibrary** d’abord ; et si le livre existe déjà dans Ex-Libris, il ajoutera la note moyenne, le nombre de critiques, quelques critiques et les likes/dislikes associés à ces critiques.
-
-Enfin, le **Contrôleur** mettra en forme toutes ces informations pour les afficher sur la page utilisateur.
-
-À noter que dans cette séquence, si le livre n’existe pas dans la base de données Ex-Libris, il n’est pas ajouté à cette base. En effet, il a été convenu par l’équipe projet qu’un ajout ne se fait qu’au moment où un utilisateur enregistre le livre dans sa bibliothèque.
+Le diagramme met également en évidence un choix important de conception : la consultation d'un ouvrage n'entraîne pas son enregistrement dans la base locale. Un livre n'est ajouté à Ex-Libris qu'à partir du moment où un utilisateur l'enregistre dans sa bibliothèque personnelle.
 
 ### Demander des recommandations
 
