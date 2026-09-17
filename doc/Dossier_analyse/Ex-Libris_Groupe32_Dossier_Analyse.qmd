@@ -330,13 +330,13 @@ Quand un utilisateur (`id_user`) consulte une critique, il peut mettre un ' j'ai
 Figure 11 – Diagramme de classes :  critique
 \end{center}
 -->
-La classe "CritiqueDao" permet de faire le lien entre les objets de la classe "Critique" en mémoire et la table critique dans la base de données. La méthode ' create ' permet de créer une nouvelle critique dans la base, ' find_by_id' permet de récupérer une critiaue précise, ' find_by_livre ' permet de récupérer toutes les critiques d'un livre (toutes éditions confondues), ' update ' réécrit une critique existante (possibilité seulement pour l'utilisateur qui l'a écrite), et ' delate ' supprime la critique et tous ses likes avec.
+`CritiqueDao` fait le lien entre les objets `Critique` en mémoire et la table correspondante : `find_by_livre` récupère toutes les critiques d'un livre (toutes éditions confondues), les autres méthodes sont des opérations classiques de persistance. `LikeDao` en est l'équivalent pour la table `Like` : `count_by_critique` compte les likes/dislikes d'une critique, `exists` vérifie qu'un utilisateur n'a pas déjà réagi à une critique donnée, et `update` sert lorsqu'un utilisateur bascule d'un like à un dislike ou inversement.
 
-La classe "LikeDao" est l'équivalent de "CritiqueDao" mais pour la table like de la base de données. 'create' insère un nouveau like dans la base de données. 'delate' supprime un like précis (méthode appelée aussi quand un utilisateur passe du like au dislike ou vice versa). 'cont_by_critique' compte le nombre le like par critique. 'exists' vérifie si un utilisateur a déjà liké ou disliké une critique.
+`CritiqueService` porte toute la logique métier, les DAO n'exécutant que des requêtes. `rediger_critique` vérifie que le texte n'est pas vide (indépendamment de toute note, les deux étant volontairement découplés). `modifier_critique` et `supprimer_critique` vérifient que l'action est bien effectuée par l'auteur de la critique ; `supprimer_critique` orchestre en plus la suppression des likes associés via `LikeDao` avant de supprimer la critique elle-même. `consulter_critiques_livre` combine `CritiqueDao.find_by_livre` et `LikeDao.count_by_critique` pour renvoyer les critiques accompagnées de leur nombre de likes. Enfin, `liker` prend un paramètre booléen `aime` : une seule méthode gère donc le like et le dislike, en s'appuyant sur `LikeDao.exists` pour éviter les doublons.
 
-La classe "CritiqueService" combine les données alors que "CritiqueDao" exécute seulement des requêtes. Elle s'appuie sur " CritiqueDao" et "LikeDao" pour proposer les fonctionnalités attendues dans l'application. ' Rediger_critique ' fait appel à CritiqueDao.create en vérifiant les contraintes métier (note entre 1 et 5). ' Modifier_critique ' et ' supprimer_critique ' vérifient aussi que l'action soit exécutée par l'utilisateur qui les a rédigées. 'Consulter_critique' fait appel à 'CritiqueDao.find_by_livre et à 'LikeDao.count_by_critique' pour renvoyer les critiques accompagnées du nombre de likes qui leur sont attribués. Enfin, les méthode 'like' et 'dislike' vérifient si il existe déjà un like ou un dislike avec 'LikeDao.exist' pour éviter les doublons (liker plusieurs fois ou liker et disliker).
-
+<!--
 Des diagrammes similaires représentent les classes relatives à l'abonnement, aux recommendations et à l'authentification. Nous n'avons pu les présenter ici faute de place.
+-->
 
 \newpage
 
