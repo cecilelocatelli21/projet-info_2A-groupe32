@@ -217,19 +217,34 @@ Figure 11 – Dépot Github
 
 ## Diagramme de Gantt
 
-![Diagramme de Gantt](Gantt.png){#fig-gantt width="80%l"}
+Notre planning se découpe en deux grandes phases : la phase d'analyse, de fin août à fin septembre, suivie de la phase de code, d'octobre à début novembre.
 
-<!--
-\begin{center}
-\includegraphics[width=0.8\textwidth]{Gantt.png}
+\noindent
+\begin{tabular}{@{}p{0.60\textwidth}@{\hspace{0.03\textwidth}}p{0.35\textwidth}@{}}
+\vspace{0pt}
+\centering
+\includegraphics[width=\linewidth]{Gantt.png}
 
-Figure 11 – Diagramme de Gantt
-\end{center}
--->
+\small Figure 11 – Diagramme de Gantt
+&
+\vspace{0pt}
+\small
+Nous commençons par étudier l'API Open Library, puis nous réalisons
+l'ensemble de la modélisation UML afin de bien comprendre comment notre
+application va s'articuler et comment la construire.
 
-Notre planning se découpe en deux grandes phases. D'abord la phase d'analyse, de fin août à fin septembre : nous commençons par étudier l'API Open Library, puis nous réalisons l'ensemble de la modélisation UML afin de bien comprendre comment notre application va s'articuler et comment la construire.
+Nous avons choisi de développer les fonctionnalités par ordre de
+difficulté croissante : d'abord les classes de base, puis
+l'authentification et la recherche de livres (F1-F2), la bibliothèque
+avec les statuts de lecture (F3), les critiques (F4), et enfin notre
+fonctionnalité F5 (les recommandations), qui nécessitera davantage de
+temps du fait de sa complexité.
 
-Une fois cette base posée, nous passons à la phase de code, d'octobre à début novembre. Nous avons choisi de développer les fonctionnalités par ordre de difficulté croissante : d'abord les classes de base, puis l'authentification et la recherche de livres (F1-F2), la bibliothèque avec les statuts de lecture (F3), les critiques (F4), et enfin notre fonctionnalité F5 (les recommandations), qui nécessitera davantage de temps du fait de sa complexité. Les tests unitaires et le frontend interviendront en dernier, le frontend n'étant pas prioritaire, sera développé uniquement s'il nous reste du temps.
+Les tests unitaires et le frontend interviendront en dernier, le
+frontend n'étant pas prioritaire, sera développé uniquement s'il nous
+reste du temps.
+\end{tabular}
+
 
 
 # Maquette de l'application
@@ -273,7 +288,7 @@ Cette table met en relation deux instances de la même entité `Utilisateur` sel
 
 ### Classes Business Object
 
-Certaines classes contiennent les attributs des objets qui sont utilisés pour les méthodes présentes dans les classes DAO et Services. Ces classes définissent les business object qui sont les objets manipulés pour construire l'application.
+Nous avons construit l'application en partant des **Business Object** : ce sont eux qui définissent les entités manipulées (attributs, sans logique métier). Les classes Controller/Service/DAO sont construites ensuite autour de ces BO, en couches (`controller → service → dao`) ; ces classes ne sont pas systématiquement détaillées ici, en particulier le Controller, couche de routage sans logique propre, est illustré dans les diagrammes de séquence plutôt que dans les diagrammes de classes. Nous présentons ci-dessous deux exemples pour illustrer cette articulation : l'authentification et les critiques.
 
 ![Diagramme de classes : Business Object](classe_1.png){#fig-business_object width="50%"}
 
@@ -301,22 +316,6 @@ La classe `Critique` recense les critiques proposées par les utilisateurs pour 
 
 Quand un utilisateur (`id_user`) consulte une critique, il peut mettre un ' j'aime ' ou ' je n'aime pas ' à cette critique (`id_critique`). Ces informations sont des attributs de la classe `Like`.
 
-### Diagramme de classe pour l'authentification
-
-Pour s'authentifier, l'utilisateur va renseigner des informations qui correspondent à l'objet de la classe `Utilisateur`.
-
-![Diagramme de classes : authentification](classe_2.png){#fig-classe_2 width="40%"}
-
-<!--
-\begin{center}
-\includegraphics[width=0.4\textwidth]{classe_2.png}
-
-Figure 11 – Diagramme de classes :  authentification
-\end{center}
--->
-La classe "UtilisateurDAO" permet de créer, de trouver, de modifier ou de supprimer un objet de la classe "Utilisateur". Cette classe est en lien avec les données stockées en local dans la BDD car ces informations ne relèvent pas de OpenLibrary. La méthode update permet de modifier toutes les informations d'un utilisateur.
-
-La classe "UtilisateurService" répond aux besoins métiers de l'application : les méthodes créer un compte, s'authentifier et consulter un profil renvoient l'objet Utilisateur et la méthode modifier_bio renvoie un booléen (False si l'utilisateur n'existe pas ou si la sauvegarde en base échoue).
 
 ### Diagramme de classe pour les critiques
 
@@ -334,6 +333,8 @@ La classe "CritiqueDao" permet de faire le lien entre les objets de la classe "C
 La classe "LikeDao" est l'équivalent de "CritiqueDao" mais pour la table like de la base de données. 'create' insère un nouveau like dans la base de données. 'delate' supprime un like précis (méthode appelée aussi quand un utilisateur passe du like au dislike ou vice versa). 'cont_by_critique' compte le nombre le like par critique. 'exists' vérifie si un utilisateur a déjà liké ou disliké une critique.
 
 La classe "CritiqueService" combine les données alors que "CritiqueDao" exécute seulement des requêtes. Elle s'appuie sur " CritiqueDao" et "LikeDao" pour proposer les fonctionnalités attendues dans l'application. ' Rediger_critique ' fait appel à CritiqueDao.create en vérifiant les contraintes métier (note entre 1 et 5). ' Modifier_critique ' et ' supprimer_critique ' vérifient aussi que l'action soit exécutée par l'utilisateur qui les a rédigées. 'Consulter_critique' fait appel à 'CritiqueDao.find_by_livre et à 'LikeDao.count_by_critique' pour renvoyer les critiques accompagnées du nombre de likes qui leur sont attribués. Enfin, les méthode 'like' et 'dislike' vérifient si il existe déjà un like ou un dislike avec 'LikeDao.exist' pour éviter les doublons (liker plusieurs fois ou liker et disliker).
+
+Des diagrammes similaires représentent les classes relatives à l'abonnement, aux recommendations et à l'authentification. Nous n'avons les présenter ici faute de place.
 
 \newpage
 
