@@ -23,6 +23,9 @@ header-includes:
   - '\KOMAoption{captions}{tableheading}'
   - '\usepackage{tocloft}'
   - '\usepackage[top=2cm,bottom=1.8cm,left=2.5cm,right=2.5cm,footskip=1cm]{geometry}'
+  - '\usepackage{caption}'
+  - '\captionsetup[figure]{font={normalfont,normalsize},labelfont=bf,textfont=normalfont,justification=centering}'
+
 
   # STYLE SOMMAIRE
   - '\renewcommand{\cfttoctitlefont}{\Huge\bfseries}'
@@ -138,7 +141,7 @@ Le diagramme ci-dessous offre une vue d'ensemble organisée par paquetage foncti
 \hspace{-2cm}\begin{tabular}{p{9cm}p{10cm}}
 \includegraphics[width=9cm]{cas_usage}
 
-\hspace{2cm}\textit{Diagramme des cas d'usage}
+\captionof{figure}{Diagramme des cas d'usage}
 &
 \vspace{-10cm}
 
