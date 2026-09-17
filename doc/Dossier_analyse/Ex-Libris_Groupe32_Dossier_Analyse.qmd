@@ -239,51 +239,35 @@ Après avoir défini les besoins et les fonctionnalités attendues, place à la 
 ## Modèle des données
 
 La conception de la base de données repose sur la séparation entre les informations bibliographiques des livres et les données propres aux utilisateurs de l'application. Les informations générales concernant les livres sont récupérées à partir de l'API Open Library : il n'est donc pas nécessaire de reconstruire localement un catalogue complet. La base de données est principalement destinée à conserver les utilisateurs ainsi que leurs interactions avec les livres (lectures, critiques, appréciations) et les relations entre utilisateurs à travers le système d'abonnement.
-
+ 
 ![Modèle de données](diag_BDD.png){#fig-BDD width="50%"}
-
-<!--
-\begin{center}
-\includegraphics[width=0.5\textwidth]{diag_BDD.png}
-
-Figure 11 – Modèle des données
-\end{center}
--->
+ 
 La base est composée de six tables : Utilisateur, Livre, Lecture, Critique, Abonnement et Like.
-
+ 
 **Table Utilisateur**
-
-La table Utilisateur représente les personnes utilisant l'application. Elle contient un identifiant unique id_user (SERIAL), clé primaire, ainsi que pseudo, email, password_hash et bio. Cette table constitue une entité centrale de la base puisque les fonctionnalités personnalisées (gestion des lectures, publication de critiques, abonnements) sont toutes associées à un utilisateur.
-
+ 
+Cette table constitue l'entité centrale de la base. Contrairement aux données bibliographiques issues d'Open Library, les utilisateurs et leurs interactions (lectures, critiques, abonnements) sont propres à Ex-Libris et doivent être conservés localement.
+ 
 **Table Livre**
-
-La table Livre représente les ouvrages enregistrés dans l'application. Elle possède un identifiant unique id_livre (SERIAL), clé primaire. L'attribut id_work (VARCHAR) correspond à l'identifiant de l'œuvre fourni par Open Library et permet d'établir le lien avec les informations bibliographiques de l'API.
-
-Bien que id_work permette déjà d'identifier une œuvre dans Open Library, nous avons choisi de définir notre propre clé primaire id_livre. Cela permet à notre base de disposer d'un identifiant interne indépendant de l'API externe : id_work sert alors de référence vers Open Library, tandis que id_livre constitue la référence interne utilisée par les autres tables, notamment Lecture.
-
-Les attributs titre et auteurs permettent de conserver localement les principales informations bibliographiques, afin de les consulter rapidement sans requête systématique à Open Library, et de limiter le nombre d'appels à l'API (qui impose une limitation du nombre de requêtes par seconde). Les informations bibliographiques supplémentaires, non nécessaires au fonctionnement immédiat, restent récupérées directement auprès d'Open Library lorsque cela est nécessaire.
-
+ 
+L'attribut `id_work` correspond à l'identifiant de l'œuvre fourni par Open Library et permet d'établir le lien avec les informations bibliographiques de l'API.
+ 
+Bien que `id_work` permette déjà d'identifier une œuvre dans Open Library, nous avons choisi de définir notre propre clé primaire `id_livre`. Cela permet à notre base de disposer d'un identifiant interne indépendant de l'API externe : `id_work` sert alors de référence vers Open Library, tandis que `id_livre` constitue la référence interne utilisée par les autres tables, notamment `Lecture`. Nous conservons par ailleurs localement `titre` et `auteurs`, afin de les consulter sans requête systématique à Open Library, et de limiter le nombre d'appels à l'API (qui impose une limitation du nombre de requêtes par seconde).
+ 
 **Table Lecture**
-
-La table Lecture représente les interactions de lecture entre les utilisateurs et les livres. Elle possède un identifiant unique id_lecture (SERIAL), clé primaire, et deux clés étrangères : id_user (référence Utilisateur) et id_livre (référence Livre). Elle contient également statut (état de lecture : pas commencé, en cours, lu, abandonné), date_ajout, date_lu et note.
-
-Le recours à cette table permet de représenter une relation plusieurs-à-plusieurs entre les utilisateurs et les livres, tout en conservant les informations propres à chaque interaction.
-
-**Table Critique**
-
-La table Critique permet de gérer les avis publiés sur les livres. Elle possède un identifiant unique id_critique (clé primaire) et une clé étrangère id_lecture, qui rattache chaque critique à une lecture enregistrée plutôt qu'à un livre ou un utilisateur directement. Les autres attributs sont texte et date_publication.
-
-D'après le diagramme, une lecture peut recevoir au maximum une critique (0..1), et une critique est obligatoirement associée à une seule lecture. L'identifiant propre à la critique est également nécessaire pour la gestion des appréciations, une critique étant un objet identifié sur lequel les utilisateurs peuvent interagir.
-
-**Table Like**
-
-La table Like représente les appréciations associées aux critiques. Elle contient deux clés étrangères, id_user et id_critique, qui forment ensemble la clé primaire composite (évitant qu'un même utilisateur enregistre plusieurs fois la même appréciation pour une critique donnée). Elle contient également date_like et aime (BOOL, TRUE pour « j'aime », FALSE pour « je n'aime pas »).
-
-Cette table matérialise une relation plusieurs-à-plusieurs entre les utilisateurs et les critiques.
-
+ 
+Cette table matérialise la relation plusieurs-à-plusieurs entre `Utilisateur` et `Livre`, en portant les informations propres à chaque interaction (statut de lecture, dates, note). C'est également elle qui centralise `note` : celle-ci n'a pas besoin d'une table dédiée, il s'agit d'un simple attribut de `Lecture`.
+ 
+**Table Critique**  
+ 
+Une critique est rattachée à une `Lecture` plutôt qu'à un livre ou un utilisateur directement : ce choix évite qu'un utilisateur puisse rédiger une critique pour un livre qu'il n'a pas lu ou abandonné, et permet de retrouver facilement l'utilisateur et le livre concernés via la lecture associée.
+ 
+Table Like
+La table `Like` matérialise à son tour une relation plusieurs-à-plusieurs, mais entre utilisateurs et critiques : elle enregistre l'appréciation (j'aime / je n'aime pas) qu'un utilisateur porte sur une critique.
+ 
 **Table Abonnement**
-
-La table Abonnement représente les relations entre utilisateurs, en mettant en relation deux instances de la même entité Utilisateur selon deux rôles différents : id_follower (l'utilisateur qui s'abonne) et id_followed (l'utilisateur suivi), qui forment ensemble la clé primaire composite. La date de l'abonnement est conservée dans date_abonnement.
+ 
+Cette table met en relation deux instances de la même entité `Utilisateur` selon deux rôles différents (`follower` / `followed`), pour représenter le système d'abonnement entre utilisateurs.
 
 ## Diagramme de classes
 
