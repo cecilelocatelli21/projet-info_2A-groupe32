@@ -213,7 +213,7 @@ Les diagrammes d'activité présentent l’enchaînement des actions sur l'appli
 \center
 \includegraphics[width=18cm]{diagramme_activite_principal}
 
-\textit{Diagramme d'activité: parcours utilisateur global}
+\captionof{figure}{Diagramme d'activité : parcours utilisateur global}
 \end{minipage}
 ```
 
@@ -230,13 +230,13 @@ Les diagrammes d'activité présentent l’enchaînement des actions sur l'appli
 \center 
 \hspace{-1cm}\includegraphics[width=10cm]{diagramme_activite_profil_perso}
 
-\textit{Diagramme d'activité : gestion du profil personnel}
+\captionof{figure}{Diagramme d'activité : gestion du profil personnel}
 
 \vspace{1cm}
 
 \includegraphics[width=10cm]{diagramme_activite_livre}
 
-\textit{Diagramme d'activité : consultation d'un livre}
+\captionof{figure}{Diagramme d'activité : consultation d'un livre}
 \end{minipage}
 ```
 
@@ -277,7 +277,7 @@ Notre planning se découpe en deux grandes phases : la phase d'analyse, de fin a
 \centering
 \includegraphics[width=\linewidth]{Gantt.png}
 
-\small Figure 11 – Diagramme de Gantt
+\captionof{figure}{Diagramme de Gantt}
 &
 \vspace{0pt}
 \small
