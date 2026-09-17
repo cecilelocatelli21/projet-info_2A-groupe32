@@ -385,7 +385,6 @@ Figure 11 – Diagramme de classes :  critique
 Des diagrammes similaires représentent les classes relatives à l'abonnement, aux recommendations et à l'authentification. Nous n'avons pu les présenter ici faute de place.
 -->
 
-\newpage
 
 ## Diagrammes de séquence
 
