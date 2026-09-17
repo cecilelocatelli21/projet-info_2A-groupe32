@@ -90,7 +90,7 @@ Notre application repose entièrement sur les données fournies par Open Library
 
 ![Structure des données Open Library : oeuvre](work.png){#fig-openlibrary-work width="60%"}
 
-Notre choix principal est de nous appuyer, en base, sur une référence unique par œuvre (Work), qui sert d'ancrage à l'ensemble des lectures, notes et critiques associées. Notre Business Object garde néanmoins, via ses attributs, la possibilité de porter des informations d'édition (langue, format...), afin de conserver cette richesse de choix pour l'utilisateur. Ce fonctionnement est détaillé plus loin, lors de la conception de la maquette.
+Nous avons choisi d'utiliser l'identifiant d'œuvre (id_work) comme référence unique dans l'application. Les lectures, notes et critiques sont ainsi associées à l'œuvre et non à une édition particulière. Une évolution future pourrait toutefois permettre de consulter les différentes éditions disponibles via Open Library, grâce à des requêtes effectuées dynamiquement auprès de l'API, sans modifier le modèle de données actuel.
 
 <!-- On ne l'aborde pas et nous n'avons pas travaillé dessus...
 Nous avons par ailleurs constaté que le champ `subjects` (thèmes et genres), rédigé en texte libre, mélange genres littéraires et mots-clés isolés. Cette hétérogénéité motive notre fonctionnalité de normalisation des genres, pour une classification plus cohérente et exploitable pour la recherche.
