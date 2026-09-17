@@ -113,7 +113,7 @@ classDiagram
     }
 
     class LikeDao {
-        +create(like) Like
+        +create(id_user, id_critique, aime) Like
         +delete(id_user, id_critique) bool
         +count_by_critique(id_critique) int
         +exists(id_user, id_critique) bool
@@ -123,8 +123,8 @@ classDiagram
     class CritiqueService {
         -critique_dao: CritiqueDao
         -like_dao: LikeDao
-        +rediger_critique(id_user, id_livre, note, texte) Critique
-        +modifier_critique(id_critique, note, texte) bool
+        +rediger_critique(id_user, id_livre, texte) Critique
+        +modifier_critique(id_critique, texte) bool
         +supprimer_critique(id_critique) bool
         +consulter_critiques_by_livre(id_livre) list~Critique~
         +consulter_critiques_by_user(id_user) list~Critique~
