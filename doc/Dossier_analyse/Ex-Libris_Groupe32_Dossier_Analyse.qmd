@@ -88,9 +88,7 @@ Ce cahier des charges exprime le besoin initial auquel notre application doit r�
 \vspace{-0.5cm}
 \end{flushright}
 
-Notre application repose entièrement sur les données fournies par Open Library, une base collaborative et gratuite qui référence plusieurs millions d'ouvrages. Il s'agit d'une API web : on l'interroge en construisant des adresses (URLs) spécifiques, et elle nous renvoie les données demandées au format JSON. Open Library utilise trois objets majeurs: l'**auteur**, l'**œuvre** (l'idée générale du livre : titre, résumé, thèmes) et l'**édition** (une publication matérielle précise de cette œuvre — une même œuvre pouvant compter des centaines d'éditions). Le langage courant confond ces deux derniers sous le même mot « livre ». 
-
-![Structure des données Open Library : oeuvre](work.png){#fig-openlibrary-work width="60%"}
+Notre application repose entièrement sur les données fournies par Open Library, une base collaborative et gratuite qui référence plusieurs millions d'ouvrages. Il s'agit d'une API web : on l'interroge en construisant des adresses (URLs) spécifiques, et elle nous renvoie les données demandées au format JSON. Open Library utilise trois objets majeurs: l'**auteur**, l'**œuvre** (l'idée générale du livre : titre, résumé, thèmes) et l'**édition** (une publication matérielle précise de cette œuvre — une même œuvre pouvant compter des centaines d'éditions). Le langage courant confond ces deux derniers sous le même mot « livre ».
 
 Nous avons choisi d'utiliser l'identifiant d'œuvre (id_work) comme référence unique dans l'application. Les lectures, notes et critiques sont ainsi associées à l'œuvre et non à une édition particulière. Une évolution future pourrait toutefois permettre de consulter les différentes éditions disponibles via Open Library, grâce à des requêtes effectuées dynamiquement auprès de l'API, sans modifier le modèle de données actuel.
 
@@ -128,57 +126,78 @@ Nous avons par ailleurs constaté que le champ `subjects` (thèmes et genres), r
 
 ## Diagramme de cas d'utilisation
 
-![Diagramme de cas d'utilisation](cas_usage.png){#fig-cas-usage width="62%"}
 
 Le système Ex-Libris distingue deux acteurs : le **Visiteur**, non authentifié, et l'**Utilisateur**, qui hérite du Visiteur et accède à l'ensemble des fonctionnalités une fois connecté. Le Visiteur ne peut que créer un compte ou s'authentifier ; toutes les autres actions nécessitent d'être connecté.
 
 Partant de nos expériences personnelles d'utilisateurs de sites de musique ou de films, nous avons réfléchi ensemble aux fonctionnalités que nous souhaitions voir figurer dans notre projet.
 
-Le diagramme ci-dessus offre une vue d'ensemble organisée par paquetage fonctionnel. Le détail des cas d'utilisation qui composent chacun d'eux est précisé ci-dessous.
+Le diagramme ci-dessous offre une vue d'ensemble organisée par paquetage fonctionnel. Le détail des cas d'utilisation qui composent chacun d'eux est précisé en face.
 
-**F1 – Gérer son compte**
+```{=latex}
+\begin{minipage}{\textwidth}
+\hspace{-2cm}\begin{tabular}{p{9cm}p{10cm}}
+\includegraphics[width=9cm]{cas_usage}
+
+\hspace{2cm}\textit{Diagramme des cas d'usage}
+&
+\vspace{-10cm}
+
+\textbf{F1 – Gérer son compte}\smallskip
 
 - S'authentifier
-- Créer un compte
-- Mettre à jour son profil (mot de passe, email, bio)
 
-**F2 – Rechercher et consulter**
+- Créer un compte
+
+- Mettre à jour son profil (mot de passe, email, bio)\medskip
+
+\textbf{F2 – Rechercher et consulter}\smallskip
 
 - Rechercher un livre
-- Consulter la fiche d'un livre
-- Consulter son propre profil (bio, nombre d'abonnés, d'abonnements, de livres, de critiques, de likes/dislikes)
 
-**F3 – Gérer sa bibliothèque**
+- Consulter la fiche d'un livre
+
+- Consulter son propre profil (bio, nombre d'abonnés, d'abonnements, de livres, de critiques, de likes/dislikes)\medskip
+
+\textbf{F3 – Gérer sa bibliothèque}\smallskip
 
 - Consulter sa bibliothèque
-- Ajouter un livre à sa bibliothèque
-- Mettre à jour le statut d'un livre (à lire / en cours / lu / abandonné)
-- Noter un livre (de 0 à 5, si lu ou abandonné)
 
-**F4 – Gérer les critiques**
+- Ajouter un livre à sa bibliothèque
+
+- Mettre à jour le statut d'un livre (à lire / en cours / lu / abandonné)
+
+- Noter un livre (de 0 à 5, si lu ou abandonné)\medskip
+
+\textbf{F4 – Gérer les critiques}\smallskip
 
 - Rédiger une critique (si le livre est lu ou abandonné)
+
 - Consulter les critiques d'un livre
 
-*Note et critique relèvent volontairement de deux cas d'utilisation distincts : un lecteur peut vouloir noter un livre sans rédiger de critique, ou l'inverse.*
+\textit{Note et critique relèvent volontairement de deux cas d'utilisation distincts : un lecteur peut vouloir noter un livre sans rédiger de critique, ou l'inverse.}
+\end{tabular}
 
-**F5 – Obtenir des recommandations**
+\textbf{F5 – Obtenir des recommandations}\smallskip
 
 - Visualiser des recommandations personnalisées
 
-*À ce stade, la logique de recommandation n'est pas totalement arrêtée. Le principe retenu est d'afficher plusieurs sections de recommandations générées automatiquement (par exemple : « de vos auteurs favoris », « les populaires d'Ex-Libris »), combinant différents critères — dont le réseau d'abonnements de l'utilisateur (F5B)*
+\textit{À ce stade, la logique de recommandation n'est pas totalement arrêtée. Le principe retenu est d'afficher plusieurs sections de recommandations générées automatiquement (par exemple : « de vos auteurs favoris », « les populaires d'Ex-Libris »), combinant différents critères — dont le réseau d'abonnements de l'utilisateur (F5B)}\medskip
 
-**FO1 – Gérer sa communauté** *(optionnel)*
+\textbf{FO1 – Gérer sa communauté} \textit{(optionnel)}\smallskip
 
 - Rechercher un utilisateur
-- Consulter le profil d'un autre utilisateur
-- Consulter la bibliothèque d'un autre utilisateur
-- S'abonner à un utilisateur
 
-**FOX – Réagir aux critiques** *(optionnel)*
+- Consulter le profil d'un autre utilisateur
+
+- Consulter la bibliothèque d'un autre utilisateur
+
+- S'abonner à un utilisateur\medskip
+
+\textbf{FOX – Réagir aux critiques} \textit{(optionnel)}\smallskip
 
 - Ajouter un like ou un dislike à une critique
-
+\end{minipage}
+```
 
 \newpage
 
@@ -186,15 +205,45 @@ Le diagramme ci-dessus offre une vue d'ensemble organisée par paquetage fonctio
 
 Les diagrammes d'activité présentent l’enchaînement des actions sur le site et les choix possibles à chaque étape pour l'utilisateur. Le diagramme général montre l’accès aux principales fonctionnalités depuis l’accueil ; les suivants les détaillent.
 
-![Diagramme d'activité: parcours utilisateur global](diagramme_activite_principal.png){#fig-activite_principal width="80%" height="30%"}
+```{=latex}
+\begin{minipage}{\textwidth}
+\center
+\includegraphics[width=18cm]{diagramme_activite_principal}
 
-![Diagramme d'activité : gestion du profil personnel](diagramme_activite_profil_perso.png){#fig-activite_profil_perso width="40%"}
+\textit{Diagramme d'activité: parcours utilisateur global}
+\end{minipage}
+```
 
-![Diagramme d'activité : consultation d'un livre](diagramme_activite_livre.png){#fig-activite_livre width="40%"}
+<!-- ![Diagramme d'activité: parcours utilisateur global](diagramme_activite_principal.png){#fig-activite_principal width="80%" height="30%"} -->
 
-![Diagramme d'activité : consultation du profil d'un utilisateur](diagramme_activite_utilisateur.png){#fig-activite_login width="40%"}
+\newpage
 
 
+```{=latex}
+\begin{minipage}{\textwidth}
+
+\vspace{-1cm}
+
+\center 
+\hspace{-1cm}\includegraphics[width=10cm]{diagramme_activite_profil_perso}
+
+\textit{Diagramme d'activité : gestion du profil personnel}
+
+\vspace{1cm}
+
+\includegraphics[width=10cm]{diagramme_activite_livre}
+
+\textit{Diagramme d'activité : consultation d'un livre}
+\end{minipage}
+```
+
+
+<!-- 
+![Diagramme d'activité : gestion du profil personnel](diagramme_activite_profil_perso.png){#fig-activite_profil_perso width="50%"}
+
+![Diagramme d'activité : consultation d'un livre](diagramme_activite_livre.png){#fig-activite_livre width="50%"} -->
+
+<!-- ![Diagramme d'activité : consultation du profil d'un utilisateur](diagramme_activite_utilisateur.png){#fig-activite_login width="50%"} -->
 
 \newpage
 
@@ -328,13 +377,13 @@ Quand un utilisateur (`id_user`) consulte une critique, il peut mettre un ' j'ai
 Figure 11 – Diagramme de classes :  critique
 \end{center}
 -->
-La classe "CritiqueDao" permet de faire le lien entre les objets de la classe "Critique" en mémoire et la table critique dans la base de données. La méthode ' create ' permet de créer une nouvelle critique dans la base, ' find_by_id' permet de récupérer une critiaue précise, ' find_by_livre ' permet de récupérer toutes les critiques d'un livre (toutes éditions confondues), ' update ' réécrit une critique existante (possibilité seulement pour l'utilisateur qui l'a écrite), et ' delate ' supprime la critique et tous ses likes avec.
+`CritiqueDao` fait le lien entre les objets `Critique` en mémoire et la table correspondante : `find_by_livre` récupère toutes les critiques d'un livre (toutes éditions confondues), les autres méthodes sont des opérations classiques de persistance. `LikeDao` en est l'équivalent pour la table `Like` : `count_by_critique` compte les likes/dislikes d'une critique, `exists` vérifie qu'un utilisateur n'a pas déjà réagi à une critique donnée, et `update` sert lorsqu'un utilisateur bascule d'un like à un dislike ou inversement.
 
-La classe "LikeDao" est l'équivalent de "CritiqueDao" mais pour la table like de la base de données. 'create' insère un nouveau like dans la base de données. 'delate' supprime un like précis (méthode appelée aussi quand un utilisateur passe du like au dislike ou vice versa). 'cont_by_critique' compte le nombre le like par critique. 'exists' vérifie si un utilisateur a déjà liké ou disliké une critique.
+`CritiqueService` porte toute la logique métier, les DAO n'exécutant que des requêtes. `rediger_critique` vérifie que le texte n'est pas vide (indépendamment de toute note, les deux étant volontairement découplés). `modifier_critique` et `supprimer_critique` vérifient que l'action est bien effectuée par l'auteur de la critique ; `supprimer_critique` orchestre en plus la suppression des likes associés via `LikeDao` avant de supprimer la critique elle-même. `consulter_critiques_livre` combine `CritiqueDao.find_by_livre` et `LikeDao.count_by_critique` pour renvoyer les critiques accompagnées de leur nombre de likes. Enfin, `liker` prend un paramètre booléen `aime` : une seule méthode gère donc le like et le dislike, en s'appuyant sur `LikeDao.exists` pour éviter les doublons.
 
-La classe "CritiqueService" combine les données alors que "CritiqueDao" exécute seulement des requêtes. Elle s'appuie sur " CritiqueDao" et "LikeDao" pour proposer les fonctionnalités attendues dans l'application. ' Rediger_critique ' fait appel à CritiqueDao.create en vérifiant les contraintes métier (note entre 1 et 5). ' Modifier_critique ' et ' supprimer_critique ' vérifient aussi que l'action soit exécutée par l'utilisateur qui les a rédigées. 'Consulter_critique' fait appel à 'CritiqueDao.find_by_livre et à 'LikeDao.count_by_critique' pour renvoyer les critiques accompagnées du nombre de likes qui leur sont attribués. Enfin, les méthode 'like' et 'dislike' vérifient si il existe déjà un like ou un dislike avec 'LikeDao.exist' pour éviter les doublons (liker plusieurs fois ou liker et disliker).
-
+<!--
 Des diagrammes similaires représentent les classes relatives à l'abonnement, aux recommendations et à l'authentification. Nous n'avons pu les présenter ici faute de place.
+-->
 
 \newpage
 
@@ -365,7 +414,7 @@ Le diagramme met également en évidence un choix important de conception : la c
 
 ### Demander des recommandations
 
-![Diagramme de séquence : demander des recommandations](Diagramme_Sequence_demander-des-recommandations_page-0001.jpg){#fig-seq_reco width="90%"}
+![Diagramme de séquence : demander des recommandations](Diagramme_Sequence_Demander-des-recommandations_page-0001.jpg){#fig-seq_reco width="90%"}
 
 <!--
 \begin{center}
@@ -378,36 +427,20 @@ Le but de cette séquence est de recommander à l’utilisateur des livres qu’
 
 Il se situe sur sa page d’accueil, et clique sur un bouton « Recommandations personnelles ».
 
-La première étape est de récupérer la liste des livres lus par cet utilisateur (`id_livre`), ainsi que les notes associées à chacun de ces livres (`note`).
-
-Nous envisageons ensuite plusieurs possibilités pour effectuer des recommandations.
-
-\underline{Premier type de recommandations : "Les auteurs que vous aimez"}
-
-Si dans les livres lus par l’utilisateur, plusieurs livres d’un même auteur sont bien notés, d’autres livres du même auteur lui seront proposés.
-
-Le **Service** va donc essayer d’identifier dans la liste de livres de l'utilisateur les auteurs les plus appréciés. S’il trouve des candidats, il va interroger **OpenLibrary** pour rechercher d’autres livres des mêmes auteurs.
-
-On pourra éventuellement filtrer parmi ces résultats ceux qui ont les meilleures notes dans Ex-Libris, mais cela n’apparaît que comme commentaire sur le diagramme de séquence pour ne pas alourdir le schéma.
-
-\underline{Deuxième type de recommandations : "Les livres les plus aimés par les utilisateurs que vous suivez"}
-
-Cette fois-ci, nous allons utiliser la fonctionnalité d'abonnement pour offrir des recommandations à l'utilisateur.
-
-Dans un premier temps, le **Service** récupère la liste des utilisateurs auxquels celui-ci est abonné (`id_followed` dans la table `Abonnement`).
-
-Ensuite, l'application cherchera dans les lectures de ces "followed" les livres les mieux notés, et les proposera à l'utilisateur.
-
-À la fin de l'exécution des algorithmes de recommandations au niveau du **Service**, celui-ci va faire remonter une liste des livres recommandés pour l'utilisateur (`titre`, `auteur`, etc.), pour les faire afficher par le **Contrôleur**.
-
-\underline{Autres types de recommandations (en projet) :}
-
-Nous venons de présenter 2 méthodes de recommandation, à titre d'illustration, mais nous avons le projet d'en développer d'autres.
-
-En effet, les recommandations précédentes nécessitent des conditions (avoir noté plusieurs livres d'un même auteur pour la première, avoir des abonnements pour la seconde). Nous envisageons de faire des recommandations du type : "les livres les mieux notés" ou "les livres suscitant le plus de critiques".
-
-Nous avons conscience que "les livres les mieux notés" peut susciter des requêtes assez lourdes, nous avons donc envisagé la possibilité d'ajouter un champ `note_moyenne` à la table `livre`, qui pourrait être mis à jour à chaque nouvelle note sur un livre.
-
-Un autre type d'algorithme envisagé serait de recouper les livres lus et bien notés entre l'utilisateur initial et d'autres utilisateurs de l'application. Nous obtiendrions alors des utilisateurs avec des goûts similaires à l'utilisateur initial, ce qui permettrait de faire de nouvelles suggestions à l'utilisateur.
-
-Encore une fois, nous avons conscience de la charge potentielle de telles requêtes, et réflechissons aux possibilités pour les alléger.
+Cette séquence illustre le fonctionnement général du système de recommandation. Celui-ci repose sur l'historique de lecture et les notes attribuées par l'utilisateur afin de lui proposer des ouvrages qu'il n'a pas encore enregistrés dans sa bibliothèque, mais susceptibles de l'intéresser.
+ 
+À ce stade du projet, l'algorithme de recommandation n'est pas totalement arrêté. Nous avons néanmoins identifié plusieurs pistes de travail.
+ 
+__Les auteurs que vous aimez :__
+ 
+Une première approche consiste à identifier les auteurs dont les ouvrages sont régulièrement bien notés par l'utilisateur, puis à proposer d'autres livres du même auteur à partir des données d'Open Library. Ces résultats pourraient être enrichis par les évaluations de la communauté Ex-Libris.
+ 
+__Les recommandations du réseau :__
+ 
+Une seconde approche s'appuie sur les abonnements. L'application peut analyser les lectures et les notes des utilisateurs suivis afin de suggérer les ouvrages les plus appréciés par ce réseau.
+ 
+__Pistes complémentaires :__
+ 
+D'autres stratégies sont envisagées, notamment la mise en avant des livres les mieux évalués ou les plus discutés sur la plateforme, ainsi que l'identification d'utilisateurs partageant des goûts de lecture similaires.
+ 
+Ces différentes approches nécessitent toutefois des calculs potentiellement coûteux. Nous réfléchissons donc aux optimisations possibles, comme la conservation d'indicateurs agrégés (par exemple une note moyenne par livre) afin de limiter la charge des requêtes.
