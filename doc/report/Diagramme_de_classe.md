@@ -1,3 +1,4 @@
+
 # Diagramme de classe des business object
 
 Certaines classes contiennent les attributs des objets qui sont utilisés pour les méthodes présentes dans les classes DAO et Services. Ces classes définissent les business object qui sont les objets manipulés pour construire l'application.
@@ -80,49 +81,6 @@ La classe `Critique` recense les critiques proposées par les utilisateurs pour 
 Quand un utilisateur (`id_user`) consulte une critique, il peut mettre un ' j'aime ' ou  ' je n'aime pas ' à cette critique (`id_critique`). Ces informations sont des attributs de la classe `Like`.
 
 
-
-# Diagramme de classe pour l'authentification
-
-Pour s'authentifier, l'utilisateur va renseigner des informations qui correspondent à l'objet de la classe `Utilisateur`.
-
-```mermaid
-
-classDiagram
-
-    class Utilisateur {
-        -id_user: int
-        -pseudo: str
-        -email: str
-        -password_hash: str
-        -bio: str
-    }
-
-
-    class UtilisateurDao {
-        +create(utilisateur) Utilisateur
-        +find_by_id(id_user) Utilisateur
-        +find_by_pseudo(pseudo) Utilisateur
-        +update(utilisateur) bool
-        +delete(id_user) bool
-    }
-
-    class UtilisateurService {
-        -utilisateur_dao: UtilisateurDao
-        +creer_compte(pseudo, email, mdp) Utilisateur
-        +authentifier(pseudo, mdp) Utilisateur
-        +modifier_bio(id_user, bio) bool
-        +consulter_profil(id_user) Utilisateur
-    }
-
-    UtilisateurService --> UtilisateurDao
-    UtilisateurDao ..> Utilisateur
-
-```
-
-La classe `UtilisateurDAO` permet de créer, de trouver, de modifier ou de supprimer un objet de la classe `Utilisateur`. Cette classe est en lien avec les données stockées en local dans la BDD car ces informations ne relèvent pas de OpenLibrary. La méthode update permet de modifier toutes les informations d'un utilisateur.
-La classe `UtilisateurService` répond aux besoins métiers de l'application : les méthodes créer un compte, s'authentifier et consulter un profil renvoient l'objet Utilisateur et la méthode modifier_bio renvoie un booléen (False si l'utilisateur n'existe pas ou si la sauvegarde en base échoue).
-
-
 # Diagramme de classe pour les critiques
 
 ```mermaid
@@ -131,18 +89,17 @@ classDiagram
     class Utilisateur
 
     class Critique {
-        -int id_critique
-        -str id_livre
-        -int id_utilisateur
-        -int note
-        -str texte
-        -datetime date_creation
+        -id_critique: int
+        -id_lecture: int
+        -texte: str
+        -date_publication: datetime
     }
 
     class Like {
-        -int id_utilisateur
-        -int id_critique
-        -datetime date_like
+        -id_user: int
+        -id_critique: int
+        -aime: bool
+        -date_like: datetime
     }
 
 
@@ -160,6 +117,7 @@ classDiagram
         +delete(id_user, id_critique) bool
         +count_by_critique(id_critique) int
         +exists(id_user, id_critique) bool
+        +update(id_user, id_critique, aime) bool
     }
 
     class CritiqueService {
@@ -170,8 +128,8 @@ classDiagram
         +supprimer_critique(id_critique) bool
         +consulter_critiques_by_livre(id_livre) list~Critique~
         +consulter_critiques_by_user(id_user) list~Critique~
-        +liker(id_user, id_critique) bool
-        +disliker(id_user, id_critique) bool
+        +liker(id_user, id_critique, aime) Like
+        +retirer_like(id_user, id_critique) bool
     }
 
     CritiqueService --> CritiqueDao
