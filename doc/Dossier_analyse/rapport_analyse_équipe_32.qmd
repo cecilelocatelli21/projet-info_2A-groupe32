@@ -443,3 +443,15 @@ __Pistes complémentaires :__
 D'autres stratégies sont envisagées, notamment la mise en avant des livres les mieux évalués ou les plus discutés sur la plateforme, ainsi que l'identification d'utilisateurs partageant des goûts de lecture similaires.
  
 Ces différentes approches nécessitent toutefois des calculs potentiellement coûteux. Nous réfléchissons donc aux optimisations possibles, comme la conservation d'indicateurs agrégés (par exemple une note moyenne par livre) afin de limiter la charge des requêtes.
+
+
+
+# Conclusion {-}
+
+Le travail préliminaire de construction de notre projet nous a tout d'abord permis de nous connaître entre membres du groupe, d'apprendre à nous écouter et de voir les capacités de chacun. L'avantage de notre groupe est que nous voulons tous progresser en informatique grâce à ce projet en nous informant de notre côté et surtout en nous transmettant les connaissances les uns aux autres. 
+
+
+Le dialogue intergroupe a permis d'expliciter et de déployer le sujet. Avec l'imagination et les connaissances de chacun, nous avons pu mettre sur pied les différents diagrammes qui sont présentés dans ce rapport. Cela nous a permis de donner une première structure à notre projet et nous fixer des objectifs. Nous avons l'intention d'affiner et de compléter nous connaissance techniques durant la suite de ce projet.
+
+
+Ce rapport nous a permis de découvrir le codage en couches avec les fonctionnalités nécessaires pour coder l'application demandée (controller, Dao, Service) et nous a obligé à réfléchir sur les moyens pour l'optimiser (nombre de requêtes à OpenLibrary, stockage des donnée intéressantes).
