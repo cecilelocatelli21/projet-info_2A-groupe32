@@ -6,59 +6,59 @@ Certaines classes contiennent les attributs des objets qui sont utilisés pour l
 ```mermaid
 
 classDiagram
-    class Utilisateur {
-        -id_user: int
-        -pseudo: str
+    class User {
+        -user_id: int
+        -username: str
         -email: str
         -password_hash: str
         -bio: str
     }
 
-    class Livre {
-        -id_livre: int
-        -id_work: str
-        -titre: str
-        -auteurs: str
+    class Book {
+        -book_id: int
+        -work_id: str
+        -title: str
+        -authors: str
         -cover_url: str
     }
 
-    class Abonnement {
-        -id_follower: int
-        -id_followed: int
-        -date_abonnement: datetime
+    class Follow {
+        -follower_id: int
+        -followed_id: int
+        -follow_date: datetime
     }
 
-    class Lecture {
-        -id_lecture: int
-        -id_user: int
-        -id_livre: str
-        -statut: str
-        -date_ajout: date
-        -date_lu: date
-        -note: int
+    class Reading {
+        -reading_id: int
+        -user_id: int
+        -book_id: str
+        -status: str
+        -date_added: date
+        -date_read: date
+        -rating: int
     }
 
-    class Critique {
-        -id_critique: int
-        -id_lecture: int
-        -texte: str
-        -date_publication: datetime
+    class Review {
+        -review_id: int
+        -reading_id: int
+        -text: str
+        -publication_date: datetime
     }
 
     class Like {
-        -id_user: int
-        -id_critique: int
-        -aime: bool
-        -date_like: datetime
+        -user_id: int
+        -review_id: int
+        -liked: bool
+        -like_date: datetime
     }
 
-    Utilisateur "1" --> "0..*" Abonnement : suit (follower)
-    Utilisateur "1" <-- "0..*" Abonnement : est suivi (followed)
-    Utilisateur "1" -- "0..*" Lecture : possède
-    Livre "1" -- "0..*" Lecture : concerne
-    Lecture "1" *-- "0..1" Critique : rédige
-    Critique "1" *-- "0..*" Like : reçoit
-    Utilisateur "1" -- "0..*" Like : auteur du like
+    User "1" --> "0..*" Follow : follows (follower)
+    User "1" <-- "0..*" Follow : is followed (followed)
+    User "1" -- "0..*" Reading : owns
+    Book "1" -- "0..*" Reading : concerns
+    Reading "1" *-- "0..1" Review : writes
+    Review "1" *-- "0..*" Like : receives
+    User "1" -- "0..*" Like : likes
 
 ```
 
