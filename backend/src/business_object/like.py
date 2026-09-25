@@ -1,41 +1,41 @@
 from datetime import datetime
- 
-from business_object.utilisateur import Utilisateur
-from business_object.critique import Critique
- 
- 
+
+from business_object.user import User
+from business_object.review import Review
+
+
 class Like:
     """
-    Business object représentant la réaction d'un utilisateur à une critique.
- 
-    aime = True  -> "j'aime"
-    aime = False -> "je n'aime pas"
- 
+    Business object representing a user's reaction to a review.
+
+    liked = True  -> "like"
+    liked = False -> "dislike"
+
     Attributes:
-        utilisateur (Utilisateur) : L'utilisateur à l'origine de la réaction.
-        critique (Critique) : La critique concernée par la réaction.
-        aime (bool) : True pour "j'aime", False pour "je n'aime pas".
-        date_like (datetime) : Date et heure de la réaction.
+        user (User): The user reacting to the review.
+        review (Review): The review being reacted to.
+        liked (bool): True for "like", False for "dislike".
+        like_date (datetime): The date and time of the reaction.
     """
- 
+
     def __init__(
         self,
-        utilisateur: Utilisateur,
-        critique: Critique,
-        aime: bool,
-        date_like: datetime,
+        user: User,
+        review: Review,
+        liked: bool,
+        like_date: datetime,
     ):
-        """Constructeur"""
-        self.utilisateur = utilisateur
-        self.critique = critique
-        self.aime = aime
-        self.date_like = date_like
- 
+        """Constructor"""
+        self.user = user
+        self.review = review
+        self.liked = liked
+        self.like_date = like_date
+
     def __str__(self) -> str:
-        """Retourne une représentation textuelle de la réaction.
- 
+        """Returns a human-readable string describing the reaction.
+
         Returns:
-            str : Une chaîne indiquant qui a réagi et comment.
+            str: A string showing who reacted and how.
         """
-        reaction = "aime" if self.aime else "n'aime pas"
-        return f"Like({self.utilisateur.pseudo} {reaction} la critique)"
+        reaction = "likes" if self.liked else "dislikes"
+        return f"Like({self.user.username} {reaction} the review)"
