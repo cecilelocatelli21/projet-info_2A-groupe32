@@ -40,8 +40,8 @@ CREATE TABLE utilisateur (
 -----------------------------------------------------
 DROP TABLE IF EXISTS abonnement CASCADE;
 CREATE TABLE abonnement (
-    id_follower         SERIAL PRIMARY KEY,
-    id_followed         INT UNIQUE NOT NULL,
+    id_follower         INT UNIQUE PRIMARY KEY,
+    id_followed         INT UNIQUE PRIMARY KEY,
     date_abonnement     DATE
 );
 
