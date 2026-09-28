@@ -1,11 +1,13 @@
-from business_object.utilisateur import Utilisateur
-from dao.librairie_dao import UtilisateurDao
+# uv run --project backend python backend/sandbox.py
+
+from business_object.user import User
+from dao.librairie_dao import UserDao
 from utils.env_variables import load_environment_variables
 
 load_environment_variables()   # Required to load the variables needed (env) to connect to the database 
 
-utilisateurdao = UtilisateurDao()
-utilisateurs = utilisateurdao.find_all()
+userdao = UserDao()
+users = userdao.find_all()
 
-for u in utilisateurs:
-    print(u.pseudo)
+for u in users:
+    print(u.username)

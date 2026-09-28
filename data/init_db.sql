@@ -13,72 +13,73 @@ CREATE TABLE player (
 );
 
 -----------------------------------------------------
--- Livre
+-- Book
 -----------------------------------------------------
-DROP TABLE IF EXISTS livre CASCADE;
-CREATE TABLE livre (
-    id_livre    SERIAL PRIMARY KEY,
-    id_work     VARCHAR(255) UNIQUE,
-    titre       VARCHAR(255) NOT NULL,
-    auteurs     VARCHAR(255) NOT NULL
+DROP TABLE IF EXISTS book CASCADE;
+CREATE TABLE book (
+    book_id    SERIAL PRIMARY KEY,
+    work_id     VARCHAR(255) UNIQUE,
+    title       VARCHAR(255) NOT NULL,
+    authors     VARCHAR(255) NOT NULL,
+    cover_url   VARCHAR(255)
 );
 
 -----------------------------------------------------
--- Utilisateur
+-- User
 -----------------------------------------------------
-DROP TABLE IF EXISTS utilisateur CASCADE;
-CREATE TABLE utilisateur (
-    id_user         SERIAL PRIMARY KEY,
-    pseudo          VARCHAR(30),
+DROP TABLE IF EXISTS user_table CASCADE;
+CREATE TABLE user_table (
+    user_id         SERIAL PRIMARY KEY,
+    username        VARCHAR(30),
     email           VARCHAR(255) NOT NULL,
     password_hash   VARCHAR(255) NOT NULL,
     bio             TEXT
 );
 
 -----------------------------------------------------
--- Utilisateur
+-- Follow
 -----------------------------------------------------
-DROP TABLE IF EXISTS abonnement CASCADE;
-CREATE TABLE abonnement (
-    id_follower         INT UNIQUE PRIMARY KEY,
-    id_followed         INT UNIQUE PRIMARY KEY,
-    date_abonnement     DATE
+DROP TABLE IF EXISTS follow CASCADE;
+CREATE TABLE follow (
+    follower_id         INT UNIQUE PRIMARY KEY,
+    followed_id         INT UNIQUE,
+    follow_date     DATE
 );
 
 -----------------------------------------------------
--- Lecture
+-- Reading
 -----------------------------------------------------
-DROP TABLE IF EXISTS lecture CASCADE;
-CREATE TABLE lecture (
-    id_lecture      SERIAL PRIMARY KEY,
-    id_user         INT UNIQUE REFERENCES utilisateur(id_user) NOT NULL,
-    id_livre        INT UNIQUE REFERENCES livre(id_livre) NOT NULL,
-    statut          VARCHAR(50) NOT NULL,
-    date_ajout      DATE,
-    date_lu         DATE,
-    note            INT
+DROP TABLE IF EXISTS reading CASCADE;
+CREATE TABLE reading (
+    reading_id      SERIAL PRIMARY KEY,
+    user_id         INT UNIQUE REFERENCES user_table(user_id) NOT NULL,
+    book_id         INT UNIQUE REFERENCES book(book_id) NOT NULL,
+    status          VARCHAR(50) NOT NULL,
+    date_added      DATE,
+    date_read       DATE,
+    rating          INT
 );
 
 -----------------------------------------------------
--- Critique
+-- Review
 -----------------------------------------------------
-DROP TABLE IF EXISTS critique CASCADE;
-CREATE TABLE critique (
-    id_critique         SERIAL PRIMARY KEY,
-    id_lecture          INT UNIQUE REFERENCES lecture(id_lecture) NOT NULL,
-    texte               TEXT NOT NULL,
-    date_publication    DATE
+DROP TABLE IF EXISTS review CASCADE;
+CREATE TABLE review (
+    review_id           SERIAL PRIMARY KEY,
+    reading_id          INT UNIQUE REFERENCES reading(reading_id) NOT NULL,
+    text                TEXT NOT NULL,
+    publication_date    DATE
 );
 
 -----------------------------------------------------
 -- Like
 -----------------------------------------------------
-DROP TABLE IF EXISTS like CASCADE;
-CREATE TABLE like_ (
-    id_user         INT UNIQUE REFERENCES utilisateur(id_user) NOT NULL,
-    id_critique     INT UNIQUE REFERENCES critique(id_critique) NOT NULL,
-    date_like       DATE,
-    aime            BOOLEAN NOT NULL
+DROP TABLE IF EXISTS like_table CASCADE;
+CREATE TABLE like_table (
+    user_id         INT UNIQUE REFERENCES user_table(user_id) NOT NULL,
+    review_id       INT UNIQUE REFERENCES review(review_id) NOT NULL,
+    like_date       DATE,
+    liked           BOOLEAN NOT NULL
 );
 
 
