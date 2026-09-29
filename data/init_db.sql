@@ -30,7 +30,7 @@ CREATE TABLE book (
 DROP TABLE IF EXISTS user_table CASCADE;
 CREATE TABLE user_table (
     user_id         SERIAL PRIMARY KEY,
-    username        VARCHAR(30),
+    username        VARCHAR(30) UNIQUE,
     email           VARCHAR(255) NOT NULL,
     password_hash   VARCHAR(255) NOT NULL,
     bio             TEXT

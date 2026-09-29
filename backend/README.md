@@ -77,6 +77,7 @@ The DAO unit tests use data from the `data/pop_db_test.sql` file.
 This data is loaded into a separate schema (project_test_dao) so as not to pollute the other data.
 
 - [ ] Lanch unit tests: `uv run --project backend pytest -v` 
+                        `uv run --project backend --extra dev pytest`
 
 It is also possible to generate test coverage using [Coverage](https://coverage.readthedocs.io/en/)
 
