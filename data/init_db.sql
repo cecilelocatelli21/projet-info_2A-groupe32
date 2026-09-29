@@ -41,9 +41,11 @@ CREATE TABLE user_table (
 -----------------------------------------------------
 DROP TABLE IF EXISTS follow CASCADE;
 CREATE TABLE follow (
-    follower_id         INT UNIQUE PRIMARY KEY,
-    followed_id         INT UNIQUE,
-    follow_date     DATE
+    follower_id     INT,
+    followed_id     INT,
+    follow_date     DATE,
+    FOREIGN KEY (follower_id) REFERENCES user_table(user_id),
+    FOREIGN KEY (followed_id) REFERENCES user_table(user_id)
 );
 
 -----------------------------------------------------
