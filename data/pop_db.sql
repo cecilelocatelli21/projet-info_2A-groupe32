@@ -33,6 +33,10 @@ VALUES
     ((SELECT user_id FROM user_table WHERE username = 'Paul'),
      (SELECT user_id FROM user_table WHERE username = 'Axel'),
      CURRENT_DATE),
+    
+    ((SELECT user_id FROM user_table WHERE username = 'Paul'),
+     (SELECT user_id FROM user_table WHERE username = 'Cécile'),
+     CURRENT_DATE),
 
     ((SELECT user_id FROM user_table WHERE username = 'Axel'),
      (SELECT user_id FROM user_table WHERE username = 'Anne-Camille'),

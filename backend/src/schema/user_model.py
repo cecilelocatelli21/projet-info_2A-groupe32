@@ -32,3 +32,9 @@ class UserReadModel(BaseModel):
 class UserLoginModel(BaseModel):
     username: str
     password: str
+
+# Public view of a user: never exposes email, password or token
+class UserPublicModel(BaseModel):
+    user_id: int
+    username: str
+    bio: str | None
