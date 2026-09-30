@@ -19,3 +19,29 @@ INSERT INTO user_table(username, email, password_hash) VALUES
 ('Axel', 'axel.leclercq@eleve.ensai.fr', '1234'),
 ('Anne-Camille', 'anne-camille.tampe@eleve.ensai.fr', '1234'),
 ('Arnaud', 'arnaud.bichon@eleve.ensai.fr', '1234');
+
+INSERT INTO follow (follower_id, followed_id, follow_date)
+VALUES
+    ((SELECT user_id FROM user_table WHERE username = 'Moussa'),
+     (SELECT user_id FROM user_table WHERE username = 'Cécile'),
+     CURRENT_DATE),
+
+    ((SELECT user_id FROM user_table WHERE username = 'Cécile'),
+     (SELECT user_id FROM user_table WHERE username = 'Paul'),
+     CURRENT_DATE),
+
+    ((SELECT user_id FROM user_table WHERE username = 'Paul'),
+     (SELECT user_id FROM user_table WHERE username = 'Axel'),
+     CURRENT_DATE),
+
+    ((SELECT user_id FROM user_table WHERE username = 'Axel'),
+     (SELECT user_id FROM user_table WHERE username = 'Anne-Camille'),
+     CURRENT_DATE),
+
+    ((SELECT user_id FROM user_table WHERE username = 'Anne-Camille'),
+     (SELECT user_id FROM user_table WHERE username = 'Arnaud'),
+     CURRENT_DATE),
+
+    ((SELECT user_id FROM user_table WHERE username = 'Arnaud'),
+     (SELECT user_id FROM user_table WHERE username = 'Moussa'),
+     CURRENT_DATE);

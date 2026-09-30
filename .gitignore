@@ -166,3 +166,16 @@ doc/report/*.pdf
 doc/report/*.html
 doc/report/report_files/
 doc/report/.quarto/
+
+#######.env
+POSTGRES_HOST=postgresql-cnpg-208358-rw.user-pfourcade
+POSTGRES_PORT=5432
+POSTGRES_DATABASE=defaultdb
+POSTGRES_USER=user-pfourcade
+POSTGRES_PASSWORD=38wrexq0r4d2ozdw9pxq
+POSTGRES_SCHEMA=project
+
+UVICORN_HOST=0.0.0.0
+UVICORN_PORT=5000
+BACKEND_URL=http://localhost:5000
+BACKEND_TIMEOUT=5
