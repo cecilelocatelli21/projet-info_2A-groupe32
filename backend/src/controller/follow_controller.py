@@ -38,3 +38,24 @@ async def get_following(
         return follow_service.get_following(user_id)
     except NotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
+
+
+@router.get("/users/{user_id}/followers", response_model=list[UserPublicModel], tags=["Follow"])
+async def get_followers(
+    user_id: int,
+    follow_service=Depends(get_follow_service),
+):
+    """List the users who follow a given user.
+    Args:
+        user_id (int): id of the user whose followers are requested
+        follow_service (FollowService): The service used to interact with follow data
+    Returns:
+        list[UserPublicModel]: the followers, sorted by username (empty if none)
+    Raises:
+        HTTPException: 404 error if the user is not found.
+    """
+    logger.info("List the followers of a user")
+    try:
+        return follow_service.get_followers(user_id)
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e

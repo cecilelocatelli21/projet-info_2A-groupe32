@@ -22,3 +22,18 @@ class FollowService:
             raise NotFoundError(f"User (id={user_id}) not found.")
 
         return FollowDao().find_following(user_id)
+    
+    @log
+    def get_followers(self, user_id: int) -> list[User]:
+        """Retrieves the users who follow a given user.
+        Args:
+            user_id (int): id of the user whose followers are requested
+        Returns:
+            list[User] following user_id (empty list if nobody follows them)
+        Raises:
+            NotFoundError: if user_id does not match any user
+        """
+        if UserService().find_by_id(user_id) is None:
+            raise NotFoundError(f"User (id={user_id}) not found.")
+
+        return FollowDao().find_followers(user_id)

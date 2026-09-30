@@ -50,3 +50,46 @@ class FollowDao(metaclass=Singleton):
                 following_list.append(user)
 
         return following_list
+
+
+    @log
+    def find_followers(self, user_id: int) -> list[User]:
+        """List the users who follow a given user.
+        Args:
+            user_id (int): id of the followed user
+        Returns:
+            list[User] following user_id, sorted by username
+            (empty list if nobody follows user_id)
+        """
+
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "SELECT u.*                                          "
+                        "  FROM follow f                                     "
+                        "  JOIN user_table u ON u.user_id = f.follower_id    "
+                        "  WHERE f.followed_id = %(user_id)s                 "
+                        "  ORDER BY u.username;                              ",
+                        {"user_id": user_id},
+                    )
+                    res = cursor.fetchall()
+        except Exception as e:
+            logger.error(e)
+            raise
+
+        followers_list = []
+
+        if res:
+            for row in res:
+                user = User(
+                    user_id=row["user_id"],
+                    username=row["username"],
+                    email=row["email"],
+                    password_hash=row["password_hash"],
+                    bio=row["bio"],
+                )
+
+                followers_list.append(user)
+
+        return followers_list
