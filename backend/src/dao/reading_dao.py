@@ -79,8 +79,8 @@ class ReadingDao(metaclass=Singleton):
             book = BookDao().find_by_id(res["book_id"])
             reading = Reading(
                     reading_id=res["reading_id"],
-                    user_id=res["user_id"],
-                    book_id=res["book_id"],
+                    user=user,
+                    book=book,
                     status=res["status"],
                     date_added=res["date_added"],
                     date_read=res["date_read"],
@@ -137,15 +137,17 @@ class ReadingDao(metaclass=Singleton):
             return reading_list_user
 
     @log
-    def find_by_user_and_book(self, user_id: int, book_id: int) -> Reading | None
+    def find_by_user_and_book(self, user_id: int, book_id: int) -> Reading | None:
 
         """ Find a reading by user_id and book_id.
         Arg:
             user_id : int
-                id permit to indentify the reading.
+                id permit to indentify the user.
+            book_id: int
+                id permit to identify the book
         Returns:
-            list[Reading] : list of reading of user if user_id exist in the table reading and take care of its status
-            None:   if userd_id havn't reading yet i.e not exist in reading
+            Reading : reading of user if user_id and book_id exist in the table reading.
+            None:   otherwise
 
         """
 
@@ -154,32 +156,31 @@ class ReadingDao(metaclass=Singleton):
                 with connection.cursor() as cursor:
                     cursor.execute(
                         "SELECT * FROM reading       "
-                        "WHERE user_id == %(user_id)s AND status== %(status)s",
+                        "WHERE user_id == %(user_id)s AND book_id== %(book_id)s",
                         {
                             "user_id": user_id,
-                            "status": status
+                            "book_id": book_id
                         },
                     )
-                    res = cursor.fetchall()
+                    res = cursor.fetchone() #it's expected one line because user_id and book_id are unique
         except Exception as e:
             logger.error(e)
             raise
-        reading_list_user = None
+        reading = None
         if res:
-            reading_list_user = []
-            for reading in res:
-                reading = Reading(
-                        reading_id=res["reading_id"],
-                        user_id=res["user_id"],
-                        book_id=res["book_id"],
-                        status=res["status"],
-                        date_added=res["date_added"],
-                        date_read=res["date_read"],
-                        rating=res["rating"]
-                )
-                reading_list_user.append(reading)
+            user = UserDao().find_by_id(res["user_id"])
+            book = BookDao().find_by_id(res["book_id"]) 
+            reading = Reading(
+                    reading_id=res["reading_id"],
+                    user=user,
+                    book=book,
+                    status=res["status"],
+                    date_added=res["date_added"],
+                    date_read=res["date_read"],
+                    rating=res["rating"]
+            )
 
-        return reading_list_user
+        return reading
 
 
 
@@ -190,13 +191,105 @@ class ReadingDao(metaclass=Singleton):
 
         
     def update(self, reading: Reading) -> bool             # status, date_read, rating
-    def delete(self, reading_id: int) -> bool
-    def average_rating_by_book(self, book_id: int) -> float | None   # pour Book
-    def count_by_user(self, user_id: int) -> int                     # pour le profil
+
+
+    @log
+    def delete(self, reading_id: int) -> bool:
+        """ Delecte reading by its id
+
+        Arg:
+            reading_id :int
+
+        return
+            bool : True if it successful and False otherwise
+        """
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "DELETE * FROM reading       "
+                        "WHERE reading_id == %(reading_id)s",
+                        {
+                            "reading_id": reading_id
+                        },
+                    )
+                    res = cursor.fetchone()
+        except Exception as e:
+            logger.error(e)
+            raise
+        reading = False
+        if res:
+            reading = True
+        return reading
+
+
+    @log
+    def average_rating_by_book(self, book_id: int) -> float | None:
+        """ Average rating by book
+
+        Arg:
+            book_id : int
+                id of book
+        Returns:
+            float: the average ration of book
+            None: if book not found in table reading
+        """
+
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "SELECT AVG(rating) AS average_rating FROM reading       "
+                        "WHERE book_id == %(book_id)s AND status IN ('read', 'abandoned')"
+                        "GROUP BY book_id",
+                        {
+                            "book_id": book_id
+                        },
+                    )
+                    res = cursor.fetchone()
+        except Exception as e:
+            logger.error(e)
+            raise
+        avg_rating = None
+        if res:
+            avg_rating=res["average_rating"]
+        return avg_rating
+
+    @log
+    def count_by_user(self, user_id: int) -> int | None :
+        """ Average rating by book
+
+        Arg:
+            book_id : int
+                id of book
+        Returns:
+            int: the number of book in the library of user_id
+            None: if user_id not found in table reading
+        """
+
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "SELECT COUNT(*) AS nb_book FROM reading       "
+                        "WHERE user_id == %(user_id)s "
+                        "GROUP BY book_id",
+                        {
+                            "book_id": book_id
+                        },
+                    )
+                    res = cursor.fetchone()
+        except Exception as e:
+            logger.error(e)
+            raise
+        nbr_books = None
+        if res:
+            nbr_books=res["nb_book"]
+        return nbr_books
+
+    @log
     def find_by_users(self, user_ids: list[int],
-                      min_rating: int | None = None) -> list[Reading] # pour les recommandations
-    def _row_to_reading(self, row: dict) -> Reading        # privée
-
-
-
-    
+                      min_rating: int | None = None) -> list[Reading]: # pour les recommandations
+        pass
+    def _row_to_reading(self, row: dict) -> Reading:        # privée
+        pass

@@ -1,7 +1,7 @@
 from datetime import date
 
-from business_object.user import User
 from business_object.book import Book
+from business_object.user import User
 
 
 class Reading:
@@ -27,7 +27,7 @@ class Reading:
         user: User,
         book: Book,
         status: str,
-        date_added: date,
+        date_added:date,
         date_read: date = None,
         rating: int = None,
         reading_id: int = None,
@@ -37,7 +37,7 @@ class Reading:
         self.user = user
         self.book = book
         self.status = status
-        self.date_added = date_added
+        self.date_added = date.today(),
         self.date_read = date_read
         self.rating = rating
 
