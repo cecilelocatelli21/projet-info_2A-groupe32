@@ -183,15 +183,24 @@ class ReadingDao(metaclass=Singleton):
         return reading
 
 
+    @log
+    def update(self, reading: Reading) -> bool:             # status, date_read, rating
+        """ Update a reading
 
+        Arg: 
+            reading : Reading
 
+        Return:
+            bool: 
+                True if it's succesfull, false otherwise
+        """
 
+        try:
+            with DBConnection.connection as connection :
+                with conncetion.cursor as cursor :
+                    
 
-
-
-        
-    def update(self, reading: Reading) -> bool             # status, date_read, rating
-
+        except Exception e
 
     @log
     def delete(self, reading_id: int) -> bool:
