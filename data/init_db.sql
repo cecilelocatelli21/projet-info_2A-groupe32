@@ -46,7 +46,7 @@ CREATE TABLE follow (
     followed_id     INT NOT NULL REFERENCES user_table(user_id) ON DELETE CASCADE,
     follow_date     DATE,
     PRIMARY KEY (follower_id, followed_id),
-    CHECK (followed_id <> followed_id)
+    CHECK (follower_id <> followed_id)
 );
 
 -----------------------------------------------------

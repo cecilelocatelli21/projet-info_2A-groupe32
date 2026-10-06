@@ -31,7 +31,7 @@ class BookDao(metaclass=Singleton):
                             "title": book.title,
                             "authors": book.authors,
                             "cover_url": book.cover_url,
-                        },
+                        }
                     )
                     res = cursor.fetchone()
         except Exception as e:
@@ -40,7 +40,7 @@ class BookDao(metaclass=Singleton):
 
         created = False
         if res:
-            book.book_id = res["book_id"]
+            book.book_id = res["book_id"]  # Add a book_id to the book business object
             created = True
 
         return created
@@ -56,7 +56,7 @@ class BookDao(metaclass=Singleton):
 
     @log
     def find_by_work_id(self, work_id: str) -> Book:
-        """Find a book by their id.
+        """Find a book by their id in OpenLibrary database.
         Args:
             work_id (str): The OpenLibrary ID of the book to find
         Returns:
@@ -69,7 +69,7 @@ class BookDao(metaclass=Singleton):
                         "SELECT *                            "
                         "  FROM book                       "
                         " WHERE work_id = %(work_id)s;   ",
-                        {"work_id": work_id},
+                        {"work_id": work_id}
                     )
                     row = cursor.fetchone()
         except Exception as e:
@@ -81,6 +81,30 @@ class BookDao(metaclass=Singleton):
             book = self._row_to_book(row)
 
         return book
+
+    @log
+    def find_by_id(self, book_id: int) -> Book:
+        """Find a book by its id in our local database.
+        Args:
+            book_id (int): The ID used in our local database for the book to find
+        Returns:
+            Book matching the given id
+        """
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "SELECT *"
+                        "  FROM book"
+                        "  WHERE book_id = %(book_id)s;",
+                        {"book_id": book_id}
+                    )
+                    row = cursor.fetchone()
+        except Exception as e:
+            logger.error(e)
+            raise
+
+        return self._row_to_book(row)
 
     @log
     def find_all(self) -> list[Book]:

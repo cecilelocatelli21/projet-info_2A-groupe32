@@ -10,6 +10,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from controller import (
+    book_controller,
     follow_controller,
     game_controller,
     login_controller,
@@ -51,6 +52,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
+app.include_router(book_controller.router, prefix="/book", tags=["Books"])
 app.include_router(user_controller.router, prefix="/user", tags=["Users"])
 app.include_router(player_controller.router, prefix="/player", tags=["Players"])
 app.include_router(login_controller.router, prefix="/login", tags=["Login"])
