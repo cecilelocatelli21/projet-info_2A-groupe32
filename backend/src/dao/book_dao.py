@@ -31,7 +31,7 @@ class BookDao(metaclass=Singleton):
                             "title": book.title,
                             "authors": book.authors,
                             "cover_url": book.cover_url,
-                        },
+                        }
                     )
                     res = cursor.fetchone()
         except Exception as e:
@@ -69,7 +69,7 @@ class BookDao(metaclass=Singleton):
                         "SELECT *                            "
                         "  FROM book                       "
                         " WHERE work_id = %(work_id)s;   ",
-                        {"work_id": work_id},
+                        {"work_id": work_id}
                     )
                     row = cursor.fetchone()
         except Exception as e:
@@ -84,9 +84,9 @@ class BookDao(metaclass=Singleton):
 
     @log
     def find_by_id(self, book_id: int) -> Book:
-        """Find a book by their id in our local database.
+        """Find a book by its id in our local database.
         Args:
-            book_id (int): The ID used in our local database of the book to find
+            book_id (int): The ID used in our local database for the book to find
         Returns:
             Book matching the given id
         """

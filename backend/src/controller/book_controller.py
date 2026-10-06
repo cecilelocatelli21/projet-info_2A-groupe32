@@ -46,7 +46,7 @@ async def find_by_work_id(work_id: str, book_service=Depends(get_book_service)):
     return book
 
 
-@router.get("/{book_id}", response_model=BookModel, tags=["Books"])
+@router.get("/id/{book_id}", response_model=BookModel, tags=["Books"])
 async def find_by_id(book_id: int, book_service=Depends(get_book_service)):
     """Find a book by its ID used in our local database.
     Args:
