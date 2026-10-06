@@ -4,6 +4,11 @@ from business_object.reading import Reading
 from business_object.user import User
 from dao.reading_dao import ReadingDao
 from service.book_service import BookService
+from utils.exceptions import (
+    ConflictError,
+    ForbiddenError,
+    NotFoundError,
+)
 from utils.log_utils import get_logger, log
 
 logger = get_logger(__name__)
@@ -40,7 +45,7 @@ class ReadingService:
                     "Book not found with work_id=%s",
                     work_id
                 )
-                raise ValueError(
+                raise NotFoundError(
                     f"Book with work_id '{work_id}' not found"
                 )
 
@@ -56,7 +61,7 @@ class ReadingService:
                     user.user_id,
                     book.book_id
                 )
-                raise ValueError(
+                raise ConflictError(
                     "This book is already in the user's library"
                 )
 
@@ -153,7 +158,7 @@ class ReadingService:
             Reading: The updated reading.
 
         Raises:
-            ValueError: If the reading does not exist, if the user
+            NotFoundError: If the reading does not exist, if the user
                 does not own it, or if the update violates a
                 business rule.
         """
@@ -166,7 +171,7 @@ class ReadingService:
                     "Reading not found: reading_id=%s",
                     reading_id
                 )
-                raise ValueError(
+                raise NotFoundError(
                     f"Reading with id '{reading_id}' not found"
                 )
 
@@ -179,7 +184,7 @@ class ReadingService:
                     reading_id,
                     reading.user.user_id
                 )
-                raise ValueError(
+                raise ForbiddenError(
                     "You are not allowed to update this reading"
                 )
 
@@ -266,7 +271,7 @@ class ReadingService:
                     "Reading not found: reading_id=%s",
                     reading_id
                 )
-                raise ValueError(
+                raise NotFoundError(
                     f"Reading with id '{reading_id}' not found"
                 )
 
@@ -279,7 +284,7 @@ class ReadingService:
                     reading_id,
                     reading.user.user_id
                 )
-                raise ValueError(
+                raise ForbiddenError(
                     "You are not allowed to delete this reading"
                 )
 

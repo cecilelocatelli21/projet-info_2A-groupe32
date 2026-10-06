@@ -12,7 +12,7 @@ ReadingStatus = Literal[
 ]
 
 
-class ReadingModel(BaseModel):
+class ReadingCreateModel(BaseModel):
     work_id: str
     status: ReadingStatus = "to read"
 

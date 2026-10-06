@@ -65,7 +65,7 @@ async def add_reading(
     )
 
     try:
-        reading = reading_service.add_book(
+        reading = reading_service.create(
             user=current_user,
             work_id=reading_data.work_id,
             status=reading_data.status,
@@ -74,13 +74,13 @@ async def add_reading(
         return _to_model(reading)
 
     except NotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
 
     except ConflictError as e:
-        raise HTTPException(status_code=409, detail=str(e))
+        raise HTTPException(status_code=409, detail=str(e)) from e
 
-    except ConnectionError as e:
-        raise HTTPException(status_code=503, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get(
@@ -167,13 +167,13 @@ async def update_reading(
         return _to_model(reading)
 
     except NotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
 
     except ForbiddenError as e:
-        raise HTTPException(status_code=403, detail=str(e))
+        raise HTTPException(status_code=403, detail=str(e)) from e
 
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.delete(
@@ -202,7 +202,7 @@ async def delete_reading(
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     except NotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
 
     except ForbiddenError as e:
-        raise HTTPException(status_code=403, detail=str(e))
+        raise HTTPException(status_code=403, detail=str(e)) from e
