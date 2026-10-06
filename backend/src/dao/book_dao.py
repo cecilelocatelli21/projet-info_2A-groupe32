@@ -56,7 +56,7 @@ class BookDao(metaclass=Singleton):
 
     @log
     def find_by_work_id(self, work_id: str) -> Book:
-        """Find a book by their id.
+        """Find a book by their id in OpenLibrary database.
         Args:
             work_id (str): The OpenLibrary ID of the book to find
         Returns:
@@ -81,6 +81,30 @@ class BookDao(metaclass=Singleton):
             book = self._row_to_book(row)
 
         return book
+
+    @log
+    def find_by_id(self, book_id: int) -> Book:
+        """Find a book by their id in our local database.
+        Args:
+            book_id (int): The ID used in our local database of the book to find
+        Returns:
+            Book matching the given id
+        """
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "SELECT *"
+                        "  FROM book"
+                        " WHERE book_id = %(book_id)s;",
+                        {"book_id": book_id},
+                    )
+                    row = cursor.fetchone()
+        except Exception as e:
+            logger.error(e)
+            raise
+
+        return self._row_to_book(row)
 
     @log
     def find_all(self) -> list[Book]:
