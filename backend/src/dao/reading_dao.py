@@ -1,9 +1,11 @@
 from business_object.reading import Reading
-from dao.user_dao import UserDao
 from dao.book_dao import BookDao
 from dao.db_connection import DBConnection
+from dao.user_dao import UserDao
 from utils.log_utils import get_logger, log
 from utils.singleton import Singleton
+
+logger = get_logger(__name__)
 
 
 class ReadingDao(metaclass=Singleton):
@@ -27,12 +29,12 @@ class ReadingDao(metaclass=Singleton):
                         "(%(user_id)s, %(book_id)s, %(date_added)s, %(date_read)s, %(rating)s) "
                         "RETURNING reading_id;",
                         {
-                            "user_id": user_id,
-                            "book_id": book_id,
-                            "status": status,
-                            "date_added": date_added,
-                            "date_read": date_read,
-                            "rating":rating
+                            "user_id": reading.user_id,
+                            "book_id": reading.book_id,
+                            "status": reading.status,
+                            "date_added": reading.date_added,
+                            "date_read": reading.date_read,
+                            "rating":reading.rating
                         },
                     )
                     res = cursor.fetchone()
@@ -42,7 +44,7 @@ class ReadingDao(metaclass=Singleton):
 
         created = False
         if res:
-            book.reading_id = res["reading_id"]
+            reading.reading_id = res["reading_id"]
             created = True
 
         return created
@@ -115,7 +117,7 @@ class ReadingDao(metaclass=Singleton):
                         )
                         res = cursor.fetchall()
             except Exception as e:
-                logger.error(e)
+                log.error(e)
                 raise
             reading_list_user = None
             if res:
@@ -187,20 +189,34 @@ class ReadingDao(metaclass=Singleton):
     def update(self, reading: Reading) -> bool:             # status, date_read, rating
         """ Update a reading
 
-        Arg: 
+        Arg :
             reading : Reading
-
-        Return:
-            bool: 
+        Return :
+            bool :
                 True if it's succesfull, false otherwise
         """
 
         try:
-            with DBConnection.connection as connection :
-                with conncetion.cursor as cursor :
-                    
+            with DBConnection.connection as connection:
+                with connection.cursor as cursor:
+                    cursor.excute(
+                        "UPDATE INTO Reading                                        "
+                        "status = %(status)s,                                                               "
+                        "date_read = %(date_read)s,                                         "
+                        "rating = %(rating)s)                                                       ",
+                        "WHERE reading_id = %(reading_id)s;                                           ",
+                        {
+                            "status" : reading.status,
+                            "date_read": reading.date_read,
+                            "rating": reading.rating
+                        },
+                    )
+                    nb_row = cursor.rowcount
 
-        except Exception e
+        except Exception as e:
+            logger.error(e)
+            raise
+        return nb_row==1
 
     @log
     def delete(self, reading_id: int) -> bool:
@@ -266,11 +282,11 @@ class ReadingDao(metaclass=Singleton):
 
     @log
     def count_by_user(self, user_id: int) -> int | None :
-        """ Average rating by book
+        """ Count number of books in library by user_id
 
         Arg:
-            book_id : int
-                id of book
+            user_id : int
+                id of user
         Returns:
             int: the number of book in the library of user_id
             None: if user_id not found in table reading
@@ -282,9 +298,9 @@ class ReadingDao(metaclass=Singleton):
                     cursor.execute(
                         "SELECT COUNT(*) AS nb_book FROM reading       "
                         "WHERE user_id == %(user_id)s "
-                        "GROUP BY book_id",
+                        "GROUP BY user_id",
                         {
-                            "book_id": book_id
+                            "user_id": user_id
                         },
                     )
                     res = cursor.fetchone()

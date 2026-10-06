@@ -2,15 +2,11 @@ from datetime import date
 
 from business_object.reading import Reading
 from business_object.user import User
-
 from dao.reading_dao import ReadingDao
 from service.book_service import BookService
-
 from utils.log_utils import get_logger, log
 
-
 logger = get_logger(__name__)
-
 
 class ReadingService:
     """Class containing business logic for Reading."""
