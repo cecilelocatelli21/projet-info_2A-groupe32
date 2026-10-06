@@ -13,11 +13,11 @@ logger = get_logger(__name__)
 
 
 def get_book_service():
-    """Dependency Injection provider for UserService."""
+    """Dependency Injection provider for BookService."""
     return BookService()
 
 
-@router.get("/", response_model=list[BookModel], tags=["Book"])
+@router.get("/", response_model=list[BookModel], tags=["Books"])
 async def find_all(book_service=Depends(get_book_service)):
     """List all books.
     Returns:
@@ -28,7 +28,7 @@ async def find_all(book_service=Depends(get_book_service)):
     return books_list
 
 
-@router.get("/{work_id}", response_model=BookModel, tags=["Book"])
+@router.get("/{work_id}", response_model=BookModel, tags=["Books"])
 async def find_by_work_id(work_id: str, book_service=Depends(get_book_service)):
     """Find a book by its ID used in OpenLibrary.
     Args:
@@ -42,11 +42,11 @@ async def find_by_work_id(work_id: str, book_service=Depends(get_book_service)):
     logger.info("Find a book by Work id (OpenLibrary data)")
     book = book_service.find_by_work_id(work_id)
     if not book:
-        raise HTTPException(status_code=404, detail="Book (id={work_id}) not found.")
+        raise HTTPException(status_code=404, detail="Book (work_id={work_id}) not found.")
     return book
 
 
-@router.get("/{book_id}", response_model=BookModel, tags=["Book"])
+@router.get("/{book_id}", response_model=BookModel, tags=["Books"])
 async def find_by_id(book_id: int, book_service=Depends(get_book_service)):
     """Find a book by its ID used in our local database.
     Args:
@@ -57,8 +57,8 @@ async def find_by_id(book_id: int, book_service=Depends(get_book_service)):
     Raises:
         HTTPException: 404 error if the book is not found
     """
-    logger.info("Find a book by Work id (OpenLibrary data)")
+    logger.info("Find a book by Book id (local database data)")
     book = book_service.find_by_id(book_id)
     if not book:
-        raise HTTPException(status_code=404, detail="Book (id={book_id}) not found.")
+        raise HTTPException(status_code=404, detail="Book (book_id={book_id}) not found.")
     return book

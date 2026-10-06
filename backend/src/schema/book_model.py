@@ -1,6 +1,4 @@
-import os
-
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel
 
 
 class BookModel(BaseModel):
@@ -9,11 +7,11 @@ class BookModel(BaseModel):
     It defines the JSON structure used to exchange player information,
     ensuring data consistency and validation during API requests and responses."""
 
-    book_id: int | None = None
-    work_id: str
-    title: str
-    authors: str
-    cover_url: str
+    book_id: int | None
+    work_id: str | None
+    title: str | None
+    authors: str | None
+    cover_url: str | None
 
     # @field_validator("password")
     # @classmethod

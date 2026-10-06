@@ -40,7 +40,7 @@ class BookDao(metaclass=Singleton):
 
         created = False
         if res:
-            book.book_id = res["book_id"]
+            book.book_id = res["book_id"]  # Add a book_id to the book business object
             created = True
 
         return created
@@ -96,8 +96,8 @@ class BookDao(metaclass=Singleton):
                     cursor.execute(
                         "SELECT *"
                         "  FROM book"
-                        " WHERE book_id = %(book_id)s;",
-                        {"book_id": book_id},
+                        "  WHERE book_id = %(book_id)s;",
+                        {"book_id": book_id}
                     )
                     row = cursor.fetchone()
         except Exception as e:
