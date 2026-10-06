@@ -1,6 +1,7 @@
 import secrets
 
 from business_object.book import Book
+from client.openlibrary_client import OpenLibraryClient
 from dao.book_dao import BookDao
 from utils.log_utils import log
 from utils.security import hash_password
@@ -10,27 +11,26 @@ class BookService:
     """Service that handles business logic related to book (creation, search, etc.)."""
 
     @log
-    def get_or_create(self, work_id, title, authors, cover_url) -> Book | None:
-        """Creates a new book in the system if it doesn't exist or get the book if it does exist.
+    def get_or_create(self, work_id) -> Book | None:
+        """Get the Book if it exists in our database,
+        or create the Book if the work_id is a valid reference in OL,
+        if not reurn None.
         Args:
             work_id (str)
-            title (str)
-            authors (str)
-            cover_url (str)
         Returns:
             Book object created or None if creation failed.
         """
-
-        if (BookDao().find_by_work_id(work_id=work_id) is None):
-            new_book = Book(
-                work_id=work_id,
-                title=title,
-                authors=authors,
-                cover_url=cover_url
-            )
-            return BookDao().find_by_work_id(work_id) if BookDao().create(new_book) else None # we create a new book if it does'nt already exist in the database
-        return BookDao().find_by_work_id(work_id) # we get the book if it already does exist in the database
-
+        # The book already exists in our database
+        book = BookDao().find_by_work_id(work_id=work_id)
+        if book is not None:
+            return book
+        # The book (by its work_id) doesn't exist in OpenLibrary
+        book = OpenLibraryClient().get_work(work_id)
+        if book is None:
+            return None
+        # The book exists in OL, we create it in our database
+        else:
+            return book if BookDao().create(book) else None
 
     @log
     def find_all(self) -> list[Book]:
