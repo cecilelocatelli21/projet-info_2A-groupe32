@@ -3,7 +3,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from schema.book_model import BookModel, BookReadModel
+from schema.book_model import BookModel
 from service.book_service import BookService
 from utils.log_utils import get_logger
 
@@ -12,35 +12,53 @@ router = APIRouter()
 logger = get_logger(__name__)
 
 
-def get_user_service():
+def get_book_service():
     """Dependency Injection provider for UserService."""
-    return UserService()
+    return BookService()
 
 
-@router.get("/", response_model=list[UserReadModel], tags=["Users"])
-async def find_all_users(user_service=Depends(get_user_service)):
-    """List all users.
+@router.get("/", response_model=list[BookModel], tags=["Book"])
+async def find_all(book_service=Depends(get_book_service)):
+    """List all books.
     Returns:
-        list[UserReadModel]: A list of all registered users.
+        list[BookModel]: A list of all registered books.
     """
-    logger.info("List all users")
-    users_list = user_service.find_all()
-    return users_list
+    logger.info("List all books")
+    books_list = book_service.find_all()
+    return books_list
 
 
-@router.get("/{user_id}", response_model=UserReadModel, tags=["Users"])
-async def user_by_id(user_id: int, user_service=Depends(get_user_service)):
-    """Find a user by their unique ID.
+@router.get("/{work_id}", response_model=BookModel, tags=["Book"])
+async def find_by_work_id(work_id: str, book_service=Depends(get_book_service)):
+    """Find a book by its ID used in OpenLibrary.
     Args:
-        user_id (int)
-        user_service (UserService): The service used to interact with user data
+        work_id (str)
+        book_service (BookService): The service used to interact with user data
     Returns:
-        UserReadModel: The user data if found
+        BookModel: The book data if found
     Raises:
-        HTTPException: 404 error if the user is not found
+        HTTPException: 404 error if the book is not found
     """
-    logger.info("Find a user by id")
-    user = user_service.find_by_id(user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User (id={user_id}) not found.")
-    return user
+    logger.info("Find a book by Work id (OpenLibrary data)")
+    book = book_service.find_by_work_id(work_id)
+    if not book:
+        raise HTTPException(status_code=404, detail="Book (id={work_id}) not found.")
+    return book
+
+
+@router.get("/{book_id}", response_model=BookModel, tags=["Book"])
+async def find_by_id(book_id: int, book_service=Depends(get_book_service)):
+    """Find a book by its ID used in our local database.
+    Args:
+        book_id (int)
+        book_service (BookService): The service used to interact with user data
+    Returns:
+        BookModel: The book data if found
+    Raises:
+        HTTPException: 404 error if the book is not found
+    """
+    logger.info("Find a book by Work id (OpenLibrary data)")
+    book = book_service.find_by_id(book_id)
+    if not book:
+        raise HTTPException(status_code=404, detail="Book (id={book_id}) not found.")
+    return book

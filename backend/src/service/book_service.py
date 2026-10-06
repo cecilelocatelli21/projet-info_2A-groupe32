@@ -10,25 +10,23 @@ class BookService:
     """Service that handles business logic related to book (creation, search, etc.)."""
 
     @log
-    def get_or_create(self, work_id, title, authors, cover_url) -> Book | None:
+    def get_or_create(self, work_id) -> Book | None:
         """Creates a new book in the system if it doesn't exist or get the book if it does exist.
         Args:
             work_id (str)
-            title (str)
-            authors (str)
-            cover_url (str)
         Returns:
             Book object created or None if creation failed.
         """
 
         if (BookDao().find_by_work_id(work_id=work_id) is None):
+            # AJOUTER UNE FONCTION QUI VA CHERCHER LES DONNEES DANS OPENLIBRARY
             new_book = Book(
                 work_id=work_id,
                 title=title,
                 authors=authors,
                 cover_url=cover_url
             )
-            return BookDao().find_by_work_id(work_id) if BookDao().create(new_book) else None # we create a new book if it does'nt already exist in the database
+            return BookDao().find_by_work_id(work_id) if BookDao().create(new_book) else None # we create a new book if it doesn't already exist in the database
         return BookDao().find_by_work_id(work_id) # we get the book if it already does exist in the database
 
 
