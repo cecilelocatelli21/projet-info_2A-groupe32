@@ -15,6 +15,7 @@ class BookService:
         """Get the Book if it exists in our database,
         or create the Book if the work_id is a valid reference in OL,
         if not reurn None.
+
         Args:
             work_id (str)
         Returns:
@@ -31,6 +32,7 @@ class BookService:
         # The book exists in OL, we create it in our database
         else:
             return book if BookDao().create(book) else None
+
 
     @log
     def find_all(self) -> list[Book]:
