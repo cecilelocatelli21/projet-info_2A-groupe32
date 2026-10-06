@@ -38,16 +38,28 @@ class BookService:
         return BookDao().find_all()
 
     @log
-    def find_by_work_id(self, work_id: int) -> Book | None:
+    def find_by_work_id(self, work_id: str) -> Book | None:
         """Finds a specific book by their unique work_id.
         work_id is the identifier from OpenLibrary we use to store books into our database
 
         Args:
-            work_id (int)
+            work_id (str)
         Returns:
             Book object if found, otherwise None.
         """
         return BookDao().find_by_work_id(work_id)
+
+    @log
+    def find_by_id(self, book_id: int) -> Book | None:
+        """Finds a specific book by their book_id .
+        book_id is the internal ID we use to store books into our database
+
+        Args:
+            book_id (int)
+        Returns:
+            Book object if found, otherwise None.
+        """
+        return BookDao().find_by_id(book_id)
 
     # @log
     # def update(self, player) -> Player:
