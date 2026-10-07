@@ -31,12 +31,39 @@ class OpenLibraryClient(metaclass=Singleton):
             raw_json = r.json()
             # print(json.dumps(raw_json, indent=2))  # Pretty print
 
+        if "error" in raw_json:
+            return None
+
         title = raw_json["title"]
-        author_key = raw_json["author"["key"]]
-        author = self._get_author_name(author_key=author_key)
-        print(title)
-        print(author_key)
-        print(author)
+
+        authors_in_work = raw_json["authors"]
+        author_key = authors_in_work[0]["author"]["key"].split("/")[2]
+        authors = self._get_author_name(author_key=author_key)
+
+        #cover_in_work = raw_json["covers"]
+        cover_url = "https://covers.openlibrary.org/b/ID/" + str(raw_json["covers"][-1]) + "-L.jpg"
+
+        book = Book(work_id, title, authors, cover_url)
+        #print(book.work_id + " " + book.title + " " + book.authors + " " +  book.cover_url)
+        return book
+
+    @log
+    def _get_author_name(self, author_key: str) -> str:
+        """get the author name from the author key obtained in OpenLibrary
+    Args:
+        author_key (str)
+    Returns:
+        author_name (str): The name of the author whose author_key is the key
+        """
+
+        r = requests.get(url= f"{self.BASE_URL}/authors/{author_key}.json")
+        if r.status_code != 200:
+            raise Exception(f"Cannot reach (HTTP {r.status_code}): {r.text}")
+        else:
+            raw_json = r.json()
+
+        author_name = raw_json["personal_name"]
+        return author_name
 
     @log
     def get_work_details(self, work_id: str) -> dict | None:
@@ -53,12 +80,6 @@ class OpenLibraryClient(metaclass=Singleton):
     @log
     def search_by_author(self, author: str, limit: int = 20) -> list[Book]:
         """search works in OpenLibrary from one author
-        """
-        ...
-
-    @log
-    def _get_author_name(self, author_key: str) -> str:
-        """get the author name from the author key obtained in OpenLibrary
         """
         ...
 
