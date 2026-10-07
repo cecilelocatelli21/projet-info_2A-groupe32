@@ -58,7 +58,7 @@ app.include_router(player_controller.router, prefix="/player", tags=["Players"])
 app.include_router(login_controller.router, prefix="/login", tags=["Login"])
 app.include_router(game_controller.router, prefix="/game", tags=["Games"])
 app.include_router(follow_controller.router, tags=["Follow"])
-app.include_router(reading_controller.router, tags=["Reading"])
+app.include_router(reading_controller.router, tags=["Readings"])
 
 
 @app.get("/", include_in_schema=False)

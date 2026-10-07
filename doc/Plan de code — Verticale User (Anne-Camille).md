@@ -1,6 +1,6 @@
 # Plan de code — Verticale User (Anne-Camille)
 
-Sep 30, 2026 · @Cécile
+Sep 30, 2026 · @Cécile · mis à jour le 7 octobre 2026 (vérification du mot de passe alignée sur le template)
 
 ## Périmètre et endpoints
 
@@ -53,11 +53,23 @@ class UserDao(metaclass=Singleton):
     def find_by_username(self, username: str) -> User | None
     def find_by_email(self, email: str) -> User | None
     def find_by_token(self, token: str) -> User | None
+    def login(self, username: str, password_hash: str) -> User | None   # comme le template
     def search_by_username(self, pattern: str) -> list[User]   # ILIKE '%motif%'
     def update(self, user: User) -> bool                  # bio, email, password_hash, access_token
     def delete(self, user_id: int) -> bool
     def _row_to_user(self, row: dict) -> User             # privée
 ```
+
+**`login` suit le template du professeur.** Le DAO ne fait qu'une requête : « donne-moi l'utilisateur qui a *ce* pseudo **et** *ce* mot de passe brouillé ». S'il n'y en a pas (pseudo inconnu ou mauvais mot de passe), il renvoie `None`.
+
+```sql
+SELECT * FROM user_table
+ WHERE username = %(username)s AND password_hash = %(password_hash)s;
+```
+
+Le DAO reçoit le mot de passe **déjà brouillé** : c'est le service qui appelle `hash_password`. Le DAO ne voit jamais le mot de passe en clair.
+
+`find_by_username` reste utile pour vérifier qu'un pseudo n'est pas déjà pris à la création de compte.
 
 `_row_to_user` évite de réécrire la construction de `User` dans chaque méthode, comme c'est le cas aujourd'hui dans `find_all` et `find_by_id`.
 
@@ -85,10 +97,23 @@ class UserService:
 Règles à coder :
 
 - `create_account` : refuse un pseudo ou un email déjà pris (lève une `ValueError` avec un message clair), hache le mot de passe, puis appelle `UserDao().create`.
-- `login` : cherche par pseudo, compare `hash_password(password, username)` au hash stocké, génère `secrets.token_urlsafe(32)`, l'enregistre avec `update` et renvoie l'utilisateur. Le code commenté du template montre déjà ce schéma.
+- `login` : brouille le mot de passe avec `hash_password(password, username)`, appelle `UserDao().login`, et si un utilisateur est trouvé, génère `secrets.token_urlsafe(32)`, l'enregistre avec `update` et renvoie l'utilisateur (code ci-dessous).
 - `logout` : remet `access_token` à `None`.
 - `update_profile` : si l'email change, vérifier qu'il n'est pas déjà utilisé par quelqu'un d'autre.
-- `change_password` : refuse si l'ancien mot de passe est faux.
+- `change_password` : vérifie l'ancien mot de passe en réutilisant `UserDao().login(user.username, hash_password(old_password, user.username))`. S'il renvoie `None`, l'ancien mot de passe est faux et on refuse. Sinon, on brouille le nouveau et on l'enregistre avec `update`.
+
+Le `login` du service, repris du code commenté du template :
+
+```python
+@log
+def login(self, username: str, password: str) -> User | None:
+    user = UserDao().login(username, hash_password(password, username))
+    if user is None:
+        return None                                  # pseudo inconnu ou mauvais mot de passe
+    user.access_token = secrets.token_urlsafe(32)   # on remet un jeton
+    UserDao().update(user)
+    return user
+```
 
 Le contrôle de longueur du mot de passe reste dans le modèle Pydantic, où il est déjà.
 
@@ -147,10 +172,14 @@ Deux points pratiques :
 
 ## Tests prioritaires
 
+Tests du DAO, sur le schéma de test :
+
+- [ ] `login` : bon pseudo et bon hash renvoient l'utilisateur ; mauvais hash renvoie `None` ; pseudo inconnu renvoie `None`
+
 Tests du service, avec `UserDao` remplacé par un `MagicMock` :
 
 - [ ] `create_account` : succès ; pseudo déjà pris ; email déjà pris ; le mot de passe transmis au DAO est bien haché
-- [ ] `login` : succès avec jeton généré ; mauvais mot de passe ; pseudo inconnu
+- [ ] `login` : succès avec jeton généré ; `UserDao().login` reçoit bien le mot de passe haché ; `None` quand le DAO ne trouve personne
 - [ ] `logout` : le jeton est remis à `None`
 - [ ] `update_profile` : email déjà utilisé par un autre compte refusé
 - [ ] `change_password` : ancien mot de passe faux refusé

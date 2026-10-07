@@ -11,6 +11,12 @@ class BookService:
     """Service that handles business logic related to book (creation, search, etc.)."""
 
     @log
+    def search(self, query: str, limit: int = 20) -> list[Book]:
+        """Search a book in open library
+        """
+        ...
+
+    @log
     def get_or_create_by_work_id(self, work_id) -> Book | None:
         """Get the Book if it exists in our database,
         or create the Book if the work_id is a valid reference in OL,
@@ -32,6 +38,12 @@ class BookService:
         # The book exists in OL, we create it in our database
         else:
             return book if BookDao().create(book) else None
+
+    @log
+    def get_book_details(self, work_id: str) -> dict | None:
+        """Get the details of the book in OpenLibrary
+        """
+        ...
 
 
     @log
@@ -64,6 +76,18 @@ class BookService:
             Book object if found, otherwise None.
         """
         return BookDao().find_by_id(book_id)
+
+    @log
+    def search_by_author(self, author: str, limit: int = 20) -> list[Book]:
+        """Get some books from the specified author
+        """
+        ...
+
+    @log
+    def average_rating(self, book_id: int) -> float | None:
+        """Get the average rating of a book in our local database
+        """
+        ...
 
     # @log
     # def update(self, player) -> Player:

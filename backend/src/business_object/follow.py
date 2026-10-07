@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date
 
 from business_object.user import User
 
@@ -9,25 +9,22 @@ class Follow:
 
     follower is the user who follows, followed is the user being
     followed. A follow relationship is not necessarily reciprocal.
+    It mirrors the `follow` table, whose primary key is
+    (follower_id, followed_id): there is no follow_id.
 
     Attributes:
-        follow_id (int, optional): The unique identifier for the follow
-            relationship.
         follower (User): The user who follows.
         followed (User): The user being followed.
-        follow_date (datetime): The date and time the follow relationship
-            was created.
+        follow_date (date): The date the follow relationship was created.
     """
 
     def __init__(
         self,
         follower: User,
         followed: User,
-        follow_date: datetime,
-        follow_id: int = None,
+        follow_date: date,
     ):
         """Constructor"""
-        self.follow_id = follow_id
         self.follower = follower
         self.followed = followed
         self.follow_date = follow_date
