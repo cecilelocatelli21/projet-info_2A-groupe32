@@ -57,7 +57,7 @@ class BookService:
                 None if OpenLibrary does not know this work_id
                 or dict with following keys :"work_id", "book_id", "title",
                 "authors", "cover_url", "subjects", "description",
-                "editions", "average_rating".
+                "editions_count", "editions", "average_rating".
         """
         # 1. Information from OpenLibrary
         client = OpenLibraryClient()
@@ -72,7 +72,8 @@ class BookService:
             "cover_url": book.cover_url,
             "subjects": [],
             "description": None,
-            "editions": client.get_editions(work_id),
+            "editions_count": 0,
+            "editions": [],
             "average_rating": None
             }
         # Subjects and description may be missing
@@ -80,6 +81,11 @@ class BookService:
         if work_details is not None:
             details["subjects"] = work_details.get("subjects",[])
             details["description"] = work_details.get("description")
+        # Editions may be missing
+        editions_data = client.get_editions(work_id)
+        if editions_data is not None:
+            details["editions_count"] = editions_data.get("total",0)
+            details["editions"] = editions_data.get("editions",[])
         # 2. Information from our database
         book_in_database = BookDao().find_by_work_id(work_id)
         if book_in_database is not None:

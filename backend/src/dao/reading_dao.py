@@ -263,7 +263,7 @@ class ReadingDao(metaclass=Singleton):
                 with connection.cursor() as cursor:
                     cursor.execute(
                         "SELECT AVG(rating) AS average_rating FROM reading       "
-                        "WHERE book_id == %(book_id)s AND status IN ('read', 'abandoned')"
+                        "WHERE book_id = %(book_id)s AND status IN ('read', 'abandoned')"
                         "GROUP BY book_id",
                         {
                             "book_id": book_id

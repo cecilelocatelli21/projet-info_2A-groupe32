@@ -35,13 +35,15 @@ class BookDetailModel(BaseModel):
     """A book with all necessary details"""
 
     work_id: str
-    book_id: int | None
-    title: str | None
-    authors: str | None
-    cover_url: str | None
-    description: str | None
-    editions: list[EditionModel]
-    average_rating: float | None
+    book_id: int | None = None
+    title: str
+    authors: str | None = None
+    cover_url: str | None = None
+    subjects: list[str] = []
+    description: str | None = None
+    editions_count: int = 0
+    editions: list[EditionModel] = []
+    average_rating: float | None = None
 
     # @field_validator("password")
     # @classmethod

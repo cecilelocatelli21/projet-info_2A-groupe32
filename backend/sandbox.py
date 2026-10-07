@@ -21,3 +21,9 @@ print(service.get_or_create_by_work_id("OL10263W").as_list())
 print(service.get_or_create_by_work_id("OL10263W").book_id)
 print(service.get_or_create_by_work_id("OL258850W").as_list())
 print(service.get_or_create_by_work_id("OL258850W").book_id)
+
+edition = openlibraryclient.get_editions("OL10263W")
+print(edition["total"])
+print(edition["editions"])
+
+print(service.get_book_details("OL258850W"))
