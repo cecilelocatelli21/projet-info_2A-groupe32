@@ -1,10 +1,8 @@
-import secrets
-
 from business_object.book import Book
 from client.openlibrary_client import OpenLibraryClient
 from dao.book_dao import BookDao
+from dao.reading_dao import ReadingDao
 from utils.log_utils import log
-from utils.security import hash_password
 
 
 class BookService:
@@ -12,20 +10,29 @@ class BookService:
 
     @log
     def search(self, query: str, limit: int = 20) -> list[Book]:
-        """Search a book in open library
-        """
-        ...
-
-    @log
-    def get_or_create_by_work_id(self, work_id) -> Book | None:
-        """Get the Book if it exists in our database,
-        or create the Book if the work_id is a valid reference in OL,
-        if not reurn None.
+        """Search a book in OpenLibrary
 
         Args:
-            work_id (str)
+            query (str): the object of the search
+            limit (int): maximum number of books to return
         Returns:
-            Book object created or None if creation failed.
+            list[Book] list of the books found on OpenLibrary.
+        """
+        return OpenLibraryClient().search(query, limit)
+
+    @log
+    def get_or_create_by_work_id(self, work_id: str) -> Book | None:
+        """Get the Book if it exists in our database,
+        or create the Book if the work_id is a valid reference in OL,
+        if not return None.
+
+        Args:
+            work_id (str): OpenLibrary identifier of the work (e.g. "OL45804W").
+        Returns:
+            Book | None: 
+                the book with its book_id (found or just created),
+                or None if OpenLibrary does not know this work_id
+                or if the creation failed.
         """
         # The book already exists in our database
         book = BookDao().find_by_work_id(work_id=work_id)
@@ -41,25 +48,62 @@ class BookService:
 
     @log
     def get_book_details(self, work_id: str) -> dict | None:
-        """Get the details of the book in OpenLibrary
+        """Get the details of the book necessary for the book page.
+
+        Args:
+            work_id (str): OpenLibrary identifier of the work (e.g. "OL45804W").
+        Returns:
+            dict | None:
+                None if OpenLibrary does not know this work_id
+                or dict with following keys :"work_id", "book_id", "title",
+                "authors", "cover_url", "subjects", "description",
+                "editions", "average_rating".
         """
-        ...
+        # 1. Information from OpenLibrary
+        client = OpenLibraryClient()
+        book = client.get_work(work_id=work_id)
+        if book is None:
+            return None
+        details = {
+            "work_id": work_id,
+            "book_id": None,
+            "title": book.title,
+            "authors": book.authors,
+            "cover_url": book.cover_url,
+            "subjects": [],
+            "description": None,
+            "editions": client.get_editions(work_id),
+            "average_rating": None
+            }
+        # Subjects and description may be missing
+        work_details = client.get_work_details(work_id)
+        if work_details is not None:
+            details["subjects"] = work_details.get("subjects",[])
+            details["description"] = work_details.get("description")
+        # 2. Information from our database
+        book_in_database = BookDao().find_by_work_id(work_id)
+        if book_in_database is not None:
+            details["book_id"] = book_in_database.book_id
+            details["average_rating"] = self.average_rating(book_in_database.book_id)
+        return details
+
+
 
 
     @log
     def find_all(self) -> list[Book]:
         """Retrieves all books from the database.
+
         Returns:
             list[Book]"""
         return BookDao().find_all()
 
     @log
     def find_by_work_id(self, work_id: str) -> Book | None:
-        """Finds a specific book by their unique work_id.
-        work_id is the identifier from OpenLibrary we use to store books into our database
+        """Finds a specific book by its unique work_id.
 
         Args:
-            work_id (str)
+            work_id (str) : OpenLibrary identifier of the work (e.g. "OL45804W").
         Returns:
             Book object if found, otherwise None.
         """
@@ -67,11 +111,10 @@ class BookService:
 
     @log
     def find_by_id(self, book_id: int) -> Book | None:
-        """Finds a specific book by their book_id .
-        book_id is the internal ID we use to store books into our database
+        """Finds a specific book by its book_id .
 
         Args:
-            book_id (int)
+            book_id (int): internal ID of the book in our database
         Returns:
             Book object if found, otherwise None.
         """
@@ -80,14 +123,27 @@ class BookService:
     @log
     def search_by_author(self, author: str, limit: int = 20) -> list[Book]:
         """Get some books from the specified author
+
+        Args:
+            author (str): name of an author
+            limit (int): maximum number of books to return
+        Returns:
+            list[Book]: books found on OpenLibrary, with book_id = None
         """
-        ...
+        return OpenLibraryClient().search_by_author(author, limit)
 
     @log
     def average_rating(self, book_id: int) -> float | None:
         """Get the average rating of a book in our local database
+
+        Args:
+            book_id (int): internal ID of the book in our database
+        Returns:
+            float | None: the average rating (between 0 and 5),
+                or None if no user has rated this book yet.
         """
-        ...
+        return ReadingDao().average_rating_by_book(book_id)
+
 
     # @log
     # def update(self, player) -> Player:
