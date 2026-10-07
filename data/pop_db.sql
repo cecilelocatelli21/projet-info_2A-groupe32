@@ -20,6 +20,11 @@ INSERT INTO user_table(username, email, password_hash) VALUES
 ('Anne-Camille', 'anne-camille.tampe@eleve.ensai.fr', '1234'),
 ('Arnaud', 'arnaud.bichon@eleve.ensai.fr', '1234');
 
+UPDATE user_table 
+SET password_hash=
+encode(sha256(convert_to(password_hash||
+username, 'UTF8')), 'hex');
+
 INSERT INTO follow (follower_id, followed_id, follow_date)
 VALUES
     ((SELECT user_id FROM user_table WHERE username = 'Moussa'),

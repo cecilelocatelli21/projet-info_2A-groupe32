@@ -8,6 +8,7 @@ class User:
         email (str): The user's email address.
         password_hash (str): The user's password, stored as a hash.
         bio (str): The user's biography.
+        access_token (str, optional) : Token given at login, None when logged out. Never returned by the API, except by the login route
     """
 
     def __init__(
@@ -17,13 +18,15 @@ class User:
         password_hash,
         bio="",
         user_id=None,
-    ):
+        access_token=None
+            ):
         """Constructor"""
         self.user_id = user_id
         self.username = username
         self.email = email
         self.password_hash = password_hash
         self.bio = bio
+        self.access_token = access_token
 
     def __str__(self):
         """Returns a string representation of the user.
