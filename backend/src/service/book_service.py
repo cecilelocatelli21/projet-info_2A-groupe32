@@ -11,7 +11,7 @@ class BookService:
     """Service that handles business logic related to book (creation, search, etc.)."""
 
     @log
-    def get_or_create(self, work_id) -> Book | None:
+    def get_or_create_by_work_id(self, work_id) -> Book | None:
         """Get the Book if it exists in our database,
         or create the Book if the work_id is a valid reference in OL,
         if not reurn None.
