@@ -11,9 +11,10 @@ from utils.security import hash_password
 
 
 @pytest.fixture(scope="session", autouse=True)
+
 def setup_test_environment():
     """Initialize test data"""
-    with patch.dict(os.environ, {"SCHEMA": "project_test_dao"}):
+    with patch.dict(os.environ, {"POSTGRES_SCHEMA": "project_test_dao"}):
         ResetDatabase().run(test_dao=True)
         yield
 
@@ -70,8 +71,11 @@ def test_create_ok():
 
     # THEN
     assert creation_ok
-    print(book.book_id)
-    assert book.book_id
+    assert book.work_id == "work id"
+    assert book.title == "titre"
+    assert book.authors == "authors of the book"
+    assert book.cover_url == "http://cover of the book"
+    assert isinstance(book.book_id, int)
 
 
 def test_create_ko_book_already_exists():

@@ -33,6 +33,7 @@ class BookDao(metaclass=Singleton):
                             "cover_url": book.cover_url,
                         }
                     )
+                    connection.commit()
                     res = cursor.fetchone()
         except Exception as e:
             logger.error(e)

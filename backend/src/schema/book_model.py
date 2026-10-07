@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from datetime import datetime
 
 
 class BookModel(BaseModel):
@@ -8,10 +9,39 @@ class BookModel(BaseModel):
     ensuring data consistency and validation during API requests and responses."""
 
     book_id: int | None
-    work_id: str | None
+    work_id: str
     title: str | None
     authors: str | None
     cover_url: str | None
+
+class BookSearchResultModel(BaseModel):
+    """For the research in OpenLibrary database"""
+
+    work_id: str
+    title: str
+    authors: str
+    cover_url: str | None
+
+class EditionModel(BaseModel):
+    """One specific edition associated with work"""
+
+    title: str
+    publisher: str | None
+    publish_date: datetime | None
+    number_of_pages: int | None
+    isbn: str | None
+
+class BookDetailModel(BaseModel):
+    """A book with all necessary details"""
+
+    work_id: str
+    book_id: int | None
+    title: str | None
+    authors: str | None
+    cover_url: str | None
+    description: str | None
+    editions: list[EditionModel]
+    average_rating: float | None
 
     # @field_validator("password")
     # @classmethod
