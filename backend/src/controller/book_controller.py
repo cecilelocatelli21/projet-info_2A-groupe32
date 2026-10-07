@@ -3,8 +3,9 @@
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from schema.book_model import BookModel, BookSearchResultModel
+from schema.book_model import BookModel, BookSearchResultModel, BookDetailModel
 from service.book_service import BookService
+from service.user_service import User
 from utils.log_utils import get_logger
 
 router = APIRouter()
@@ -63,18 +64,18 @@ async def find_by_id(book_id: int, book_service=Depends(get_book_service)):
         raise HTTPException(status_code=404, detail="Book (book_id={book_id}) not found.")
     return book
 
-@router.get("", response_model=list[BookSearchResultModel], tags=["Books"])
-async def search_books(q: str, #= Query(min_length=1),
-current_user: User = Depends(get_current_user),
-book_service=Depends(get_book_service)):
-    """Search books in OpenLibrary
-    """
-    ...
+# @router.get("", response_model=list[BookSearchResultModel], tags=["Books"])
+# async def search_books(q: str, #= Query(min_length=1),
+# current_user: User, #= Depends(get_current_user),
+# book_service=Depends(get_book_service)):
+#     """Search books in OpenLibrary
+#     """
+#     ...
 
-@router.get("/{work_id}", response_model=BookDetailModel, tags=["Books"])
-async def get_book(work_id: str,
-current_user: User = Depends(get_current_user),
-book_service=Depends(get_book_service)):
-    """Search books in OpenLibrary
-    """
-    ...
+# @router.get("/{work_id}", response_model=BookDetailModel, tags=["Books"])
+# async def get_book(work_id: str,
+# current_user: User = Depends(get_current_user),
+# book_service=Depends(get_book_service)):
+#     """Search books in OpenLibrary
+#     """
+#     ...
