@@ -164,7 +164,7 @@ class ReadingDao(metaclass=Singleton):
                             "book_id": book_id
                         },
                     )
-                    res = cursor.fetchone() #it's expected one line because user_id and book_id are unique
+                    res = cursor.fetchone()     # it's expected one line because user_id and book_id are unique
         except Exception as e:
             logger.error(e)
             raise
@@ -184,7 +184,6 @@ class ReadingDao(metaclass=Singleton):
 
         return reading
 
-
     @log
     def update(self, reading: Reading) -> bool:             # status, date_read, rating
         """ Update a reading
@@ -201,12 +200,12 @@ class ReadingDao(metaclass=Singleton):
                 with connection.cursor as cursor:
                     cursor.excute(
                         "UPDATE INTO Reading                                        "
-                        "status = %(status)s,                                                               "
-                        "date_read = %(date_read)s,                                         "
-                        "rating = %(rating)s)                                                       ",
-                        "WHERE reading_id = %(reading_id)s;                                           ",
+                        "status = %(status)s                                         "
+                        "date_read = %(date_read)s                                         "
+                        "rating = %(rating)s)                                                   "
+                        "WHERE reading_id = %(reading_id)s;                                      ",
                         {
-                            "status" : reading.status,
+                            "status": reading.status,
                             "date_read": reading.date_read,
                             "rating": reading.rating
                         },
@@ -216,7 +215,7 @@ class ReadingDao(metaclass=Singleton):
         except Exception as e:
             logger.error(e)
             raise
-        return nb_row==1
+        return nb_row == 1
 
     @log
     def delete(self, reading_id: int) -> bool:
@@ -247,7 +246,6 @@ class ReadingDao(metaclass=Singleton):
             reading = True
         return reading
 
-
     @log
     def average_rating_by_book(self, book_id: int) -> float | None:
         """ Average rating by book
@@ -277,7 +275,7 @@ class ReadingDao(metaclass=Singleton):
             raise
         avg_rating = None
         if res:
-            avg_rating=res["average_rating"]
+            avg_rating = res["average_rating"]
         return avg_rating
 
     @log
@@ -309,12 +307,13 @@ class ReadingDao(metaclass=Singleton):
             raise
         nbr_books = None
         if res:
-            nbr_books=res["nb_book"]
+            nbr_books = res["nb_book"]
         return nbr_books
 
     @log
-    def find_by_users(self, user_ids: list[int],
-                      min_rating: int | None = None) -> list[Reading]: # pour les recommandations
+    def find_by_users(self, user_ids: list[int], min_rating: int | None = None) -> list[Reading] : # pour les recommandations
         pass
+
+    @log
     def _row_to_reading(self, row: dict) -> Reading:        # privée
         pass
