@@ -44,7 +44,7 @@ Les quatre statuts sont ceux du business object : `"to read"`, `"in progress"`, 
 
 ```python
 class ReadingDao(metaclass=Singleton):
-    def create(self, reading: Reading) -> Reading          # INSERT ... RETURNING reading_id
+    def create(self, reading: Reading) -> bool          # INSERT ... RETURNING reading_id
     def find_by_id(self, reading_id: int) -> Reading | None
     def find_by_user(self, user_id: int, status: str | None = None) -> list[Reading]
     def find_by_user_and_book(self, user_id: int, book_id: int) -> Reading | None
