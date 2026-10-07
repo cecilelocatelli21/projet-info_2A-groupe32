@@ -1,9 +1,9 @@
-from controller.dependencies import get_current_user
 from fastapi import APIRouter, Depends, HTTPException, Response, status
-from schema.book_model import BookModel
 
 from business_object.reading import Reading
 from business_object.user import User
+from controller.dependencies import get_current_user
+from schema.book_model import BookModel
 from schema.reading_model import (
     ReadingCreateModel,
     ReadingReadModel,
