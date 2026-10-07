@@ -23,6 +23,12 @@ class OpenLibraryClient(metaclass=Singleton):
     @log
     def get_work(self, work_id: str) -> Book or None:
         """get a work in OpenLibrary if it exists
+
+        Args:
+            work_id (str): OpenLibrary identifier of the work (e.g. "OL45804W").
+        Returns:
+            Book | None: the book without its book_id ,
+                or None if OpenLibrary does not know this work_id
         """
         r = requests.get(url= f"{self.BASE_URL}/works/{work_id}.json")
         if r.status_code != 200:
