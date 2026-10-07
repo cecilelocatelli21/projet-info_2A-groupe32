@@ -75,7 +75,7 @@ Points d'attention dans le JSON :
 
 ```python
 class BookDao(metaclass=Singleton):
-    def create(self, book: Book) -> Book              # INSERT ... RETURNING book_id
+    def create(self, book: Book) -> bool              # INSERT ... RETURNING book_id
     def find_by_id(self, book_id: int) -> Book | None
     def find_by_work_id(self, work_id: str) -> Book | None
     def _row_to_book(self, row: dict) -> Book         # privée
