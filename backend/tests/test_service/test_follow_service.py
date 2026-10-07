@@ -126,27 +126,39 @@ def test_get_followers_user_not_found(mock_user_service, mock_follow_dao):
 # ---------------------------------------------------------------- follow
 
 
+def make_user(user_id: int) -> User:
+    return User(
+        user_id=user_id,
+        username=f"user{user_id}",
+        email=f"user{user_id}@mail.fr",
+        password_hash="hash",
+        bio=None,
+    )
+
+
 def users_found(*existing_ids):
-    """find_by_id mock: returns a user for the given ids, None otherwise"""
-    return MagicMock(side_effect=lambda uid: MagicMock() if uid in existing_ids else None)
+    """find_by_id mock: returns a User for the given ids, None otherwise"""
+    return MagicMock(side_effect=lambda uid: make_user(uid) if uid in existing_ids else None)
 
 
 @patch("service.follow_service.FollowDao")
 @patch("service.follow_service.UserService")
 def test_follow_ok(mock_user_service, mock_follow_dao):
-    """Both users exist, not followed yet: the subscription is created, dated today"""
+    """The followed user exists, not followed yet: the subscription is created, dated today"""
 
     # GIVEN
-    mock_user_service.return_value.find_by_id = users_found(1, 2)
+    current_user = make_user(1)
+    mock_user_service.return_value.find_by_id = users_found(2)
     mock_follow_dao.return_value.exists = MagicMock(return_value=False)
     mock_follow_dao.return_value.create = MagicMock(side_effect=lambda follow: follow)
 
     # WHEN
-    res = FollowService().follow(follower_id=1, followed_id=2)
+    res = FollowService().follow(user=current_user, followed_id=2)
 
     # THEN
     assert isinstance(res, Follow)
-    assert (res.follower_id, res.followed_id) == (1, 2)
+    assert res.follower is current_user
+    assert res.followed.user_id == 2
     assert res.follow_date == date.today()
     mock_follow_dao.return_value.exists.assert_called_once_with(1, 2)
     mock_follow_dao.return_value.create.assert_called_once()
@@ -158,28 +170,12 @@ def test_follow_followed_not_found(mock_user_service, mock_follow_dao):
     """The user to follow does not exist: NotFoundError, nothing is created"""
 
     # GIVEN
-    mock_user_service.return_value.find_by_id = users_found(1)
+    mock_user_service.return_value.find_by_id = users_found()
     mock_follow_dao.return_value.create = MagicMock()
 
     # WHEN / THEN
     with pytest.raises(NotFoundError):
-        FollowService().follow(follower_id=1, followed_id=9999)
-
-    mock_follow_dao.return_value.create.assert_not_called()
-
-
-@patch("service.follow_service.FollowDao")
-@patch("service.follow_service.UserService")
-def test_follow_follower_not_found(mock_user_service, mock_follow_dao):
-    """The follower does not exist: NotFoundError, nothing is created"""
-
-    # GIVEN
-    mock_user_service.return_value.find_by_id = users_found(2)
-    mock_follow_dao.return_value.create = MagicMock()
-
-    # WHEN / THEN
-    with pytest.raises(NotFoundError):
-        FollowService().follow(follower_id=9999, followed_id=2)
+        FollowService().follow(user=make_user(1), followed_id=9999)
 
     mock_follow_dao.return_value.create.assert_not_called()
 
@@ -195,7 +191,7 @@ def test_follow_himself(mock_user_service, mock_follow_dao):
 
     # WHEN / THEN
     with pytest.raises(ValueError):
-        FollowService().follow(follower_id=1, followed_id=1)
+        FollowService().follow(user=make_user(1), followed_id=1)
 
     mock_follow_dao.return_value.create.assert_not_called()
 
@@ -206,12 +202,42 @@ def test_follow_already_followed(mock_user_service, mock_follow_dao):
     """The subscription already exists: ConflictError, nothing is created"""
 
     # GIVEN
-    mock_user_service.return_value.find_by_id = users_found(1, 2)
+    mock_user_service.return_value.find_by_id = users_found(2)
     mock_follow_dao.return_value.exists = MagicMock(return_value=True)
     mock_follow_dao.return_value.create = MagicMock()
 
     # WHEN / THEN
     with pytest.raises(ConflictError):
-        FollowService().follow(follower_id=1, followed_id=2)
+        FollowService().follow(user=make_user(1), followed_id=2)
 
     mock_follow_dao.return_value.create.assert_not_called()
+
+
+# ---------------------------------------------------------------- unfollow
+
+
+@patch("service.follow_service.FollowDao")
+def test_unfollow_ok(mock_follow_dao):
+    """The subscription exists: it is deleted"""
+
+    # GIVEN
+    mock_follow_dao.return_value.delete = MagicMock(return_value=True)
+
+    # WHEN
+    res = FollowService().unfollow(user=make_user(1), followed_id=2)
+
+    # THEN
+    assert res is True
+    mock_follow_dao.return_value.delete.assert_called_once_with(1, 2)
+
+
+@patch("service.follow_service.FollowDao")
+def test_unfollow_not_following(mock_follow_dao):
+    """The user does not follow followed_id: NotFoundError"""
+
+    # GIVEN
+    mock_follow_dao.return_value.delete = MagicMock(return_value=False)
+
+    # WHEN / THEN
+    with pytest.raises(NotFoundError):
+        FollowService().unfollow(user=make_user(1), followed_id=2)

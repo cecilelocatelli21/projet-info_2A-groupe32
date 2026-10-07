@@ -157,3 +157,29 @@ class FollowDao(metaclass=Singleton):
             followed=follow.followed,
             follow_date=res["follow_date"],
         )
+
+    @log
+    def delete(self, follower_id: int, followed_id: int) -> bool:
+        """Delete a subscription line from the database.
+        Args:
+            follower_id (int): id of the user who follows
+            followed_id (int): id of the user being followed
+        Returns:
+            True if a subscription was deleted, False if it did not exist
+        """
+
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "DELETE FROM follow                                  "
+                        "  WHERE follower_id = %(follower_id)s               "
+                        "    AND followed_id = %(followed_id)s;              ",
+                        {"follower_id": follower_id, "followed_id": followed_id},
+                    )
+                    deleted = cursor.rowcount
+        except Exception as e:
+            logger.error(e)
+            raise
+
+        return deleted > 0

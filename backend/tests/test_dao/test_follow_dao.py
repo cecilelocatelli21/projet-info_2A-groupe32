@@ -44,6 +44,17 @@ def insert_follows(setup_test_environment):
             cursor.execute("DELETE FROM follow;")
 
 
+def make_user(user_id: int) -> User:
+    """Minimal User: only user_id is used to create a follow"""
+    return User(
+        user_id=user_id,
+        username=f"user{user_id}",
+        email=f"user{user_id}@mail.fr",
+        password_hash="hash",
+        bio=None,
+    )
+
+
 def delete_follow(follower_id: int, followed_id: int):
     """Remove a follow created by a test, so that the other tests keep their data"""
     with DBConnection().connection as connection:
@@ -203,7 +214,7 @@ def test_create_ok():
     """A subscription line is created and returned with its date"""
 
     # GIVEN
-    follow = Follow(follower_id=5, followed_id=1, follow_date=date.today())
+    follow = Follow(follower=make_user(5), followed=make_user(1), follow_date=date.today())
 
     try:
         # WHEN
@@ -211,7 +222,7 @@ def test_create_ok():
 
         # THEN
         assert isinstance(created, Follow)
-        assert (created.follower_id, created.followed_id) == (5, 1)
+        assert (created.follower.user_id, created.followed.user_id) == (5, 1)
         assert created.follow_date == date.today()
         assert FollowDao().exists(5, 1) is True
         assert [u.username for u in FollowDao().find_following(5)] == ["Moussa"]
@@ -224,7 +235,7 @@ def test_create_duplicate_raises():
     """The primary key (follower_id, followed_id) forbids a duplicate"""
 
     # GIVEN: Paul -> Cécile already exists
-    follow = Follow(follower_id=3, followed_id=2, follow_date=date.today())
+    follow = Follow(follower=make_user(3), followed=make_user(2), follow_date=date.today())
 
     # WHEN / THEN
     with pytest.raises(psycopg2.errors.UniqueViolation):
@@ -235,7 +246,7 @@ def test_create_self_follow_raises():
     """The CHECK (follower_id <> followed_id) forbids following oneself"""
 
     # GIVEN
-    follow = Follow(follower_id=4, followed_id=4, follow_date=date.today())
+    follow = Follow(follower=make_user(4), followed=make_user(4), follow_date=date.today())
 
     # WHEN / THEN
     with pytest.raises(psycopg2.errors.CheckViolation):
@@ -246,8 +257,53 @@ def test_create_unknown_user_raises():
     """The foreign keys forbid a subscription with a non-existing user"""
 
     # GIVEN
-    follow = Follow(follower_id=1, followed_id=9999999, follow_date=date.today())
+    follow = Follow(follower=make_user(1), followed=make_user(9999999), follow_date=date.today())
 
     # WHEN / THEN
     with pytest.raises(psycopg2.errors.ForeignKeyViolation):
         FollowDao().create(follow)
+
+
+# ---------------------------------------------------------------- delete
+
+
+def test_delete_ok():
+    """An existing subscription is deleted, only in the given direction"""
+
+    # GIVEN: Anne-Camille (5) follows Moussa (1), and Moussa follows Anne-Camille
+    FollowDao().create(Follow(follower=make_user(5), followed=make_user(1), follow_date=date.today()))
+    FollowDao().create(Follow(follower=make_user(1), followed=make_user(5), follow_date=date.today()))
+
+    try:
+        # WHEN
+        deleted = FollowDao().delete(5, 1)
+
+        # THEN
+        assert deleted is True
+        assert FollowDao().exists(5, 1) is False
+        assert FollowDao().exists(1, 5) is True  # the other direction is untouched
+    finally:
+        delete_follow(5, 1)
+        delete_follow(1, 5)
+
+
+def test_delete_not_existing():
+    """Deleting a subscription that does not exist returns False"""
+
+    # Cécile (2) does not follow Moussa (1)
+    assert FollowDao().delete(2, 1) is False
+
+
+def test_delete_keeps_other_subscriptions():
+    """Deleting Paul -> Cécile keeps Paul's other subscriptions"""
+
+    # GIVEN
+    try:
+        # WHEN
+        deleted = FollowDao().delete(3, 2)
+
+        # THEN
+        assert deleted is True
+        assert [u.username for u in FollowDao().find_following(3)] == ["Arnaud", "Axel"]
+    finally:
+        FollowDao().create(Follow(follower=make_user(3), followed=make_user(2), follow_date=date.today()))

@@ -104,3 +104,30 @@ async def follow_user(
         followed_id=follow.followed.user_id,
         follow_date=follow.follow_date,
     )
+
+
+@router.delete(
+    "/users/{user_id}/follow",
+    status_code=status.HTTP_204_NO_CONTENT,
+    tags=["Follow"],
+)
+async def unfollow_user(
+    user_id: int,
+    current_user: User = Depends(get_current_user),
+    follow_service=Depends(get_follow_service),
+):
+    """The connected user stops following user_id (deletes the subscription line).
+    The follower is always the connected user, identified by the token.
+    Args:
+        user_id (int): id of the user to unfollow (taken from the URL)
+        current_user (User): the authenticated user, who is the follower
+        follow_service (FollowService): The service used to interact with follow data
+    Raises:
+        HTTPException: 401 error if the token is missing or invalid.
+        HTTPException: 404 error if the user does not follow user_id.
+    """
+    logger.info("User %s unfollows user %s", current_user.user_id, user_id)
+    try:
+        follow_service.unfollow(user=current_user, followed_id=user_id)
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e

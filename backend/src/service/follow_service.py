@@ -4,7 +4,7 @@ from business_object.follow import Follow
 from business_object.user import User
 from dao.follow_dao import FollowDao
 from service.user_service import UserService
-from utils.exceptions import NotFoundError
+from utils.exceptions import ConflictError, NotFoundError
 from utils.log_utils import log
 
 
@@ -25,7 +25,7 @@ class FollowService:
             raise NotFoundError(f"User (id={user_id}) not found.")
 
         return FollowDao().find_following(user_id)
-    
+
     @log
     def get_followers(self, user_id: int) -> list[User]:
         """Retrieves the users who follow a given user.
@@ -65,3 +65,19 @@ class FollowService:
             raise ConflictError(f"User (id={user.user_id}) already follows user (id={followed_id}).")
 
         return FollowDao().create(Follow(user, followed, date.today()))
+
+    @log
+    def unfollow(self, user: User, followed_id: int) -> bool:
+        """Makes the connected user stop following another user (deletes the subscription line).
+        Args:
+            user (User): the connected user, who is the follower
+            followed_id (int): id of the user to unfollow
+        Returns:
+            True if the subscription was deleted
+        Raises:
+            NotFoundError: if the user does not follow followed_id
+        """
+        if not FollowDao().delete(user.user_id, followed_id):
+            raise NotFoundError(f"User (id={user.user_id}) does not follow user (id={followed_id}).")
+
+        return True
