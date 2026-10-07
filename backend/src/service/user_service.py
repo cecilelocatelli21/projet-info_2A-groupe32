@@ -2,6 +2,7 @@ import secrets
 
 from business_object.user import User
 from dao.user_dao import UserDao
+from utils.exceptions import ConflictError, ForbiddenError, NotFoundError
 from utils.log_utils import log
 from utils.security import hash_password
 
@@ -9,6 +10,55 @@ from utils.security import hash_password
 class UserService:
     """Service that handles business logic related to users (creation, search, etc.)."""
 
+    @log
+    def create_account(self, username: str, email: str, password: str) -> User:
+        """Creates a new account in the system.
+        Args:
+            username (str)
+            password (str) will be hashed before storage
+            email (str)
+        Returns:
+            user created or None if creation failed.
+         """
+        if UserDao().find_by_username(username) is not None:
+            raise ConflictError(f"Username '{username}' is already taken.")
+        if UserDao().find_by_email(email) is not None:
+            raise ConflictError(f"Email '{email}' is already used.")
+
+        new_user = User(
+            username=username,
+            email=email,
+            password_hash=hash_password(password, username),
+        )
+        return new_user if UserDao().create(new_user) else None
+
+    @log
+    def login(self, username: str, password: str) -> User | None:
+        """Authenticates a user using their credentials.
+        Args:
+            username (str)
+            password (str)
+        Returns:
+            User object if authentication is successful, otherwise None.
+         """
+        user = UserDao().find_by_username(username)
+        if user is None or not secrets.compare_digest(
+            user.password_hash, hash_password(password, username)
+        ):
+            return None
+
+        user.access_token = secrets.token_urlsafe(32)
+        UserDao().update(user)
+        return user
+
+    @log
+    def logout(self, user: User) -> bool:
+        user.access_token = None
+        return UserDao().update(user)
+
+    def find_by_token(self, token: str) -> User | None:
+        """Not decorated with @log so that tokens never end up in the logs."""
+        return UserDao().find_by_token(token)
     # @log
     # def create(self, username, password, elo, email, pokemon_fan) -> Player:
     #     """Creates a new player in the system.
@@ -30,22 +80,6 @@ class UserService:
     #     )
     #     return new_player if PlayerDao().create(new_player) else None
 
-    @log
-    def find_all(self) -> list[User]:
-        """Retrieves all users from the database.
-        Returns:
-            list[User]"""
-        return UserDao().find_all()
-
-    @log
-    def find_by_id(self, user_id: int) -> User:
-        """Finds a specific user by their unique id.
-        Args:
-            user_id (int)
-        Returns:
-            User object if found, otherwise None.
-        """
-        return UserDao().find_by_id(user_id)
 
     # @log
     # def update(self, player) -> Player:

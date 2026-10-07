@@ -9,6 +9,38 @@ logger = get_logger(__name__)
 class UserDao(metaclass=Singleton):
     """Class containing methods to access User in the database."""
 
+    def _find_one(self, column: str, value) -> User | None:
+        """Get the user whose column equals value.
+        column always comes from this class, never from the client.
+        """
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        f"SELECT * FROM user_table WHERE {column} = %(value)s;",  # nosec B608
+                            {"value": value},
+                        )
+                    res = cursor.fetchone()
+        except Exception as e:
+            logger.error(e)
+            raise
+
+        return self._row_to_user(res) if res else None
+
+
+    @staticmethod
+    def _row_to_user(row: dict) -> User:
+        """Build a User business object from a database row."""
+        return User(
+            user_id=row["user_id"],
+            username=row["username"],
+            email=row["email"],
+            password_hash=row["password_hash"],
+            bio=row["bio"],
+            access_token=row["access_token"],
+        )
+
+
     @log
     def find_all(self) -> list[User]:
         """List all users in the database.
@@ -29,51 +61,33 @@ class UserDao(metaclass=Singleton):
             logger.error(e)
             raise
 
-        users_list = []
+        return [self._row_to_user(row) for row in res] if res else []
+    @log
+    def find_by_id(self, user_id: int) -> User | None:
+        """Get one user by its user_id."""
+        return self._find_one("user_id", user_id)
 
-        if res:
-            for row in res:
-                user = User(
-                    user_id=row["user_id"],
-                    username=row["username"],
-                    email=row["email"],
-                    password_hash=row["password_hash"],
-                    bio=row["bio"]
-                )
+    @log
+    def find_by_username(self, username: str) -> User | None:
+        """Get one user by its username."""
+        return self._find_one("username", username)
 
-                users_list.append(user)
+# recherche par morceau ou pseudo
 
-        return users_list
-
-    def find_by_id(self, user_id) -> User:
-        """Get one user in the database by its user_id.
-        Returns:
-            the User with the specific user_id
-        """
-
+    @log
+    def search_by_username(self, pattern: str) -> list[User]:
         try:
             with DBConnection().connection as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "SELECT *                              "
-                        "  FROM user_table                           "
-                        "  WHERE user_id = %(user_id)s;                  ",
-                        {"user_id": user_id}
+                        "SELECT * FROM user_table WHERE username ILIKE %(pattern)s ORDER BY username;",
+                        {"pattern": f"%{pattern}%"},
                     )
-                    res = cursor.fetchone()
+                    res = cursor.fetchall()
         except Exception as e:
             logger.error(e)
             raise
 
-        user = None
+        return [self._row_to_user(row) for row in res] if res else []
 
-        if res:
-            user = User(
-            user_id=res["user_id"],
-            username=res["username"],
-            email=res["email"],
-            password_hash=res["password_hash"],
-            bio=res["bio"]
-        )
-
-        return user
+# création, modification, suppression
