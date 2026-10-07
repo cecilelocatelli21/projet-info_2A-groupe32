@@ -1,3 +1,6 @@
+from datetime import date
+
+from business_object.follow import Follow
 from business_object.user import User
 from dao.follow_dao import FollowDao
 from service.user_service import UserService
@@ -37,3 +40,28 @@ class FollowService:
             raise NotFoundError(f"User (id={user_id}) not found.")
 
         return FollowDao().find_followers(user_id)
+
+    @log
+    def follow(self, user: User, followed_id: int) -> Follow:
+        """Makes the connected user follow another user (creates a subscription line).
+        Args:
+            user (User): the connected user, who becomes the follower
+            followed_id (int): id of the user to follow
+        Returns:
+            Follow: the created subscription (dated today)
+        Raises:
+            NotFoundError: if followed_id does not match any user
+            ValueError: if the user tries to follow himself
+            ConflictError: if the user already follows followed_id
+        """
+        followed = UserService().find_by_id(followed_id)
+        if followed is None:
+            raise NotFoundError(f"User (id={followed_id}) not found.")
+
+        if followed_id == user.user_id:
+            raise ValueError("A user cannot follow himself.")
+
+        if FollowDao().exists(user.user_id, followed_id):
+            raise ConflictError(f"User (id={user.user_id}) already follows user (id={followed_id}).")
+
+        return FollowDao().create(Follow(user, followed, date.today()))
