@@ -43,9 +43,7 @@ class OpenLibraryClient(metaclass=Singleton):
         #cover_in_work = raw_json["covers"]
         cover_url = "https://covers.openlibrary.org/b/ID/" + str(raw_json["covers"][-1]) + "-L.jpg"
 
-        book = Book(work_id, title, authors, cover_url)
-        #print(book.work_id + " " + book.title + " " + book.authors + " " +  book.cover_url)
-        return book
+        return Book(work_id, title, authors, cover_url)
 
     @log
     def _get_author_name(self, author_key: str) -> str:
