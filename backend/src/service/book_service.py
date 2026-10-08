@@ -29,7 +29,7 @@ class BookService:
         Args:
             work_id (str): OpenLibrary identifier of the work (e.g. "OL45804W").
         Returns:
-            Book | None: 
+            Book | None:
                 the book with its book_id (found or just created),
                 or None if OpenLibrary does not know this work_id
                 or if the creation failed.
@@ -93,9 +93,6 @@ class BookService:
             details["average_rating"] = self.average_rating(book_in_database.book_id)
         return details
 
-
-
-
     @log
     def find_all(self) -> list[Book]:
         """Retrieves all books from the database.
@@ -149,52 +146,3 @@ class BookService:
                 or None if no user has rated this book yet.
         """
         return ReadingDao().average_rating_by_book(book_id)
-
-
-    # @log
-    # def update(self, player) -> Player:
-    #     """Updates an existing player's information.
-    #     Args:
-    #         Player object containing updated information.
-    #     Returns:
-    #         The updated Player object, or None if the update failed.
-    #     """
-    #     return player if PlayerDao().update(player) else None
-
-    # @log
-    # def delete(self, player) -> bool:
-    #     """Delete a player account.
-    #     Args:
-    #         Player object to be deleted.
-    #     Returns:
-    #         True if deletion was successful, False otherwise.
-    #     """
-    #     return PlayerDao().delete(player)
-
-    # @log
-    # def login(self, username: str, password: str) -> Player:
-    #     """Authenticates a player using their credentials.
-    #     Args:
-    #         username (str)
-    #         password (str)
-    #     Returns:
-    #         Player object if authentication is successful, otherwise None.
-    #     """
-    #     player = PlayerDao().login(username, hash_password(password, username))
-    #     if player:
-    #         # Generate a token and update the Player
-    #         player.access_token = secrets.token_urlsafe(32)
-    #         self.update(player)
-    #         return player
-    #     return None
-
-    # @log
-    # def username_already_used(self, username: str) -> bool:
-    #     """Check if a username is already used.
-    #     Args:
-    #         username (str)
-    #     Returns:
-    #         True if the username already exists in the database.
-    #     """
-    #     players = PlayerDao().find_all()
-    #     return username in [p.username for p in players]

@@ -31,14 +31,13 @@ class OpenLibraryClient(metaclass=Singleton):
                 or None if OpenLibrary does not know this work_id
         """
         r = requests.get(url= f"{self.BASE_URL}/works/{work_id}.json")
-        if r.status_code != 200:
+        if r.status_code == 404:
+            return None
+        elif r.status_code != 200:
             raise Exception(f"Cannot reach (HTTP {r.status_code}): {r.text}")
         else:
             raw_json = r.json()
             # print(json.dumps(raw_json, indent=2))  # Pretty print
-
-        if "error" in raw_json:
-            return None
 
         title = raw_json["title"]
 
