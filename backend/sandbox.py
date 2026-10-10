@@ -11,10 +11,14 @@ load_environment_variables()   # Required to load the variables needed (env) to 
 
 openlibraryclient = OpenLibraryClient()
 
-book = openlibraryclient.get_work("OL258850W")
-print(book)
-print(book.work_id + " " + book.title + " " + book.authors + " " + book.cover_url)
-print(book.as_list())
+book_list = openlibraryclient.search_by_author("Flaubert")
+for b in book_list:
+    print(b)
+
+# book = openlibraryclient.get_work("OL258850W")
+# print(book)
+# print(book.work_id + " " + book.title + " " + book.authors + " " + book.cover_url)
+# print(book.as_list())
 
 # service = BookService()
 # print(service.get_or_create_by_work_id("OL10263W").as_list())

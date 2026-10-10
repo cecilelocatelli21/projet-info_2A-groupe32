@@ -30,7 +30,7 @@ class OpenLibraryClient(metaclass=Singleton):
             Book | None: the book without its book_id ,
                 or None if OpenLibrary does not know this work_id
         """
-        r = requests.get(url= f"{self.BASE_URL}/works/{work_id}.json")
+        r = requests.get(url=f"{self.BASE_URL}/works/{work_id}.json")
         if r.status_code == 404:
             return None
         elif r.status_code != 200:
@@ -106,8 +106,41 @@ class OpenLibraryClient(metaclass=Singleton):
     @log
     def search_by_author(self, author: str, limit: int = 20) -> list[Book]:
         """search works in OpenLibrary from one author
+
+        Args:
+            author (str): The name of the author we are looking for.
+            limit (int): maximum number of books to return.
+        Returns:
+            A list of books written by this author or about this author
+            An empty list if nothing has been found
         """
-        ...
+
+        book_list = []
+
+        r = requests.get(
+            url=f"{self.BASE_URL}/search.json?q={author}",
+            params={"limit": limit},
+        )
+
+        if r.status_code == 404:
+            return book_list
+        elif r.status_code != 200:
+            raise Exception(f"Cannot reach (HTTP {r.status_code}): {r.text}")
+        else:
+            raw_json = r.json()
+
+        docs = raw_json.get("docs")
+        for i in range(limit):
+            # We split the key that is like "/works/{work_id}" to get only the work_id
+            work_id = docs[i]["key"].split("/")[2]
+            title = docs[i]["title"]
+            authors = docs[i]["author_name"]
+            cover_i = docs[i]["cover_i"]
+            cover_url = self._build_cover_url(cover_i)
+            book = Book(work_id=work_id, title=title, authors=authors, cover_url=cover_url)
+            book_list.append(book)
+
+        return book_list
 
     @log
     def _get_author_name(self, author_key: str) -> str:
@@ -138,5 +171,5 @@ class OpenLibraryClient(metaclass=Singleton):
             the precise url for the image of the cover.
         """
 
-        cover_url = "https://covers.openlibrary.org/b/ID/" + str(cover_id) + "-" + size + ".jpg"
+        cover_url = f"https://covers.openlibrary.org/b/ID/{cover_id}-{size}.jpg"
         return cover_url
