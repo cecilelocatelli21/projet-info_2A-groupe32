@@ -45,28 +45,11 @@ class OpenLibraryClient(metaclass=Singleton):
         author_key = authors_in_work[0]["author"]["key"].split("/")[2]
         authors = self._get_author_name(author_key=author_key)
 
-        #cover_in_work = raw_json["covers"]
-        cover_url = "https://covers.openlibrary.org/b/ID/" + str(raw_json["covers"][-1]) + "-L.jpg"
+        # OpenLibrary returns a list of covers in the raw_json, we choose the last one of the list.
+        cover_id = raw_json["covers"][-1]
+        cover_url = self._build_cover_url(cover_id=cover_id)
 
         return Book(work_id, title, authors, cover_url)
-
-    @log
-    def _get_author_name(self, author_key: str) -> str:
-        """get the author name from the author key obtained in OpenLibrary
-    Args:
-        author_key (str)
-    Returns:
-        author_name (str): The name of the author whose author_key is the key
-        """
-
-        r = requests.get(url= f"{self.BASE_URL}/authors/{author_key}.json")
-        if r.status_code != 200:
-            raise Exception(f"Cannot reach (HTTP {r.status_code}): {r.text}")
-        else:
-            raw_json = r.json()
-
-        author_name = raw_json["personal_name"]
-        return author_name
 
     @log
     def get_work_details(self, work_id: str) -> dict | None:
@@ -127,7 +110,33 @@ class OpenLibraryClient(metaclass=Singleton):
         ...
 
     @log
-    def _build_cover_url(self, cover_id: int | None, size: str = "M") -> str:
+    def _get_author_name(self, author_key: str) -> str:
         """get the author name from the author key obtained in OpenLibrary
+    Args:
+        author_key (str)
+    Returns:
+        author_name (str): The name of the author whose author_key is the key
         """
-        ...
+
+        r = requests.get(url= f"{self.BASE_URL}/authors/{author_key}.json")
+        if r.status_code != 200:
+            raise Exception(f"Cannot reach (HTTP {r.status_code}): {r.text}")
+        else:
+            raw_json = r.json()
+
+        author_name = raw_json["personal_name"]
+        return author_name
+
+    @log
+    def _build_cover_url(self, cover_id: int | None, size: str = "L") -> str:
+        """get the author name from the author key obtained in OpenLibrary
+
+        Args:
+            cover_id (int): OpenLibrary identifier of the cover (e.g. "7165018").
+            size (str): the size of the image ("S" -> small, "M" -> medium, "L" -> large). Default size is "L".
+        Returns:
+            the precise url for the image of the cover.
+        """
+
+        cover_url = "https://covers.openlibrary.org/b/ID/" + str(cover_id) + "-" + size + ".jpg"
+        return cover_url
