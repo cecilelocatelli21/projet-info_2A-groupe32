@@ -59,6 +59,12 @@ class UserService:
     def find_by_token(self, token: str) -> User | None:
         """Not decorated with @log so that tokens never end up in the logs."""
         return UserDao().find_by_token(token)
+
+    @log
+    def find_by_id(self, user_id: int) -> User | None:
+        """Finds a specific user by their unique id."""
+        return UserDao().find_by_id(user_id)  
+          
     # @log
     # def create(self, username, password, elo, email, pokemon_fan) -> Player:
     #     """Creates a new player in the system.

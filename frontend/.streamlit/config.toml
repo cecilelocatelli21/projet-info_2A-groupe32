@@ -5,8 +5,8 @@ port = 8000
 textColor="#1a1a1a"
 font="Calibri"
 
-primaryColor="#1963a0"
-backgroundColor="#90C090"
+primaryColor="#90C090"
+backgroundColor="#1963a0"
 secondaryBackgroundColor="#ffffff"
 
 redTextColor="#8b0303"

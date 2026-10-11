@@ -1,0 +1,67 @@
+"""Picks the data source for the current session.
+
+* demo session  -> ``DemoRepository`` only (never any API call).
+* real session  -> ``ApiRepository``; if the *catalogue* cannot be fetched (or is empty) and the
+  settings allow it, the read-only demo catalogue is used and the UI shows a banner.
+  Library, status changes and profile always stay on the API: demo and real data are not merged.
+"""
+
+from __future__ import annotations
+
+import streamlit as st
+
+from data.api_repository import ApiRepository
+from data.demo_repository import DemoCatalog, DemoRepository
+from data.errors import DataUnavailable
+from data.repository import Repository
+from utils.settings import data_source
+
+
+class FallbackRepository(ApiRepository):
+    """API repository whose catalogue falls back on the demo catalogue when it is unavailable."""
+
+    def __init__(self):
+        self._demo = DemoCatalog()
+        self.degraded = False
+        self.degraded_reason = None
+
+    def _catalog_or_demo(self):
+        if data_source() == "demo":
+            return None
+        try:
+            books = super().catalog()
+            if books:
+                return books
+            reason = "Le catalogue du serveur est vide."
+        except DataUnavailable as exc:
+            reason = f"Serveur injoignable ({exc})."
+        if data_source() == "api":
+            return []
+        self.degraded, self.degraded_reason = True, reason
+        return None
+
+    def catalog(self):
+        books = self._catalog_or_demo()
+        return self._demo.catalog() if books is None else books
+
+    def featured(self):
+        books = self._catalog_or_demo()
+        return self._demo.featured() if books is None else books[:4]
+
+    def get_book(self, work_id):
+        book = self._demo.get_book(work_id)
+        return book or super().get_book(work_id)
+
+    def book_reviews(self, work_id):
+        return self._demo.book_reviews(work_id) if self._demo.get_book(work_id) else []
+
+
+def get_repository() -> Repository:
+    if st.session_state.get("mode") == "demo":
+        repo = st.session_state.get("_repo_demo")
+        if repo is None:
+            repo = st.session_state["_repo_demo"] = DemoRepository()
+        return repo
+    repo = FallbackRepository()
+    repo.degraded = False
+    return repo
