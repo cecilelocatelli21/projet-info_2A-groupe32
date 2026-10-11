@@ -17,8 +17,38 @@ class OpenLibraryClient(metaclass=Singleton):
     @log
     def search(self, query: str, limit: int = 20) -> list[Book]:
         """search books in open library
+
+        Args:
+            query (str): the sentence the user typed to make a search in OpenLibrary (for instance: "le petit prince")
+            limit (int): the maximum values we have in the answer
+        Returns:
+            A list of books corresponding to the answer made by OpenLibrary
         """
-        ...
+
+        # We cut the sentence written by the user into words that we insert into a html query for OpenLibrary
+        words_list = query.split(" ")
+        words_query = ""
+        for w in words_list:
+            words_query = f"{words_query}{w}+"
+        words_query = words_query[:-1]
+
+        OL_query = f"{self.BASE_URL}/search.json?q={words_query}"
+        print(OL_query)
+
+        r = requests.get(
+            url=OL_query,
+            params={"limit": limit},
+        )
+        if r.status_code == 404:
+            return []
+        elif r.status_code != 200:
+            raise Exception(f"Cannot reach (HTTP {r.status_code}): {r.text}")
+        else:
+            raw_json = r.json()
+
+        books_list = self._raw_json_to_list_of_book(raw_json=raw_json, limit=limit)
+
+        return books_list
 
     @log
     def get_work(self, work_id: str) -> Book or None:
@@ -115,8 +145,6 @@ class OpenLibraryClient(metaclass=Singleton):
             An empty list if nothing has been found
         """
 
-        book_list = []
-
         r = requests.get(
             url=f"{self.BASE_URL}/search.json?q={author}",
             params={"limit": limit},
@@ -129,18 +157,9 @@ class OpenLibraryClient(metaclass=Singleton):
         else:
             raw_json = r.json()
 
-        docs = raw_json.get("docs")
-        for i in range(limit):
-            # We split the key that is like "/works/{work_id}" to get only the work_id
-            work_id = docs[i]["key"].split("/")[2]
-            title = docs[i]["title"]
-            authors = docs[i]["author_name"]
-            cover_i = docs[i]["cover_i"]
-            cover_url = self._build_cover_url(cover_i)
-            book = Book(work_id=work_id, title=title, authors=authors, cover_url=cover_url)
-            book_list.append(book)
+        books_list = self._raw_json_to_list_of_book(raw_json=raw_json, limit=limit)
 
-        return book_list
+        return books_list
 
     @log
     def _get_author_name(self, author_key: str) -> str:
@@ -151,7 +170,7 @@ class OpenLibraryClient(metaclass=Singleton):
         author_name (str): The name of the author whose author_key is the key
         """
 
-        r = requests.get(url= f"{self.BASE_URL}/authors/{author_key}.json")
+        r = requests.get(url=f"{self.BASE_URL}/authors/{author_key}.json")
         if r.status_code != 200:
             raise Exception(f"Cannot reach (HTTP {r.status_code}): {r.text}")
         else:
@@ -173,3 +192,34 @@ class OpenLibraryClient(metaclass=Singleton):
 
         cover_url = f"https://covers.openlibrary.org/b/ID/{cover_id}-{size}.jpg"
         return cover_url
+
+    @log
+    def _raw_json_to_list_of_book(self, raw_json: dict, limit: int = 20) -> list[Book]:
+        """transform a json returned by OpenLibrary in a list of books
+
+        Args:
+            raw_json (dict): OpenLibrary response to the query made by the user
+            limit (int): maximum number of editions to return.
+        Returns:
+            a list of suggested books in a format corresponding to Business Objects Book
+        """
+
+        book_list = []
+
+        docs = raw_json.get("docs")
+        for i in range(limit):
+            # We split the key that is like "/works/{work_id}" to get only the work_id
+            work_id = docs[i].get("key").split("/")[2]
+            title = docs[i].get("title")
+            authors = docs[i].get("author_name")
+            # We transform the list of authors into a string that contains all the authors
+            authors_string = ""
+            for a in authors:
+                authors_string = f"{authors_string}{a} et "
+            authors_string = authors_string[:-4]
+            cover_i = docs[i].get("cover_i")
+            cover_url = self._build_cover_url(cover_i)
+            book = Book(work_id=work_id, title=title, authors=authors_string, cover_url=cover_url)
+            book_list.append(book)
+
+        return book_list

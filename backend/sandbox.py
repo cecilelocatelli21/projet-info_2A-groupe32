@@ -11,9 +11,13 @@ load_environment_variables()   # Required to load the variables needed (env) to 
 
 openlibraryclient = OpenLibraryClient()
 
-book_list = openlibraryclient.search_by_author("Flaubert")
+book_list = openlibraryclient.search("Madame Bovary")
 for b in book_list:
     print(b)
+
+# book_list = openlibraryclient.search_by_author("Flaubert")
+# for b in book_list:
+#     print(b)
 
 # book = openlibraryclient.get_work("OL258850W")
 # print(book)

@@ -35,6 +35,7 @@ class Book:
         Returns:
             str: A string containing the title and author(s).
         """
+
         return f"Book({self.title}, authors: {self.authors})"
 
     def as_list(self) -> list[str]:
