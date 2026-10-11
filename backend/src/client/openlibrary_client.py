@@ -3,6 +3,8 @@ import json
 import requests
 
 from business_object.book import Book
+# from dao.reading_dao import ReadingDao
+# from service.book_service import BookService
 from utils.log_utils import get_logger, log
 from utils.singleton import Singleton
 
@@ -10,6 +12,7 @@ from utils.singleton import Singleton
 class OpenLibraryError(Exception):
     """OpenLibrary unjoignable, timeout or unexpected response"""
     ...
+
 
 class OpenLibraryClient(metaclass=Singleton):
     BASE_URL = "https://openlibrary.org"
@@ -20,9 +23,9 @@ class OpenLibraryClient(metaclass=Singleton):
 
         Args:
             query (str): the sentence the user typed to make a search in OpenLibrary (for instance: "le petit prince")
-            limit (int): the maximum values we have in the answer
+            limit (int): the maximum values we get in the response from OpenLibrary
         Returns:
-            A list of books corresponding to the answer made by OpenLibrary
+            A list of books corresponding to the response given by OpenLibrary
         """
 
         # We cut the sentence written by the user into words that we insert into a html query for OpenLibrary
@@ -31,9 +34,9 @@ class OpenLibraryClient(metaclass=Singleton):
         for w in words_list:
             words_query = f"{words_query}{w}+"
         words_query = words_query[:-1]
+        # words_query is a string corresponding at what we have to put in the html query for the search
 
         OL_query = f"{self.BASE_URL}/search.json?q={words_query}"
-        print(OL_query)
 
         r = requests.get(
             url=OL_query,
@@ -46,6 +49,7 @@ class OpenLibraryClient(metaclass=Singleton):
         else:
             raw_json = r.json()
 
+        # _raw_json_to_list_of_book transform a raw_json into a list of books
         books_list = self._raw_json_to_list_of_book(raw_json=raw_json, limit=limit)
 
         return books_list
@@ -69,14 +73,14 @@ class OpenLibraryClient(metaclass=Singleton):
             raw_json = r.json()
             # print(json.dumps(raw_json, indent=2))  # Pretty print
 
-        title = raw_json["title"]
+        title = raw_json.get("title")
 
-        authors_in_work = raw_json["authors"]
+        authors_in_work = raw_json.get("authors")
         author_key = authors_in_work[0]["author"]["key"].split("/")[2]
         authors = self._get_author_name(author_key=author_key)
 
         # OpenLibrary returns a list of covers in the raw_json, we choose the last one of the list.
-        cover_id = raw_json["covers"][-1]
+        cover_id = raw_json.get("covers")[-1]
         cover_url = self._build_cover_url(cover_id=cover_id)
 
         return Book(work_id, title, authors, cover_url)
@@ -84,8 +88,61 @@ class OpenLibraryClient(metaclass=Singleton):
     @log
     def get_work_details(self, work_id: str) -> dict | None:
         """get some information about a work in OpenLibrary
+
+        Args:
+            work_id (str): OpenLibrary identifier of the work (e.g. "OL45804W").
+        Returns:
+            dict: {
+                "work_id" (str): work_id of the book
+                "book_id" (int | None): if it does exist, the book_id of the book
+                "title" (str): the title of the book
+                "authors" (str): the authors of the book
+                "cover_url" (str): the url corresponding to the cover of the book
+                "subjects" (list[str] = []): the subjects covered by the book
+                "description" (str | None) : if it does exist, a description of the book
+                "editions" (list[EditionModel]) : the list of the editions available in OpenLibrary for this book
+                "average_rating" (float | None): the ranking of the book in our local database
+            }
+            None if OpenLibrary does not know this work_id.
         """
-        ...
+        r = requests.get(url=f"{self.BASE_URL}/works/{work_id}.json")
+        if r.status_code == 404:
+            return None
+        elif r.status_code != 200:
+            raise Exception(f"Cannot reach (HTTP {r.status_code}): {r.text}")
+        else:
+            raw_json = r.json()
+
+        # We create an empty dictionnaru called work_details
+        work_details = {}
+        work_details["work_id"] = work_id
+        # We fill this dictionnary with the work_id and data from OpenLibrary request
+        work_details["title"] = raw_json.get("title")
+
+        authors_in_work = raw_json.get("authors")
+        # From the "authors" key in raw_json, we extract the author_id, then we get the name of the author
+        author_key = authors_in_work[0]["author"]["key"].split("/")[2]
+        work_details["authors"] = self._get_author_name(author_key=author_key)
+
+        # OpenLibrary returns a list of covers in the raw_json, we choose the last one of the list.
+        cover_id = raw_json.get("covers")[-1]
+        work_details["cover_url"] = self._build_cover_url(cover_id=cover_id)
+
+        work_details["subjects"] = raw_json.get("subjects")
+        work_details["description"] = raw_json.get("description")
+        work_details["editions"] = self.get_editions(work_id=work_id)
+
+        # Problème d'appel circulaire : j'ai besoin de BookService() qui se trouve dans book_service, et book_service utilise openlibrary_client -> je ne vois pas comment faire...
+
+        # bookservice = BookService()
+        # book = bookservice.find_by_work_id(work_id=work_id)
+        # if book.book_id is not None:
+        #     work_details["book_id"] = book.book_id
+        #     readingdao = ReadingDao()
+        #     average_rating = readingdao.average_rating_by_book(book_id=book.book_id)
+        #     work_details["average_rating"] = average_rating
+
+        return work_details
 
     @log
     def get_editions(self, work_id: str, limit: int = 10) -> dict | None:
@@ -146,6 +203,7 @@ class OpenLibraryClient(metaclass=Singleton):
         """
 
         r = requests.get(
+            # this is the basic request to search for an author in OpenLibrary
             url=f"{self.BASE_URL}/search.json?q={author}",
             params={"limit": limit},
         )
@@ -157,6 +215,7 @@ class OpenLibraryClient(metaclass=Singleton):
         else:
             raw_json = r.json()
 
+        # _raw_json_to_list_of_book transform a raw_json into a list of books
         books_list = self._raw_json_to_list_of_book(raw_json=raw_json, limit=limit)
 
         return books_list
@@ -180,7 +239,7 @@ class OpenLibraryClient(metaclass=Singleton):
         return author_name
 
     @log
-    def _build_cover_url(self, cover_id: int | None, size: str = "L") -> str:
+    def _build_cover_url(self, cover_id: int | None, size: str = "L") -> str | None:
         """get the author name from the author key obtained in OpenLibrary
 
         Args:
@@ -190,16 +249,18 @@ class OpenLibraryClient(metaclass=Singleton):
             the precise url for the image of the cover.
         """
 
-        cover_url = f"https://covers.openlibrary.org/b/ID/{cover_id}-{size}.jpg"
-        return cover_url
+        if cover_id is None:
+            return None
+        else:
+            return f"https://covers.openlibrary.org/b/ID/{cover_id}-{size}.jpg"
 
     @log
     def _raw_json_to_list_of_book(self, raw_json: dict, limit: int = 20) -> list[Book]:
-        """transform a json returned by OpenLibrary in a list of books
+        """transform a json returned by OpenLibrary into a list of books
 
         Args:
             raw_json (dict): OpenLibrary response to the query made by the user
-            limit (int): maximum number of editions to return.
+            limit (int): maximum number of responses returned by OpenLibrary.
         Returns:
             a list of suggested books in a format corresponding to Business Objects Book
         """
@@ -220,6 +281,7 @@ class OpenLibraryClient(metaclass=Singleton):
             cover_i = docs[i].get("cover_i")
             cover_url = self._build_cover_url(cover_i)
             book = Book(work_id=work_id, title=title, authors=authors_string, cover_url=cover_url)
+
             book_list.append(book)
 
         return book_list

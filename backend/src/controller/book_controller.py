@@ -64,13 +64,26 @@ async def find_by_id(book_id: int, book_service=Depends(get_book_service)):
         raise HTTPException(status_code=404, detail="Book (book_id={book_id}) not found.")
     return book
 
-# @router.get("", response_model=list[BookSearchResultModel], tags=["Books"])
-# async def search_books(q: str, #= Query(min_length=1),
-# current_user: User, #= Depends(get_current_user),
-# book_service=Depends(get_book_service)):
-#     """Search books in OpenLibrary
-#     """
-#     ...
+
+@router.get("", response_model=list[BookModel], tags=["Books"])
+async def search_books(q: str,
+# current_user: User = Depends(get_current_user),
+book_service=Depends(get_book_service)):
+    """Search books in OpenLibrary
+
+        Args:
+            q (str): query typed by the user to search books in OpenLibrary (for instance: "le petit prince")
+            current_user (User): the current user who is doing this research
+            book_service (BookService): The service used to interact with user data
+        Returns:
+            A list of books corresponding to the response given by OpenLibrary
+    """
+    logger.info("Execute a research into OpenLibrary (function search_books)")
+    books = book_service.search(query=q)
+    if books == []:
+        raise HTTPException(status_code=404, detail="The request gave no answer in OpenLibrary client.")
+
+    return books
 
 # @router.get("/{work_id}", response_model=BookDetailModel, tags=["Books"])
 # async def get_book(work_id: str,

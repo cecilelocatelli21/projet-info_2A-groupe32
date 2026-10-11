@@ -41,7 +41,6 @@ class BookDetailModel(BaseModel):
     cover_url: str | None = None
     subjects: list[str] = []
     description: str | None = None
-    editions_count: int = 0
     editions: list[EditionModel] = []
     average_rating: float | None = None
 
