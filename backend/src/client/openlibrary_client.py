@@ -1,17 +1,12 @@
-import json
-
 import requests
 
 from business_object.book import Book
-# from dao.reading_dao import ReadingDao
-# from service.book_service import BookService
-from utils.log_utils import get_logger, log
+from utils.log_utils import log
 from utils.singleton import Singleton
 
 
 class OpenLibraryError(Exception):
     """OpenLibrary unjoignable, timeout or unexpected response"""
-    ...
 
 
 class OpenLibraryClient(metaclass=Singleton):
@@ -27,28 +22,23 @@ class OpenLibraryClient(metaclass=Singleton):
         Returns:
             A list of books corresponding to the response given by OpenLibrary
         """
+        ## request effectue déjà ce découpage + gère les accent et caractères spéciaux en passant query en paramètres
+        # # We cut the sentence written by the user into words that we insert into a html query for OpenLibrary
+        # words_list = query.split(" ")
+        # words_query = ""
+        # for w in words_list:
+        #     words_query = f"{words_query}{w}+"
+        # words_query = words_query[:-1]
+        # # words_query is a string corresponding at what we have to put in the html query for the search
 
-        # We cut the sentence written by the user into words that we insert into a html query for OpenLibrary
-        words_list = query.split(" ")
-        words_query = ""
-        for w in words_list:
-            words_query = f"{words_query}{w}+"
-        words_query = words_query[:-1]
-        # words_query is a string corresponding at what we have to put in the html query for the search
-
-        ## A MODIFIER en utilisant _get
-        OL_query = f"{self.BASE_URL}/search.json?q={words_query}"
-
-        r = requests.get(
-            url=OL_query,
-            params={"limit": limit},
+        raw_json = self._get(
+            path="/search.json",
+            params={
+                "q": query,
+                "limit": limit}
         )
-        if r.status_code == 404:
+        if raw_json is None:
             return []
-        elif r.status_code != 200:
-            raise Exception(f"Cannot reach (HTTP {r.status_code}): {r.text}")
-        else:
-            raw_json = r.json()
 
         # _raw_json_to_list_of_book transform a raw_json into a list of books
         books_list = self._raw_json_to_list_of_book(raw_json=raw_json, limit=limit)
@@ -65,25 +55,21 @@ class OpenLibraryClient(metaclass=Singleton):
             Book | None: the book without its book_id ,
                 or None if OpenLibrary does not know this work_id
         """
-        ## A MODIFIER en utilisant _get
-        r = requests.get(url=f"{self.BASE_URL}/works/{work_id}.json")
-        if r.status_code == 404:
+        raw_json = self._get(path=f"/works/{work_id}.json")
+        if raw_json is None:
             return None
-        elif r.status_code != 200:
-            raise Exception(f"Cannot reach (HTTP {r.status_code}): {r.text}")
-        else:
-            raw_json = r.json()
-            # print(json.dumps(raw_json, indent=2))  # Pretty print
 
         title = raw_json.get("title")
 
-        authors_in_work = raw_json.get("authors")
-        author_key = authors_in_work[0]["author"]["key"].split("/")[2]
-        authors = self._get_author_name(author_key=author_key)
+        authors_in_work = raw_json.get("authors") or []
+        authors = None
+        if authors_in_work:
+            author_key = authors_in_work[0]["author"]["key"].split("/")[2]
+            authors = self._get_author_name(author_key=author_key)
 
         # OpenLibrary returns a list of covers in the raw_json, we choose the last one of the list.
-        cover_id = raw_json.get("covers")[-1]
-        cover_url = self._build_cover_url(cover_id=cover_id)
+        list_cover_id = raw_json.get("covers") or []
+        cover_url = self._build_cover_url(cover_id=list_cover_id[-1] if list_cover_id else None)
 
         return Book(work_id, title, authors, cover_url)
 
@@ -95,64 +81,24 @@ class OpenLibraryClient(metaclass=Singleton):
             work_id (str): OpenLibrary identifier of the work (e.g. "OL45804W").
         Returns:
             dict: {
-                #"work_id" (str): work_id of the book
-                #"book_id" (int | None): if it does exist, the book_id of the book
-                #"title" (str): the title of the book
-                #"authors" (str): the authors of the book
-                #"cover_url" (str): the url corresponding to the cover of the book
                 "subjects" (list[str] = []): the subjects covered by the book
                 "description" (str | None) : if it does exist, a description of the book
-                #"editions" (list[EditionModel]) : the list of the editions available in OpenLibrary for this book
-                #"average_rating" (float | None): the ranking of the book in our local database
             }
             None if OpenLibrary does not know this work_id.
         """
-        ## A MODIFIER en utilisant _get
-        r = requests.get(url=f"{self.BASE_URL}/works/{work_id}.json")
-        if r.status_code == 404:
+ 
+        raw_json = self._get(f"/works/{work_id}.json")
+        if raw_json is None:
             return None
-        elif r.status_code != 200:
-            raise Exception(f"Cannot reach (HTTP {r.status_code}): {r.text}")
-        else:
-            raw_json = r.json()
-
-        # # We create an empty dictionnaru called work_details
 
         # description can be a string or a dict where the description is in the key "value"
         description = raw_json.get("description")
         if isinstance(description, dict):
             description = description.get("value")
         work_details = {
-            "subjects" : raw_json.get("subjects"),
+            "subjects" : raw_json.get("subjects",[]),
             "description" : description
         }
-        # work_details["work_id"] = work_id
-        # # We fill this dictionnary with the work_id and data from OpenLibrary request
-        # work_details["title"] = raw_json.get("title")
-
-        # authors_in_work = raw_json.get("authors")
-        # # From the "authors" key in raw_json, we extract the author_id, then we get the name of the author
-        # author_key = authors_in_work[0]["author"]["key"].split("/")[2]
-        # work_details["authors"] = self._get_author_name(author_key=author_key)
-
-        # # OpenLibrary returns a list of covers in the raw_json, we choose the last one of the list.
-        # cover_id = raw_json.get("covers")[-1]
-        # work_details["cover_url"] = self._build_cover_url(cover_id=cover_id)
-
-        # work_details["subjects"] = raw_json.get("subjects")
-        # work_details["description"] = raw_json.get("description")
-        # work_details["editions"] = self.get_editions(work_id=work_id)
-
-        # # Problème d'appel circulaire : j'ai besoin de BookService() qui se trouve dans book_service, et book_service utilise openlibrary_client -> je ne vois pas comment faire...
-
-        # # bookservice = BookService()
-        # # book = bookservice.find_by_work_id(work_id=work_id)
-        # # if book.book_id is not None:
-        # #     work_details["book_id"] = book.book_id
-        # #     readingdao = ReadingDao()
-        # #     average_rating = readingdao.average_rating_by_book(book_id=book.book_id)
-        # #     work_details["average_rating"] = average_rating
-
         return work_details
 
     @log
@@ -177,6 +123,7 @@ class OpenLibraryClient(metaclass=Singleton):
         )
         if raw_json is None:
             return None
+
         editions = []
         for entry in raw_json.get("entries", []):
             # publishers, isbn10, isbn13 are lists: we keep the first value
@@ -208,19 +155,14 @@ class OpenLibraryClient(metaclass=Singleton):
             A list of books written by this author or about this author
             An empty list if nothing has been found
         """
-        ## A MODIFIER en utilisant _get
-        r = requests.get(
-            # this is the basic request to search for an author in OpenLibrary
-            url=f"{self.BASE_URL}/search.json?q={author}",
-            params={"limit": limit},
-        )
+        raw_json = self._get(
+            path="/search.json",
+            params={
+                "q": author,
+                "limit": limit})
 
-        if r.status_code == 404:
-            return book_list
-        elif r.status_code != 200:
-            raise Exception(f"Cannot reach (HTTP {r.status_code}): {r.text}")
-        else:
-            raw_json = r.json()
+        if raw_json is None:
+            return []
 
         # _raw_json_to_list_of_book transform a raw_json into a list of books
         books_list = self._raw_json_to_list_of_book(raw_json=raw_json, limit=limit)
@@ -228,30 +170,28 @@ class OpenLibraryClient(metaclass=Singleton):
         return books_list
 
     @log
-    def _get_author_name(self, author_key: str) -> str:
+    def _get_author_name(self, author_key: str) -> str | None:
         """get the author name from the author key obtained in OpenLibrary
     Args:
         author_key (str)
     Returns:
         author_name (str): The name of the author whose author_key is the key
         """
-        ## A MODIFIER en utilisant _get
-        r = requests.get(url=f"{self.BASE_URL}/authors/{author_key}.json")
-        if r.status_code != 200:
-            raise Exception(f"Cannot reach (HTTP {r.status_code}): {r.text}")
-        else:
-            raw_json = r.json()
-
-        author_name = raw_json["personal_name"]
-        return author_name
+        raw_json = self._get(
+            path=f"/authors/{author_key}.json"
+        )
+        if raw_json is None:
+            return None
+        # author_name can be found under "personal_name" or "name"
+        return raw_json.get("personal_name") or raw_json.get("name")
 
     @log
-    def _build_cover_url(self, cover_id: int | None, size: str = "L") -> str | None:
-        """get the author name from the author key obtained in OpenLibrary
+    def _build_cover_url(self, cover_id: int | None, size: str = "M") -> str | None:
+        """get the url of a cover
 
         Args:
             cover_id (int): OpenLibrary identifier of the cover (e.g. "7165018").
-            size (str): the size of the image ("S" -> small, "M" -> medium, "L" -> large). Default size is "L".
+            size (str): the size of the image ("S" -> small, "M" -> medium, "L" -> large). Default size is "M".
         Returns:
             the precise url for the image of the cover.
         """
@@ -273,13 +213,13 @@ class OpenLibraryClient(metaclass=Singleton):
         """
 
         book_list = []
-
-        docs = raw_json.get("docs")
-        for i in range(limit):
+        docs = raw_json.get("docs") or []
+        results_number = min(len(docs), limit)
+        for i in range(results_number):
             # We split the key that is like "/works/{work_id}" to get only the work_id
             work_id = docs[i].get("key").split("/")[2]
             title = docs[i].get("title")
-            authors = docs[i].get("author_name")
+            authors = docs[i].get("author_name") or []
             # We transform the list of authors into a string that contains all the authors
             authors_string = ""
             for a in authors:
