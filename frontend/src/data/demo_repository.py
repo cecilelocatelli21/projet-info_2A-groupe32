@@ -53,7 +53,9 @@ class DemoCatalog:
 
 class DemoRepository(Repository):
     source = "demo"
-    supports = frozenset({"search", "reviews", "details", "social", "recommendations"})
+    supports = frozenset(
+        {"search", "reviews", "details", "social", "recommendations", "likes", "follow", "library"}
+    )
 
     def __init__(self):
         self._catalog = DemoCatalog()
@@ -65,7 +67,9 @@ class DemoRepository(Repository):
             st.session_state[_STATE_KEY] = {
                 "entries": demo_catalog.initial_library(),
                 "reviews": demo_catalog.initial_my_reviews(),
-                "next_reading_id": 100,
+                "likes": set(),  # ids of the reviews liked by the demo user
+                "following": demo_catalog.initial_following(),
+                "next_reading_id": 1000,
             }
         return st.session_state[_STATE_KEY]
 
@@ -88,7 +92,13 @@ class DemoRepository(Repository):
     def book_reviews(self, work_id: str) -> list[Review]:
         reviews = self._catalog.book_reviews(work_id)
         mine = self._state["reviews"].get(work_id)
-        return ([mine] if mine else []) + reviews
+        return [self._with_likes(r) for r in ([mine] if mine else []) + reviews]
+
+    def _with_likes(self, review: Review) -> Review:
+        """Adds the demo user's own like to the stored (fictitious) counter."""
+        if review.is_mine or review.review_id not in self._state["likes"]:
+            return review
+        return replace(review, likes=review.likes + 1, liked_by_me=True)
 
     # ---- home rows ----------------------------------------------------------------------
     def _affinities(self) -> dict[str, float]:
@@ -151,7 +161,14 @@ class DemoRepository(Repository):
         return rows
 
     # ---- library ------------------------------------------------------------------------
-    def library(self, status: str | None = None) -> list[LibraryEntry]:
+    @property
+    def own_id(self) -> int:
+        return demo_catalog.DEMO_USER_ID
+
+    def library(self, status: str | None = None, user_id: int | None = None) -> list[LibraryEntry]:
+        if user_id is not None and user_id != self.own_id:
+            others = demo_catalog.user_library(user_id)
+            return [e for e in others if status is None or e.status == status]
         entries = list(self._state["entries"].values())
         if status:
             entries = [e for e in entries if e.status == status]
@@ -226,5 +243,38 @@ class DemoRepository(Repository):
         reviews = list(self._state["reviews"].values())
         return sorted(reviews, key=lambda r: r.created or date.min, reverse=True)
 
-    def profile(self) -> Profile:
-        return demo_catalog.demo_profile()
+    def user_reviews(self, user_id: int | None = None) -> list[Review]:
+        if user_id is None or user_id == self.own_id:
+            return self.my_reviews()
+        return [self._with_likes(r) for r in demo_catalog.reviews_by_author(user_id)]
+
+    def profile(self, user_id: int | None = None) -> Profile | None:
+        uid = self.own_id if user_id is None else user_id
+        return demo_catalog.user_profile(uid, self._state["following"])
+
+    # ---- likes & follows ----------------------------------------------------------------
+    def toggle_like(self, review: Review) -> None:
+        known = {r.review_id: r for r in self._all_reviews()}
+        stored = known.get(review.review_id)
+        if stored is None:
+            raise BusinessRuleError(f"Review {review.review_id} not found")
+        if stored.is_mine:
+            raise BusinessRuleError("You cannot like your own review")
+        self._state["likes"].symmetric_difference_update({review.review_id})
+
+    def _all_reviews(self) -> list[Review]:
+        found = list(self._state["reviews"].values())
+        for slug in demo_catalog.REVIEWED_SLUGS:
+            found += demo_catalog.other_reviews(demo_catalog.wid(slug))
+        return found
+
+    def is_following(self, user_id: int) -> bool:
+        return user_id in self._state["following"]
+
+    def follow(self, user_id: int) -> None:
+        if user_id == self.own_id or demo_catalog.person(user_id) is None:
+            raise BusinessRuleError("Invalid user to follow")
+        self._state["following"].add(user_id)
+
+    def unfollow(self, user_id: int) -> None:
+        self._state["following"].discard(user_id)

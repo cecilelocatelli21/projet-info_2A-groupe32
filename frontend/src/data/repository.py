@@ -54,7 +54,13 @@ class Repository(ABC):
 
     # ---- library ------------------------------------------------------------------------
     @abstractmethod
-    def library(self, status: str | None = None) -> list[LibraryEntry]: ...
+    def library(self, status: str | None = None, user_id: int | None = None) -> list[LibraryEntry]:
+        """Library of ``user_id`` (default: the connected user). Public: no follow needed."""
+
+    @property
+    @abstractmethod
+    def own_id(self) -> int | None:
+        """Id of the connected user."""
 
     def entry(self, work_id: str) -> LibraryEntry | None:
         return next((e for e in self.library() if e.book.work_id == work_id), None)
@@ -76,7 +82,26 @@ class Repository(ABC):
     def my_reviews(self) -> list[Review]: ...
 
     @abstractmethod
-    def profile(self) -> Profile: ...
+    def user_reviews(self, user_id: int | None = None) -> list[Review]:
+        """Public reviews written by ``user_id`` (default: the connected user)."""
+
+    @abstractmethod
+    def profile(self, user_id: int | None = None) -> Profile | None:
+        """Public profile of ``user_id`` (default: the connected user); None if unknown."""
+
+    # ---- likes & follows (independent from the visibility of a profile) ---------------------
+    @abstractmethod
+    def toggle_like(self, review: Review) -> None:
+        """Like the review, or remove the like if already liked."""
+
+    @abstractmethod
+    def is_following(self, user_id: int) -> bool: ...
+
+    @abstractmethod
+    def follow(self, user_id: int) -> None: ...
+
+    @abstractmethod
+    def unfollow(self, user_id: int) -> None: ...
 
     def reset(self) -> None:  # only meaningful for the demo
         return None

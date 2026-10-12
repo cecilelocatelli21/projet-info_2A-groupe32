@@ -140,7 +140,7 @@ def navbar(current: str) -> None:
         with st.popover(session.display_name()[:1].upper()):
             html(f"<b>{escape(session.display_name())}</b>")
             if st.button("Mon profil", key="menu_profile", width="stretch"):
-                st.switch_page(PAGES["profile"])
+                open_profile(None)
             if session.is_demo() and st.button(
                 "Réinitialiser la démo", key="menu_reset", width="stretch"
             ):
@@ -201,16 +201,71 @@ def add_book(repo: Repository, book: Book, status: str = "to read") -> bool:
     return False
 
 
-def review_card(review: Review) -> None:
-    rating = f"<span class='stars'>{'★' * (review.rating or 0)}</span>" if review.rating else ""
-    title = f" · <i>{escape(review.book_title)}</i>" if review.book_title else ""
-    when = review.created.strftime("%d/%m/%Y") if review.created else ""
-    html(
-        f"<div class='panel'><span class='who'>{escape(review.author)}</span>{title}"
-        f"<span class='when'>{when}</span> {rating}"
-        f"<p>{escape(review.text)}</p>"
-        f"<small style='color:var(--muted)'>♥ {review.likes}</small></div>"
-    )
+def open_profile(user_id: int | None) -> None:
+    """Go to the public profile of ``user_id`` (own profile when it is the connected user)."""
+    if user_id is None or user_id == st.session_state.get("user_id"):
+        st.switch_page(PAGES["profile"])
+    st.switch_page(PAGES["profile"], query_params={"user": str(user_id)})
+
+
+def avatar(name: str, small: bool = False) -> str:
+    return f"<div class='avatar{' sm' if small else ''}'>{escape(name[:1].upper())}</div>"
+
+
+def user_link(name: str, user_id: int | None, key: str) -> None:
+    """A username that really navigates to the user's profile (a button styled as a link)."""
+    if user_id is None:
+        html(f"<b>{escape(name)}</b>")
+    elif st.button(f"@{name}", key=key, type="tertiary"):
+        open_profile(user_id)
+
+
+def person_row(person, scope: str) -> None:
+    with st.container(horizontal=True, vertical_alignment="center", key=f"person_{scope}_{person.user_id}"):
+        html(avatar(person.username, small=True))
+        with st.container(gap=None):
+            user_link(person.username, person.user_id, f"plink_{scope}_{person.user_id}")
+            if person.bio:
+                html(f"<span style='color:var(--muted);font-size:.8rem'>{escape(person.bio)}</span>")
+
+
+def review_card(review: Review, repo: Repository | None = None, scope: str = "r", book: Book | None = None) -> None:
+    """A review: clickable author, rating, date, text and a like button tied to the connected user.
+
+    With ``book`` (profile page) the cover is shown on the left and opens the book page."""
+    with st.container(key=f"rev_{scope}_{review.review_id}"):
+        left, right = st.columns([1, 6], gap="medium") if book else (None, st.container())
+        if left is not None:
+            with left:
+                book_card(book, f"rv{scope}{review.review_id}")
+        with right:
+            with st.container(horizontal=True, vertical_alignment="center"):
+                html(avatar(review.author or "?", small=True))
+                user_link(review.author, review.author_id, f"ulink_{scope}_{review.review_id}")
+                when = review.created.strftime("%d/%m/%Y") if review.created else ""
+                rating = f"<span class='stars'>{'★' * review.rating}</span>" if review.rating else ""
+                html(f"<span class='when'>{when}</span> {rating}")
+            if book:
+                html(f"<div class='rev-book'>{escape(book.title)}</div>")
+            html(f"<p class='rev-text'>{escape(review.text)}</p>")
+            can_like = repo is not None and "likes" in repo.supports and review.likeable
+            if can_like and not review.is_mine:
+                label = f"{'♥' if review.liked_by_me else '♡'} {review.likes}"
+                if st.button(
+                    label,
+                    key=f"like_{scope}_{review.review_id}",
+                    type="primary" if review.liked_by_me else "secondary",
+                    help="Retirer mon like" if review.liked_by_me else "J'aime cette critique",
+                ):
+                    try:
+                        repo.toggle_like(review)
+                    except BusinessRuleError as exc:
+                        st.toast(str(exc), icon="⚠️")
+                    except DataUnavailable:
+                        st.toast("Le serveur ne répond pas, réessaie dans un instant.", icon="⚠️")
+                    st.rerun()
+            else:
+                html(f"<small style='color:var(--muted)'>♥ {review.likes}</small>")
 
 
 def safe(call, default=None):

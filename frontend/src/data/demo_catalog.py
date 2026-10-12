@@ -11,7 +11,8 @@ renders a generated cover underneath, so a missing cover never shows as a broken
 from __future__ import annotations
 
 import zlib
-from datetime import date
+from dataclasses import replace
+from datetime import date, timedelta
 
 from data.models import Book, LibraryEntry, Person, Profile, Review
 from utils.settings import demo_covers_mode
@@ -368,8 +369,75 @@ _FRIENDS = [
     Person("julien.k", 16, "Essais, histoire, un peu de BD."),
 ]
 
-_FOLLOWERS = (_FRIENDS[0], _FRIENDS[2], _FRIENDS[3], _FRIENDS[4])
-_FOLLOWING = (_FRIENDS[0], _FRIENDS[1], _FRIENDS[2], _FRIENDS[5])
+_ME = Person(DEMO_USERNAME, DEMO_USER_ID, DEMO_BIO)
+PEOPLE: dict[int, Person] = {p.user_id: p for p in [_ME, *_FRIENDS]}
+_BY_USERNAME = {p.username: p for p in PEOPLE.values()}
+
+# who follows whom (usernames): the followers lists are derived from this, so they stay consistent
+_FOLLOWS = {
+    "camille.demo": {"lea_p", "marc.lit", "ines.reads", "julien.k"},
+    "lea_p": {"camille.demo", "thomas_b", "nora_pages"},
+    "marc.lit": {"ines.reads", "julien.k"},
+    "ines.reads": {"camille.demo", "marc.lit", "nora_pages"},
+    "thomas_b": {"camille.demo", "lea_p"},
+    "nora_pages": {"camille.demo", "lea_p", "julien.k", "ines.reads"},
+    "julien.k": {"marc.lit", "thomas_b"},
+}
+
+_FRIEND_SINCE = {
+    "lea_p": date(2025, 1, 20),
+    "marc.lit": date(2024, 11, 5),
+    "ines.reads": date(2025, 2, 9),
+    "thomas_b": date(2024, 9, 14),
+    "nora_pages": date(2025, 5, 30),
+    "julien.k": date(2025, 7, 2),
+}
+
+# Books of the fictitious readers besides the ones they reviewed (those are always "read"):
+# username -> [(slug, status, date_added, date_read, rating)]
+_FRIEND_EXTRAS = {
+    "lea_p": [
+        ("dragon-tattoo", "read", date(2026, 2, 1), date(2026, 2, 12), 4),
+        ("orient-express", "read", date(2026, 4, 3), date(2026, 4, 8), 5),
+        ("and-then-there-were-none", "to read", date(2026, 8, 2), None, None),
+        ("dracula", "in progress", date(2026, 9, 20), None, None),
+        ("la-peste", "abandoned", date(2025, 10, 5), date(2025, 10, 30), 2),
+    ],
+    "marc.lit": [
+        ("atomic-habits", "read", date(2026, 1, 3), date(2026, 1, 20), 4),
+        ("hobbit", "read", date(2025, 12, 1), date(2025, 12, 14), 5),
+        ("foundation", "in progress", date(2026, 9, 12), None, None),
+        ("neuromancer", "to read", date(2026, 8, 18), None, None),
+    ],
+    "ines.reads": [
+        ("mistborn", "read", date(2026, 1, 15), date(2026, 2, 20), 5),
+        ("harry-potter-1", "read", date(2025, 11, 1), date(2025, 11, 9), 5),
+        ("fahrenheit-451", "in progress", date(2026, 10, 2), None, None),
+        ("left-hand-of-darkness", "to read", date(2026, 7, 22), None, None),
+        ("game-of-thrones", "abandoned", date(2025, 6, 1), date(2025, 6, 28), 2),
+    ],
+    "thomas_b": [
+        ("la-peste", "read", date(2026, 2, 3), date(2026, 2, 17), 4),
+        ("great-gatsby", "read", date(2025, 10, 11), date(2025, 10, 15), 3),
+        ("jane-eyre", "in progress", date(2026, 9, 25), None, None),
+        ("brave-new-world", "to read", date(2026, 8, 30), None, None),
+        ("catcher-in-the-rye", "abandoned", date(2025, 8, 12), date(2025, 8, 25), 2),
+    ],
+    "nora_pages": [
+        ("normal-people", "read", date(2026, 3, 1), date(2026, 3, 11), 4),
+        ("hunger-games", "read", date(2025, 12, 20), date(2025, 12, 28), 3),
+        ("atomic-habits", "in progress", date(2026, 9, 29), None, None),
+        ("educated", "to read", date(2026, 7, 9), None, None),
+        ("hundred-years-of-solitude", "abandoned", date(2025, 9, 1), date(2025, 9, 30), 2),
+    ],
+    "julien.k": [
+        ("educated", "read", date(2026, 2, 8), date(2026, 3, 1), 5),
+        ("atomic-habits", "read", date(2025, 12, 5), date(2025, 12, 22), 4),
+        ("dracula", "in progress", date(2026, 9, 18), None, None),
+        ("frankenstein", "to read", date(2026, 8, 7), None, None),
+        ("alchemist", "abandoned", date(2025, 7, 7), date(2025, 7, 20), 2),
+    ],
+}
 
 # Reviews by other (fictional) readers: slug -> [(author, rating, text, likes, date)]
 _OTHER_REVIEWS = {
@@ -445,6 +513,9 @@ _OTHER_REVIEWS = {
 }
 
 
+REVIEWED_SLUGS = tuple(_OTHER_REVIEWS)
+
+
 def initial_library() -> dict[str, LibraryEntry]:
     """The demo user's starting library, keyed by work_id."""
     catalog = books()
@@ -480,6 +551,7 @@ def initial_my_reviews() -> dict[str, Review]:
             likes=n * 3 % 7 + 1,
             book_title=catalog[work_id].title,
             is_mine=True,
+            author_id=DEMO_USER_ID,
         )
     return reviews
 
@@ -497,17 +569,95 @@ def other_reviews(work_id: str) -> list[Review]:
             rating=rating,
             created=created,
             likes=likes,
+            author_id=_BY_USERNAME[author].user_id,
         )
         for author, rating, text, likes, created in items
     ]
 
 
-def demo_profile() -> Profile:
-    return Profile(
-        username=DEMO_USERNAME,
-        display_name=DEMO_DISPLAY_NAME,
-        bio=DEMO_BIO,
-        member_since=DEMO_MEMBER_SINCE,
-        followers=_FOLLOWERS,
-        following=_FOLLOWING,
+def person(user_id: int) -> Person | None:
+    return PEOPLE.get(user_id)
+
+
+def initial_following() -> set[int]:
+    """User ids followed by the demo user at the start of a session."""
+    return {_BY_USERNAME[u].user_id for u in _FOLLOWS[DEMO_USERNAME]}
+
+
+def _following_usernames(user_id: int, my_following: set[int]) -> set[str]:
+    if user_id == DEMO_USER_ID:
+        return {PEOPLE[i].username for i in my_following if i in PEOPLE}
+    return _FOLLOWS.get(PEOPLE[user_id].username, set())
+
+
+def followers_of(user_id: int, my_following: set[int]) -> tuple[Person, ...]:
+    name = PEOPLE[user_id].username
+    return tuple(
+        p for p in PEOPLE.values() if name in _following_usernames(p.user_id, my_following)
     )
+
+
+def following_of(user_id: int, my_following: set[int]) -> tuple[Person, ...]:
+    return tuple(_BY_USERNAME[n] for n in sorted(_following_usernames(user_id, my_following)))
+
+
+def user_profile(user_id: int, my_following: set[int]) -> Profile | None:
+    """Public profile of a demo user (the demo user included); None if unknown."""
+    p = PEOPLE.get(user_id)
+    if p is None:
+        return None
+    is_me = user_id == DEMO_USER_ID
+    return Profile(
+        user_id=user_id,
+        username=p.username,
+        display_name=DEMO_DISPLAY_NAME if is_me else p.username,
+        bio=p.bio,
+        member_since=DEMO_MEMBER_SINCE if is_me else _FRIEND_SINCE[p.username],
+        followers=followers_of(user_id, my_following),
+        following=following_of(user_id, my_following),
+    )
+
+
+def reviews_by_author(user_id: int) -> list[Review]:
+    """Reviews written by a fictitious reader (the demo user's own are kept in the session)."""
+    p = PEOPLE.get(user_id)
+    if p is None or user_id == DEMO_USER_ID:
+        return []
+    catalog = books()
+    found = []
+    for slug in _OTHER_REVIEWS:
+        for review in other_reviews(wid(slug)):
+            if review.author_id == user_id:
+                found.append(replace(review, book_title=catalog[review.work_id].title))
+    return sorted(found, key=lambda r: r.created or date.min, reverse=True)
+
+
+def user_library(user_id: int) -> list[LibraryEntry]:
+    """Library of a fictitious reader: the books they reviewed (read) plus a few others."""
+    p = PEOPLE.get(user_id)
+    if p is None or user_id == DEMO_USER_ID:
+        return []
+    catalog = books()
+    entries: dict[str, LibraryEntry] = {}
+    for n, review in enumerate(reviews_by_author(user_id), start=1):
+        entries[review.work_id] = LibraryEntry(
+            reading_id=user_id * 100 + n,
+            book=catalog[review.work_id],
+            status="read",
+            date_added=(review.created or date(2026, 1, 1)) - timedelta(days=14),
+            date_read=review.created,
+            rating=review.rating,
+        )
+    for n, (slug, status, added, read_on, rating) in enumerate(
+        _FRIEND_EXTRAS.get(p.username, []), start=50
+    ):
+        work_id = wid(slug)
+        if work_id not in entries:
+            entries[work_id] = LibraryEntry(
+                user_id * 100 + n, catalog[work_id], status, added, read_on, rating
+            )
+    return sorted(entries.values(), key=lambda e: e.date_added, reverse=True)
+
+
+def demo_profile() -> Profile:
+    return user_profile(DEMO_USER_ID, initial_following())

@@ -40,6 +40,18 @@ when the API cannot be reached; a banner says so.
 | `EXLIBRIS_DATA_SOURCE` | `auto` | `auto`: API then demo catalogue if unreachable; `api`: API only; `demo`: no API call |
 | `EXLIBRIS_DEMO_COVERS` | `remote` | `generated`: never request Open Library covers (offline demo) |
 
+### Public profiles, likes and follows
+
+`views/profile.py` is the only profile page: `/profil` is the connected user, `/profil?user=<id>`
+is the public profile of anyone (no follow needed). Usernames (reviews, followers, following) are
+buttons calling `ui.open_profile(user_id)`. Likes and the Follow button are independent of what a
+profile shows.
+
+Real backend today: profile (`GET /user/{id}`), followers/following, follow/unfollow work.
+Not available yet (the front hides or disables them): reviews, likes (no route), account creation
+date, and `GET /users/{id}/readings` (see the audit). Set `EXLIBRIS_BACKEND_REVIEWS=true` once the
+review/like routes of `doc/Ex-Libris — Endpoints de l'API.md` exist.
+
 ### Still to connect (backend side)
 
 - `GET /book/search` (search is local for now), book description/genres/average rating,

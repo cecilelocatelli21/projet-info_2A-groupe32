@@ -15,6 +15,7 @@ from data.models import Book, LibraryEntry, Person, Profile, Review, Row
 from data.repository import Repository
 from data.search import filter_books
 from utils.api_client import api_client
+from utils.settings import backend_reviews_enabled
 
 
 def _headers() -> dict:
@@ -55,33 +56,63 @@ def _entry(raw: dict) -> LibraryEntry:
     )
 
 
+def _review(raw: dict) -> Review:
+    """Maps a review of the backend. The review routes are not implemented yet: the field names
+    below follow the planned ReviewReadModel (doc/Ex-Libris — Endpoints de l'API.md) and must be
+    checked against the real response once the routes exist."""
+    created = raw.get("publication_date") or raw.get("created")
+    return Review(
+        review_id=raw["review_id"],
+        work_id=raw.get("work_id", ""),
+        author=raw.get("username", ""),
+        author_id=raw.get("user_id"),
+        text=raw.get("text", ""),
+        rating=raw.get("rating"),
+        created=date.fromisoformat(created[:10]) if created else None,
+        likes=raw.get("likes", 0),
+        liked_by_me=bool(raw.get("liked_by_me", False)),
+        book_title=raw.get("book_title"),
+        is_mine=raw.get("user_id") == st.session_state.get("user_id"),
+    )
+
+
 class ApiRepository(Repository):
     source = "api"
-    supports = frozenset({"social", "library"})
+
+    @property
+    def supports(self) -> frozenset[str]:  # type: ignore[override]
+        base = {"social", "library", "follow"}
+        return frozenset(base | ({"reviews", "likes"} if backend_reviews_enabled() else set()))
 
     @property
     def _user_id(self) -> int:
         return st.session_state["user_id"]
 
+    @property
+    def own_id(self) -> int:
+        return self._user_id
+
     # ---- catalogue ----------------------------------------------------------------------
     def catalog(self) -> list[Book]:
-        return [_book(b) for b in _call("get", "/book/") or []]
+        return [_book(b) for b in _call("get", "/books/") or []]
 
     def featured(self) -> list[Book]:
         return self.catalog()[:4]
 
     def search(self, query="", genres=(), authors=(), sort="relevance") -> list[Book]:
-        # GET /book/search is not available yet -> local filtering on the stored books
+        # GET /books?q= exists but returns OpenLibrary results (not the stored catalogue) -> local filtering on the stored books
         return filter_books(self.catalog(), query, genres, authors, sort)
 
     def get_book(self, work_id: str) -> Book | None:
         try:
-            return _book(_call("get", f"/book/{work_id}"))
+            return _book(_call("get", f"/books/{work_id}"))
         except BusinessRuleError:
             return None
 
     def book_reviews(self, work_id: str) -> list[Review]:
-        return []  # no review route yet
+        if not backend_reviews_enabled():
+            return []  # no review route in the backend yet
+        return [_review(r) for r in _call("get", f"/books/{work_id}/reviews") or []]
 
     def home_rows(self) -> list[Row]:
         books = self.catalog()
@@ -94,9 +125,10 @@ class ApiRepository(Repository):
         return rows
 
     # ---- library ------------------------------------------------------------------------
-    def library(self, status: str | None = None) -> list[LibraryEntry]:
+    def library(self, status: str | None = None, user_id: int | None = None) -> list[LibraryEntry]:
+        uid = self._user_id if user_id is None else user_id
         params = {"status": status} if status else None
-        raw = _call("get", f"/users/{self._user_id}/readings", params=params) or []
+        raw = _call("get", f"/users/{uid}/readings", params=params) or []
         return [_entry(r) for r in raw]
 
     def add_to_library(self, work_id: str, status: str = "to read") -> LibraryEntry:
@@ -123,22 +155,55 @@ class ApiRepository(Repository):
         # the text of the review needs POST /readings/{id}/review (not implemented yet)
 
     def my_reviews(self) -> list[Review]:
-        return []
+        return self.user_reviews(None)
 
-    def profile(self) -> Profile:
+    def user_reviews(self, user_id: int | None = None) -> list[Review]:
+        if not backend_reviews_enabled():
+            return []
+        uid = self._user_id if user_id is None else user_id
+        return [_review(r) for r in _call("get", f"/users/{uid}/reviews") or []]
+
+    def profile(self, user_id: int | None = None) -> Profile | None:
+        uid = self._user_id if user_id is None else user_id
+
         def people(path: str) -> tuple[Person, ...]:
             try:
                 return tuple(
-                    Person(p["username"], p["user_id"], p.get("bio")) for p in _call("get", path)
+                    Person(p["username"], p["user_id"], p.get("bio")) for p in _call("get", path) or []
                 )
             except (DataUnavailable, BusinessRuleError):
                 return ()
 
-        raw = _call("get", f"/user/{self._user_id}")
+        try:
+            raw = _call("get", f"/user/{uid}")
+        except BusinessRuleError:  # 404: unknown user
+            return None
+        # Only public fields are read: GET /user/{id} also returns the e-mail, never displayed.
         return Profile(
+            user_id=uid,
             username=raw["username"],
             display_name=raw["username"],
             bio=raw.get("bio"),
-            followers=people(f"/users/{self._user_id}/followers"),
-            following=people(f"/users/{self._user_id}/following"),
+            followers=people(f"/users/{uid}/followers"),
+            following=people(f"/users/{uid}/following"),
         )
+
+    # ---- likes & follows ----------------------------------------------------------------
+    def toggle_like(self, review: Review) -> None:
+        if not backend_reviews_enabled():
+            raise BusinessRuleError("Les likes ne sont pas encore disponibles sur le serveur.")
+        path = f"/reviews/{review.review_id}/like"
+        if review.liked_by_me:
+            _call("delete", path)
+        else:
+            _call("put", path, json={"liked": True})
+
+    def is_following(self, user_id: int) -> bool:
+        following = _call("get", f"/users/{self._user_id}/following") or []
+        return any(p["user_id"] == user_id for p in following)
+
+    def follow(self, user_id: int) -> None:
+        _call("post", f"/users/{user_id}/follow")
+
+    def unfollow(self, user_id: int) -> None:
+        _call("delete", f"/users/{user_id}/follow")

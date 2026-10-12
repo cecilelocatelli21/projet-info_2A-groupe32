@@ -161,6 +161,35 @@ hr {border-color:var(--line) !important;}
 .meta-grid span {display:block; color:var(--muted); font-size:.7rem; text-transform:uppercase; letter-spacing:.08em;}
 .meta-grid b {font-weight:600; font-size:.95rem;}
 
+/* ---- critiques cliquables et profils publics --------------------------------------- */
+[class*="st-key-rev_"] {background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:1rem 1.2rem; margin-bottom:.8rem; gap:.4rem !important;}
+[class*="st-key-rev_"] [class*="st-key-card_"] {max-width:130px;}
+[class*="st-key-rev_"] .cv-t {font-size:.68rem; overflow-wrap:normal; word-break:normal; hyphens:auto;}
+[class*="st-key-rev_"] .cv-a {font-size:.55rem;}
+[data-testid="stBaseButton-tertiary"] {color:var(--gold2) !important; font-weight:600 !important; padding:0 .2rem !important; min-height:0 !important; background:transparent !important;}
+[data-testid="stBaseButton-tertiary"]:hover {text-decoration:underline; color:var(--gold) !important;}
+.when {color:var(--muted); font-size:.78rem;}
+.rev-book {font-family:var(--serif); font-weight:700; font-size:1.05rem;}
+.rev-text {margin:.2rem 0 .3rem; color:#ddd7e6; line-height:1.55;}
+[class*="st-key-person_"] {padding:.2rem 0;}
+
+/* ---- champs et onglets : indépendants de .streamlit/config.toml ---------------------- */
+[data-baseweb="input"], [data-baseweb="base-input"], [data-baseweb="textarea"], [data-baseweb="select"] > div {
+  background:rgba(255,255,255,.06) !important; border-color:var(--line) !important; color:var(--text) !important;}
+.stTextInput input, .stTextArea textarea, [data-baseweb="select"] input {
+  background:transparent !important; color:var(--text) !important; -webkit-text-fill-color:var(--text) !important;}
+.stTextInput input::placeholder, .stTextArea textarea::placeholder {color:var(--muted) !important; -webkit-text-fill-color:var(--muted) !important;}
+[data-testid="stWidgetLabel"] p, label p {color:var(--text) !important;}
+[data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p {color:var(--muted) !important;}
+[data-baseweb="tab"], [data-baseweb="tab"] p {color:var(--muted) !important;}
+[data-baseweb="tab"][aria-selected="true"], [data-baseweb="tab"][aria-selected="true"] p {color:var(--gold) !important;}
+[data-baseweb="tab-highlight"] {background:var(--gold) !important;}
+[data-baseweb="tab-border"] {background:var(--line) !important;}
+[data-testid="stBaseButton-segmented_control"], [data-testid="stBaseButton-segmented_controlActive"] {
+  background:rgba(255,255,255,.06) !important; color:var(--text) !important; border:1px solid var(--line) !important;}
+[data-testid="stBaseButton-segmented_controlActive"] {background:rgba(227,176,75,.2) !important; color:var(--gold2) !important; border-color:var(--gold) !important;}
+[data-baseweb="popover"] ul, [data-baseweb="menu"] {background:var(--panel) !important; color:var(--text) !important;}
+
 /* ---- connexion --------------------------------------------------------------------- */
 .login-title {font-family:var(--serif); font-size:clamp(2.4rem,4.6vw,4.2rem); line-height:1.02; margin:1.2rem 0 1rem;}
 .login-title em {color:var(--gold); font-style:normal;}

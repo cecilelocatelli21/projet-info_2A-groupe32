@@ -8,11 +8,13 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import streamlit as st
 
 from data.api_repository import ApiRepository
 from data.demo_repository import DemoCatalog, DemoRepository
-from data.errors import DataUnavailable
+from data.errors import BusinessRuleError, DataUnavailable
 from data.repository import Repository
 from utils.settings import data_source
 
@@ -33,8 +35,8 @@ class FallbackRepository(ApiRepository):
             if books:
                 return books
             reason = "Le catalogue du serveur est vide."
-        except DataUnavailable as exc:
-            reason = f"Serveur injoignable ({exc})."
+        except (DataUnavailable, BusinessRuleError) as exc:
+            reason = f"Serveur injoignable ou route indisponible ({exc})."
         if data_source() == "api":
             return []
         self.degraded, self.degraded_reason = True, reason
@@ -53,7 +55,9 @@ class FallbackRepository(ApiRepository):
         return book or super().get_book(work_id)
 
     def book_reviews(self, work_id):
-        return self._demo.book_reviews(work_id) if self._demo.get_book(work_id) else []
+        if self._demo.get_book(work_id):  # fictitious reviews: nothing can be recorded on them
+            return [replace(r, likeable=False) for r in self._demo.book_reviews(work_id)]
+        return super().book_reviews(work_id)
 
 
 def get_repository() -> Repository:

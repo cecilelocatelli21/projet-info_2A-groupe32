@@ -71,6 +71,9 @@ class Review:
     likes: int = 0
     book_title: str | None = None
     is_mine: bool = False
+    author_id: int | None = None  # needed to open the author's public profile
+    liked_by_me: bool = False
+    likeable: bool = True  # False when likes cannot be recorded (e.g. fictitious review)
 
 
 @dataclass(frozen=True)
@@ -82,6 +85,7 @@ class Person:
 
 @dataclass(frozen=True)
 class Profile:
+    user_id: int | None
     username: str
     display_name: str
     bio: str | None = None

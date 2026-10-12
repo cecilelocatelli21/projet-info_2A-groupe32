@@ -101,7 +101,7 @@ else:
 
 reviews = ui.safe(lambda: repo.book_reviews(work_id), [])
 for review in reviews:
-    ui.review_card(review)
+    ui.review_card(review, repo, scope="book")
 if not reviews and "reviews" in repo.supports:
     ui.empty("Pas encore de critique", "Sois le premier à donner ton avis.")
 elif not reviews:
