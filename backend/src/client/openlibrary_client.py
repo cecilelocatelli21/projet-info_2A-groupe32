@@ -36,6 +36,7 @@ class OpenLibraryClient(metaclass=Singleton):
         words_query = words_query[:-1]
         # words_query is a string corresponding at what we have to put in the html query for the search
 
+        ## A MODIFIER en utilisant _get
         OL_query = f"{self.BASE_URL}/search.json?q={words_query}"
 
         r = requests.get(
@@ -55,7 +56,7 @@ class OpenLibraryClient(metaclass=Singleton):
         return books_list
 
     @log
-    def get_work(self, work_id: str) -> Book or None:
+    def get_work(self, work_id: str) -> Book | None:
         """get a work in OpenLibrary if it exists
 
         Args:
@@ -64,6 +65,7 @@ class OpenLibraryClient(metaclass=Singleton):
             Book | None: the book without its book_id ,
                 or None if OpenLibrary does not know this work_id
         """
+        ## A MODIFIER en utilisant _get
         r = requests.get(url=f"{self.BASE_URL}/works/{work_id}.json")
         if r.status_code == 404:
             return None
@@ -93,18 +95,19 @@ class OpenLibraryClient(metaclass=Singleton):
             work_id (str): OpenLibrary identifier of the work (e.g. "OL45804W").
         Returns:
             dict: {
-                "work_id" (str): work_id of the book
-                "book_id" (int | None): if it does exist, the book_id of the book
-                "title" (str): the title of the book
-                "authors" (str): the authors of the book
-                "cover_url" (str): the url corresponding to the cover of the book
+                #"work_id" (str): work_id of the book
+                #"book_id" (int | None): if it does exist, the book_id of the book
+                #"title" (str): the title of the book
+                #"authors" (str): the authors of the book
+                #"cover_url" (str): the url corresponding to the cover of the book
                 "subjects" (list[str] = []): the subjects covered by the book
                 "description" (str | None) : if it does exist, a description of the book
-                "editions" (list[EditionModel]) : the list of the editions available in OpenLibrary for this book
-                "average_rating" (float | None): the ranking of the book in our local database
+                #"editions" (list[EditionModel]) : the list of the editions available in OpenLibrary for this book
+                #"average_rating" (float | None): the ranking of the book in our local database
             }
             None if OpenLibrary does not know this work_id.
         """
+        ## A MODIFIER en utilisant _get
         r = requests.get(url=f"{self.BASE_URL}/works/{work_id}.json")
         if r.status_code == 404:
             return None
@@ -113,34 +116,42 @@ class OpenLibraryClient(metaclass=Singleton):
         else:
             raw_json = r.json()
 
-        # We create an empty dictionnaru called work_details
-        work_details = {}
-        work_details["work_id"] = work_id
-        # We fill this dictionnary with the work_id and data from OpenLibrary request
-        work_details["title"] = raw_json.get("title")
+        # # We create an empty dictionnaru called work_details
 
-        authors_in_work = raw_json.get("authors")
-        # From the "authors" key in raw_json, we extract the author_id, then we get the name of the author
-        author_key = authors_in_work[0]["author"]["key"].split("/")[2]
-        work_details["authors"] = self._get_author_name(author_key=author_key)
+        # description can be a string or a dict where the description is in the key "value"
+        description = raw_json.get("description")
+        if isinstance(description, dict):
+            description = description.get("value")
+        work_details = {
+            "subjects" : raw_json.get("subjects"),
+            "description" : description
+        }
+        # work_details["work_id"] = work_id
+        # # We fill this dictionnary with the work_id and data from OpenLibrary request
+        # work_details["title"] = raw_json.get("title")
 
-        # OpenLibrary returns a list of covers in the raw_json, we choose the last one of the list.
-        cover_id = raw_json.get("covers")[-1]
-        work_details["cover_url"] = self._build_cover_url(cover_id=cover_id)
+        # authors_in_work = raw_json.get("authors")
+        # # From the "authors" key in raw_json, we extract the author_id, then we get the name of the author
+        # author_key = authors_in_work[0]["author"]["key"].split("/")[2]
+        # work_details["authors"] = self._get_author_name(author_key=author_key)
 
-        work_details["subjects"] = raw_json.get("subjects")
-        work_details["description"] = raw_json.get("description")
-        work_details["editions"] = self.get_editions(work_id=work_id)
+        # # OpenLibrary returns a list of covers in the raw_json, we choose the last one of the list.
+        # cover_id = raw_json.get("covers")[-1]
+        # work_details["cover_url"] = self._build_cover_url(cover_id=cover_id)
 
-        # Problème d'appel circulaire : j'ai besoin de BookService() qui se trouve dans book_service, et book_service utilise openlibrary_client -> je ne vois pas comment faire...
+        # work_details["subjects"] = raw_json.get("subjects")
+        # work_details["description"] = raw_json.get("description")
+        # work_details["editions"] = self.get_editions(work_id=work_id)
 
-        # bookservice = BookService()
-        # book = bookservice.find_by_work_id(work_id=work_id)
-        # if book.book_id is not None:
-        #     work_details["book_id"] = book.book_id
-        #     readingdao = ReadingDao()
-        #     average_rating = readingdao.average_rating_by_book(book_id=book.book_id)
-        #     work_details["average_rating"] = average_rating
+        # # Problème d'appel circulaire : j'ai besoin de BookService() qui se trouve dans book_service, et book_service utilise openlibrary_client -> je ne vois pas comment faire...
+
+        # # bookservice = BookService()
+        # # book = bookservice.find_by_work_id(work_id=work_id)
+        # # if book.book_id is not None:
+        # #     work_details["book_id"] = book.book_id
+        # #     readingdao = ReadingDao()
+        # #     average_rating = readingdao.average_rating_by_book(book_id=book.book_id)
+        # #     work_details["average_rating"] = average_rating
 
         return work_details
 
@@ -160,16 +171,12 @@ class OpenLibraryClient(metaclass=Singleton):
             }
             None if OpenLibrary does not know this work_id.
         """
-        r = requests.get(
-            url=f"{self.BASE_URL}/works/{work_id}/editions.json",
-            params={"limit": limit},
+        raw_json = self._get(
+            path=f"/works/{work_id}/editions.json",
+            params={"limit": limit}
         )
-        if r.status_code == 404:
+        if raw_json is None:
             return None
-        if r.status_code != 200:
-            raise Exception(f"Cannot reach (HTTP {r.status_code}): {r.text}")
-
-        raw_json = r.json()
         editions = []
         for entry in raw_json.get("entries", []):
             # publishers, isbn10, isbn13 are lists: we keep the first value
@@ -201,7 +208,7 @@ class OpenLibraryClient(metaclass=Singleton):
             A list of books written by this author or about this author
             An empty list if nothing has been found
         """
-
+        ## A MODIFIER en utilisant _get
         r = requests.get(
             # this is the basic request to search for an author in OpenLibrary
             url=f"{self.BASE_URL}/search.json?q={author}",
@@ -228,7 +235,7 @@ class OpenLibraryClient(metaclass=Singleton):
     Returns:
         author_name (str): The name of the author whose author_key is the key
         """
-
+        ## A MODIFIER en utilisant _get
         r = requests.get(url=f"{self.BASE_URL}/authors/{author_key}.json")
         if r.status_code != 200:
             raise Exception(f"Cannot reach (HTTP {r.status_code}): {r.text}")
@@ -285,3 +292,35 @@ class OpenLibraryClient(metaclass=Singleton):
             book_list.append(book)
 
         return book_list
+
+
+    @log
+    def _get(self, path: str, params: dict | None = None) -> dict | None:
+        """Send a GET request to OpenLibrary and return the JSON response.
+
+        Args:
+            path (str): path after BASE_URL (e.g. "/works/OL45804W.json").
+            params (dict | None): query parameters (e.g. {"limit": 20}).
+
+        Returns:
+            dict | None: the JSON response, or None if OpenLibrary answers 404.
+
+        Raises:
+            OpenLibraryError: if OpenLibrary is unreachable or returns an unexpected status code.
+        """
+        try:
+            r = requests.get(
+                url=f"{self.BASE_URL}{path}",
+                params=params,
+                headers={"User-Agent": "Ex-Libris (projet ENSAI)"},
+                timeout=10,
+            )
+        except requests.RequestException as e:
+            # OpenLibrary does not answer at all (no network, timeout...)
+            raise OpenLibraryError(f"Cannot reach OpenLibrary: {e}") from e
+
+        if r.status_code == 404:
+            return None
+        if r.status_code != 200:
+            raise OpenLibraryError(f"OpenLibrary error (HTTP {r.status_code}): {r.text}")
+        return r.json()
