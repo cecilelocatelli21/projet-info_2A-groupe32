@@ -28,6 +28,8 @@ class User:
         self.bio = bio
         self.access_token = access_token
 
+# Le user a un token qui permet de l'identifier à chaque connexion et lui donner accès ou pas aux fonctionnalités qui sont disponibles pour un user connecté et pour un user qui consulte son propre profil
+
     def __str__(self):
         """Returns a string representation of the user.
 

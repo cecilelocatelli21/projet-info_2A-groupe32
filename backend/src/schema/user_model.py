@@ -2,7 +2,7 @@ import os
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-USERNAME_MAX_LENGTH = 30  
+USERNAME_MAX_LENGTH = 30
 PASSWORD_MAX_LENGTH = 128
 BIO_MAX_LENGTH = 1000
 

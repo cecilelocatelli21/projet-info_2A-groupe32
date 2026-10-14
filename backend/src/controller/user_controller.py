@@ -1,6 +1,3 @@
-# controller/user_controller.py
-
-
 from fastapi import APIRouter, Depends, HTTPException
 
 from schema.user_model import UserModel, UserReadModel

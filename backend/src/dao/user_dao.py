@@ -72,6 +72,11 @@ class UserDao(metaclass=Singleton):
         """Get one user by its username."""
         return self._find_one("username", username)
 
+# pas de log pour find by token ?
+    def find_by_token(self, token: str) -> User | None:
+        """Not decorated with @log so that tokens never end up in the logs."""
+        return self._find_one("access_token", token)
+
 # recherche par morceau ou pseudo
 
     @log
@@ -90,4 +95,58 @@ class UserDao(metaclass=Singleton):
 
         return [self._row_to_user(row) for row in res] if res else []
 
-# création, modification, suppression
+    @log
+    def create(self, user: User) -> User:
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "INSERT INTO user_table(username, email, password_hash, bio) "
+                        "VALUES (%(username)s, %(email)s, %(password_hash)s, %(bio)s) "
+                        "RETURNING user_id;",
+                        {"username": user.username, "email": user.email,
+                        "password_hash": user.password_hash, "bio": user.bio},
+                    )
+                    res = cursor.fetchone()
+        except Exception as e:
+            logger.error(e)
+            raise
+
+        user.user_id = res["user_id"]
+        return user
+
+    @log
+    def update(self, user: User) -> bool:
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "UPDATE user_table "
+                        "   SET email = %(email)s, bio = %(bio)s, "
+                        "       password_hash = %(password_hash)s, access_token = %(access_token)s "
+                        " WHERE user_id = %(user_id)s;",
+                        {"email": user.email, "bio": user.bio, "password_hash": user.password_hash,
+                        "access_token": user.access_token, "user_id": user.user_id},
+                    )
+                    res = cursor.rowcount
+        except Exception as e:
+            logger.error(e)
+            raise
+
+        return res == 1
+
+    @log
+    def delete(self, user_id: int) -> bool:
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "DELETE FROM user_table WHERE user_id = %(user_id)s;",
+                        {"user_id": user_id},
+                    )
+                    res = cursor.rowcount
+        except Exception as e:
+            logger.error(e)
+            raise
+
+        return res == 1
