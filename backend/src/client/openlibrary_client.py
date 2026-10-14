@@ -152,13 +152,13 @@ class OpenLibraryClient(metaclass=Singleton):
             author (str): The name of the author we are looking for.
             limit (int): maximum number of books to return.
         Returns:
-            A list of books written by this author or about this author
+            A list of books written by this author
             An empty list if nothing has been found
         """
         raw_json = self._get(
             path="/search.json",
             params={
-                "q": author,
+                "author": author,
                 "limit": limit})
 
         if raw_json is None:

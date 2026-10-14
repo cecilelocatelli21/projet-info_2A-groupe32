@@ -17,6 +17,7 @@ from controller import (
     player_controller,
     reading_controller,
     user_controller,
+    review_controller,
 )
 from utils.env_variables import display_values, load_environment_variables
 from utils.log_utils import LogMiddleware, get_logger, initialize_logs
@@ -56,6 +57,7 @@ app.include_router(book_controller.router, prefix="/books", tags=["Books"])
 app.include_router(user_controller.router, prefix="/user", tags=["Users"])
 app.include_router(player_controller.router, prefix="/player", tags=["Players"])
 app.include_router(login_controller.router, prefix="/login", tags=["Login"])
+app.include_router(review_controller.router, prefix="/review", tags=["Reviews"])
 app.include_router(game_controller.router, prefix="/game", tags=["Games"])
 app.include_router(follow_controller.router, tags=["Follow"])
 app.include_router(reading_controller.router, tags=["Readings"])

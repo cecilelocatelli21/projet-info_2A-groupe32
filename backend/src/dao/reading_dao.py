@@ -26,16 +26,16 @@ class ReadingDao(metaclass=Singleton):
                 with connection.cursor() as cursor:
                     cursor.execute(
                         "INSERT INTO reading(user_id, book_id, status, date_added, date_read, rating) VALUES "
-                        "(%(user_id)s, %(book_id)s, %(date_added)s, %(date_read)s, %(rating)s) "
+                        "(%(user_id)s, %(book_id)s, %(status)s, %(date_added)s, %(date_read)s, %(rating)s) "
                         "RETURNING reading_id;",
                         {
-                            "user_id": reading.user_id,
-                            "book_id": reading.book_id,
+                            "user_id": reading.user.user_id,
+                            "book_id": reading.book.book_id,
                             "status": reading.status,
                             "date_added": reading.date_added,
                             "date_read": reading.date_read,
-                            "rating":reading.rating
-                        },
+                            "rating": reading.rating
+                        }
                     )
                     res = cursor.fetchone()
         except Exception as e:
@@ -66,7 +66,7 @@ class ReadingDao(metaclass=Singleton):
                 with connection.cursor() as cursor:
                     cursor.execute(
                         "SELECT * FROM reading       "
-                        "WHERE reading_id == %(reading_id)s",
+                        "WHERE reading_id = %(reading_id)s",
                         {
                             "reading_id": reading_id
                         },
@@ -109,7 +109,7 @@ class ReadingDao(metaclass=Singleton):
                     with connection.cursor() as cursor:
                         cursor.execute(
                             "SELECT * FROM reading       "
-                            "WHERE user_id == %(user_id)s AND status== %(status)s",
+                            "WHERE user_id = %(user_id)s AND status= %(status)s",
                             {
                                 "user_id": user_id,
                                 "status": status
@@ -158,7 +158,7 @@ class ReadingDao(metaclass=Singleton):
                 with connection.cursor() as cursor:
                     cursor.execute(
                         "SELECT * FROM reading       "
-                        "WHERE user_id == %(user_id)s AND book_id== %(book_id)s",
+                        "WHERE user_id = %(user_id)s AND book_id= %(book_id)s",
                         {
                             "user_id": user_id,
                             "book_id": book_id
@@ -232,7 +232,7 @@ class ReadingDao(metaclass=Singleton):
                 with connection.cursor() as cursor:
                     cursor.execute(
                         "DELETE * FROM reading       "
-                        "WHERE reading_id == %(reading_id)s",
+                        "WHERE reading_id = %(reading_id)s",
                         {
                             "reading_id": reading_id
                         },
@@ -295,7 +295,7 @@ class ReadingDao(metaclass=Singleton):
                 with connection.cursor() as cursor:
                     cursor.execute(
                         "SELECT COUNT(*) AS nb_book FROM reading       "
-                        "WHERE user_id == %(user_id)s "
+                        "WHERE user_id = %(user_id)s "
                         "GROUP BY user_id",
                         {
                             "user_id": user_id
