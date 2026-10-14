@@ -8,7 +8,7 @@ INSERT INTO player(id_player, username, password, elo, email, pokemon_fan) VALUE
 (993, 'junior',    'aaaa',  1200,  'junior@project.io',    true);
 
 INSERT INTO book(work_id, title, authors) VALUES
-('OL10263W', 'le petit prince', 'Antoine de Saint-Exupéry'),
+('OL10263W', 'le petit prince', 'Antoine de Saint-Exupéry','https://covers.openlibrary.org/b/olid/OL10264W-M.jpg'),
 ('OL30053009W', 'Du côté de chez Swann', 'Marcel Proust'),
 ('OL29549062W', 'À l''ombre des jeunes filles en fleurs', 'Marcel Proust');
 

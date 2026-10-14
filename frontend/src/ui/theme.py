@@ -197,6 +197,10 @@ hr {border-color:var(--line) !important;}
 .spines {display:flex; gap:6px; align-items:flex-end; height:210px; margin-top:2rem;}
 .spines i {display:block; width:34px; border-radius:4px 4px 0 0; background:linear-gradient(180deg,hsl(var(--h) 45% 34%),hsl(var(--h) 50% 16%));
   box-shadow:inset -3px 0 0 rgba(0,0,0,.25);}
+.st-key-login_card [data-testid="InputInstructions"] {display:none;}
+.session-state {color:var(--muted); font-size:.78rem; margin:-.2rem 0 .4rem;}
+.or-sep {display:flex; align-items:center; gap:.8rem; color:var(--muted); font-size:.8rem; margin:.4rem 0 .9rem;}
+.or-sep::before,.or-sep::after {content:''; flex:1; height:1px; background:var(--line);}
 .st-key-login_card {background:rgba(27,24,34,.82); border:1px solid var(--line); border-radius:18px; padding:1.6rem; backdrop-filter:blur(8px);}
 [data-testid="stTextInput"] input {background:rgba(255,255,255,.05) !important; color:var(--text) !important; border-radius:8px !important;}
 [data-baseweb="tab-list"] {gap:.4rem;}

@@ -48,9 +48,11 @@ buttons calling `ui.open_profile(user_id)`. Likes and the Follow button are inde
 profile shows.
 
 Real backend today: profile (`GET /user/{id}`), followers/following, follow/unfollow work.
-Not available yet (the front hides or disables them): reviews, likes (no route), account creation
-date, and `GET /users/{id}/readings` (see the audit). Set `EXLIBRIS_BACKEND_REVIEWS=true` once the
-review/like routes of `doc/Ex-Libris — Endpoints de l'API.md` exist.
+Reviews and likes use the backend routes (`/books/{work_id}/reviews`, `/users/{id}/reviews`,
+`/readings/{id}/review`, `/reviews/{id}/like`); set `EXLIBRIS_BACKEND_REVIEWS=false` to hide them.
+The backend does not say which reviews the connected user already liked: the front remembers it for
+the session. Still unavailable: account creation date and `GET /users/{id}/readings`
+(`ReadingDao` of the backend is not working yet).
 
 ### Still to connect (backend side)
 
@@ -73,3 +75,14 @@ The frontend maintains its own logging system to track user interactions and API
 ### Code quality
 
 The **format on save** with [Ruff](https://docs.astral.sh/ruff/) is enabled by default in the workspace (cf. *.vscode/settings.json*).
+
+## Login and session
+
+* **Real login**: `POST /login/` (JSON `{"username", "password"}`) answers `{"id_user", "username", "access_token"}`.
+  The token is kept in `st.session_state` (server side, per browser session), sent as
+  `Authorization: Bearer <token>` on every call, and checked right after login on a protected route
+  (`GET /users/{id}/reviews`). The password is never stored nor logged. A 401 later on logs the user out
+  with an explanation. A browser refresh starts a new Streamlit session: the user logs in again.
+* **Demo (Camille)**: `auth.session.demo_login()`; no token, no call to the backend, demo data only.
+  Disable it with `EXLIBRIS_ENABLE_DEMO_LOGIN=false`. Real and demo sessions never share state.
+* Unauthenticated users only get the login page (`st.navigation` only registers the other pages once logged in).

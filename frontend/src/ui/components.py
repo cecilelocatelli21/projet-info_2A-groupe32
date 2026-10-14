@@ -139,6 +139,7 @@ def navbar(current: str) -> None:
             html("<span class='demo-pill'>Démo</span>")
         with st.popover(session.display_name()[:1].upper()):
             html(f"<b>{escape(session.display_name())}</b>")
+            html(f"<div class='session-state'>{escape(session.status_label())}</div>")
             if st.button("Mon profil", key="menu_profile", width="stretch"):
                 open_profile(None)
             if session.is_demo() and st.button(

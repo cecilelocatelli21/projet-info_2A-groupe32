@@ -10,6 +10,7 @@ from datetime import date
 
 import streamlit as st
 
+from auth import session
 from data.errors import BusinessRuleError, DataUnavailable
 from data.models import Book, LibraryEntry, Person, Profile, Review, Row
 from data.repository import Repository
@@ -25,7 +26,15 @@ def _headers() -> dict:
 
 def _call(method: str, path: str, **kwargs):
     response = getattr(api_client, method)(path, headers=_headers(), **kwargs)
+    if response["status_code"] == 0 and method == "get":  # stale keep-alive connection: reads are safe to retry once
+        response = getattr(api_client, method)(path, headers=_headers(), **kwargs)
     status, data = response["status_code"], response["data"]
+    if status == 401 and st.session_state.get("mode") == "api":
+        session.expire()  # token expired or revoked: the user must log in again
+        try:
+            st.rerun()
+        except Exception:  # not inside a script run (tests): fall through to the error below
+            pass
     if status == 0 or status in (401, 500, 502, 503):
         raise DataUnavailable(f"{status or 'network'}: {data}")
     if status in (400, 403, 404, 409, 422):
@@ -56,22 +65,26 @@ def _entry(raw: dict) -> LibraryEntry:
     )
 
 
+def _liked_ids() -> set:
+    """The backend does not tell which reviews the connected user already liked: remembered per session."""
+    return st.session_state.setdefault("_liked_reviews", set())
+
+
 def _review(raw: dict) -> Review:
-    """Maps a review of the backend. The review routes are not implemented yet: the field names
-    below follow the planned ReviewReadModel (doc/Ex-Libris — Endpoints de l'API.md) and must be
-    checked against the real response once the routes exist."""
-    created = raw.get("publication_date") or raw.get("created")
+    """Maps a ReviewReadModel of the backend (the book is nested, there is no rating on a review)."""
+    book = raw.get("book") or {}
+    created = raw.get("publication_date")
     return Review(
         review_id=raw["review_id"],
-        work_id=raw.get("work_id", ""),
+        work_id=book.get("work_id", ""),
         author=raw.get("username", ""),
         author_id=raw.get("user_id"),
         text=raw.get("text", ""),
         rating=raw.get("rating"),
         created=date.fromisoformat(created[:10]) if created else None,
         likes=raw.get("likes", 0),
-        liked_by_me=bool(raw.get("liked_by_me", False)),
-        book_title=raw.get("book_title"),
+        liked_by_me=raw["review_id"] in _liked_ids(),
+        book_title=book.get("title"),
         is_mine=raw.get("user_id") == st.session_state.get("user_id"),
     )
 
@@ -117,7 +130,10 @@ class ApiRepository(Repository):
     def home_rows(self) -> list[Row]:
         books = self.catalog()
         rows = []
-        reading = [e.book for e in self.library("in progress")]
+        try:
+            reading = [e.book for e in self.library("in progress")]
+        except DataUnavailable:  # library route failing: the catalogue is still shown
+            reading = []
         if reading:
             rows.append(Row("continue", "Reprendre sa lecture", reading))
         if books:
@@ -130,6 +146,12 @@ class ApiRepository(Repository):
         params = {"status": status} if status else None
         raw = _call("get", f"/users/{uid}/readings", params=params) or []
         return [_entry(r) for r in raw]
+
+    def entry(self, work_id: str) -> LibraryEntry | None:
+        try:
+            return super().entry(work_id)
+        except DataUnavailable:  # library route failing: the page must stay usable
+            return None
 
     def add_to_library(self, work_id: str, status: str = "to read") -> LibraryEntry:
         return _entry(_call("post", "/readings", json={"work_id": work_id, "status": status}))
@@ -152,7 +174,13 @@ class ApiRepository(Repository):
             raise BusinessRuleError("Ce livre n'est pas dans ta bibliothèque.")
         if rating is not None:
             _call("patch", f"/readings/{entry.reading_id}", json={"rating": rating})
-        # the text of the review needs POST /readings/{id}/review (not implemented yet)
+        if text.strip() and backend_reviews_enabled():
+            path = f"/readings/{entry.reading_id}/review"
+            try:
+                _call("post", path, json={"text": text})
+            except BusinessRuleError:  # 409: a review already exists for this reading -> edit it
+                existing = _call("get", path)
+                _call("put", f"/reviews/{existing['review_id']}", json={"text": text})
 
     def my_reviews(self) -> list[Review]:
         return self.user_reviews(None)
@@ -195,8 +223,10 @@ class ApiRepository(Repository):
         path = f"/reviews/{review.review_id}/like"
         if review.liked_by_me:
             _call("delete", path)
+            _liked_ids().discard(review.review_id)
         else:
             _call("put", path, json={"liked": True})
+            _liked_ids().add(review.review_id)
 
     def is_following(self, user_id: int) -> bool:
         following = _call("get", f"/users/{self._user_id}/following") or []

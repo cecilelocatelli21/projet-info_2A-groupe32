@@ -22,29 +22,34 @@ with left:
 
 with right:
     with st.container(key="login_card"):
-        html("<h2 style='margin:0 0 .3rem'>Bon retour parmi nous</h2>")
-        html("<div class='page-sub'>Connecte-toi pour retrouver ta bibliothèque.</div>")
+        html("<div class='brand' style='font-size:1.3rem'><i></i>Ex-Libris</div>")
+        html("<h2 style='margin:.9rem 0 .3rem'>Retrouvez votre bibliothèque</h2>")
+        html("<div class='page-sub'>Connectez-vous avec votre pseudo pour retrouver vos lectures.</div>")
 
-        if demo_login_enabled():
-            if st.button("Entrer dans ma bibliothèque", type="primary", width="stretch", key="demo"):
-                session.demo_login()
-                st.rerun()
-            html(
-                "<div style='text-align:center;color:var(--muted);font-size:.78rem;margin:.5rem 0 1rem'>"
-                "Mode démonstration : compte fictif, aucune donnée réelle.</div>"
-            )
-            html("<div style='text-align:center;color:var(--muted);font-size:.8rem'>— ou avec ton compte —</div>")
+        notice = st.session_state.pop("login_notice", None)
+        if notice:
+            st.info(notice)
 
         with st.form("login_form", border=False):
-            username = st.text_input("Nom d'utilisateur", placeholder="ton pseudo")
-            password = st.text_input("Mot de passe", type="password", placeholder="••••••••")
-            submitted = st.form_submit_button("Se connecter", width="stretch")
+            username = st.text_input("Pseudo", placeholder="votre pseudo", autocomplete="username")
+            password = st.text_input("Mot de passe", type="password", placeholder="••••••••", autocomplete="current-password")
+            submitted = st.form_submit_button("Se connecter", type="primary", width="stretch")
         if submitted:
-            if not username or not password:
-                st.warning("Renseigne ton nom d'utilisateur et ton mot de passe.")
+            if not username.strip() or not password:
+                st.warning("Renseignez votre pseudo et votre mot de passe.")
             else:
-                error = session.api_login(username, password)
+                error = session.api_login(username.strip(), password)
                 if error:
                     st.error(error)
                 else:
                     st.rerun()
+
+        if demo_login_enabled():
+            html("<div class='or-sep'><span>ou</span></div>")
+            if st.button("Essayer la démo — Camille", width="stretch", key="demo"):
+                session.demo_login()
+                st.rerun()
+            html(
+                "<div style='text-align:center;color:var(--muted);font-size:.78rem;margin-top:.5rem'>"
+                "Mode démonstration : compte fictif, données fictives, aucun jeton, aucun appel au serveur.</div>"
+            )
