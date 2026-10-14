@@ -46,6 +46,7 @@ class UserReadModel(BaseModel):
 # Ce dont le user aura besoin pour s'identifier
 class UserLoginModel(BaseModel):
     """Body of POST /login"""
+
     username: str
     password: str
 

@@ -19,7 +19,7 @@ class UserService:
             email (str)
         Returns:
             user created or None if creation failed.
-         """
+        """
         if UserDao().find_by_username(username) is not None:
             raise ConflictError(f"Username '{username}' is already taken.")
         if UserDao().find_by_email(email) is not None:
@@ -40,7 +40,7 @@ class UserService:
             password (str)
         Returns:
             User object if authentication is successful, otherwise None.
-         """
+        """
         user = UserDao().find_by_username(username)
         if user is None or not secrets.compare_digest(
             user.password_hash, hash_password(password, username)
@@ -58,25 +58,24 @@ class UserService:
 
     @log
     def update(self, user) -> User:
-         """Updates an existing user's information.
-         Args:
-             User object containing updated information.
-         Returns:
-             The updated User object, or None if the update failed.
-         """
-         return user if UserDao().update(user) else None
+        """Updates an existing user's information.
+        Args:
+            User object containing updated information.
+        Returns:
+            The updated User object, or None if the update failed.
+        """
+        return user if UserDao().update(user) else None
 
     @log
     def username_already_used(self, username: str) -> bool:
-         """Check if a username is already used.
-         Args:
-             username (str)
-         Returns:
-             True if the username already exists in the database.
-         """
-         user = UserDao().find_all()
-         return username in [p.username for p in user]
-
+        """Check if a username is already used.
+        Args:
+            username (str)
+        Returns:
+            True if the username already exists in the database.
+        """
+        user = UserDao().find_all()
+        return username in [p.username for p in user]
 
     def find_by_token(self, token: str) -> User | None:
         """Not decorated with @log so that tokens never end up in the logs."""
@@ -97,11 +96,15 @@ class UserService:
         return user
 
     @log
-    def change_password(self, current_user: User, user_id: int, old_password: str, new_password: str) -> bool:
-        """ Change password after cheking the former password"""
+    def change_password(
+        self, current_user: User, user_id: int, old_password: str, new_password: str
+    ) -> bool:
+        """Change password after cheking the former password"""
         user = self._get_own_account(current_user, user_id)
 
-        if not secrets.compare_digest(user.password_hash, hash_password(old_password, user.username)):
+        if not secrets.compare_digest(
+            user.password_hash, hash_password(old_password, user.username)
+        ):
             raise ValueError("Old password is incorrect.")
 
         user.password_hash = hash_password(new_password, user.username)

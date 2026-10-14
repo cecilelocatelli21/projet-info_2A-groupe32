@@ -18,15 +18,14 @@ class UserDao(metaclass=Singleton):
                 with connection.cursor() as cursor:
                     cursor.execute(
                         f"SELECT * FROM user_table WHERE {column} = %(value)s;",  # nosec B608
-                            {"value": value},
-                        )
+                        {"value": value},
+                    )
                     res = cursor.fetchone()
         except Exception as e:
             logger.error(e)
             raise
 
         return self._row_to_user(res) if res else None
-
 
     @staticmethod
     def _row_to_user(row: dict) -> User:
@@ -39,7 +38,6 @@ class UserDao(metaclass=Singleton):
             bio=row["bio"],
             access_token=row["access_token"],
         )
-
 
     @log
     def find_all(self) -> list[User]:
@@ -62,6 +60,7 @@ class UserDao(metaclass=Singleton):
             raise
 
         return [self._row_to_user(row) for row in res] if res else []
+
     @log
     def find_by_id(self, user_id: int) -> User | None:
         """Get one user by its user_id."""
@@ -72,12 +71,12 @@ class UserDao(metaclass=Singleton):
         """Get one user by its username."""
         return self._find_one("username", username)
 
-# pas de log pour find by token ?
+    # pas de log pour find by token ?
     def find_by_token(self, token: str) -> User | None:
         """Not decorated with @log so that tokens never end up in the logs."""
         return self._find_one("access_token", token)
 
-# recherche par morceau ou pseudo
+    # recherche par morceau ou pseudo
 
     @log
     def search_by_username(self, pattern: str) -> list[User]:
@@ -104,8 +103,12 @@ class UserDao(metaclass=Singleton):
                         "INSERT INTO user_table(username, email, password_hash, bio) "
                         "VALUES (%(username)s, %(email)s, %(password_hash)s, %(bio)s) "
                         "RETURNING user_id;",
-                        {"username": user.username, "email": user.email,
-                        "password_hash": user.password_hash, "bio": user.bio},
+                        {
+                            "username": user.username,
+                            "email": user.email,
+                            "password_hash": user.password_hash,
+                            "bio": user.bio,
+                        },
                     )
                     res = cursor.fetchone()
         except Exception as e:
@@ -125,8 +128,13 @@ class UserDao(metaclass=Singleton):
                         "   SET email = %(email)s, bio = %(bio)s, "
                         "       password_hash = %(password_hash)s, access_token = %(access_token)s "
                         " WHERE user_id = %(user_id)s;",
-                        {"email": user.email, "bio": user.bio, "password_hash": user.password_hash,
-                        "access_token": user.access_token, "user_id": user.user_id},
+                        {
+                            "email": user.email,
+                            "bio": user.bio,
+                            "password_hash": user.password_hash,
+                            "access_token": user.access_token,
+                            "user_id": user.user_id,
+                        },
                     )
                     res = cursor.rowcount
         except Exception as e:
