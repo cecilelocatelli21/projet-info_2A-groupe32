@@ -27,7 +27,7 @@ def login(credentials: UserLoginModel, service=Depends(get_user_service)):
     user = service.login(credentials.username, credentials.password)
     if user:
         return {
-            "id_user": user.user-id,
+            "id_user": user.user_id,
             "username": user.username,
             "access_token": user.access_token,
         }

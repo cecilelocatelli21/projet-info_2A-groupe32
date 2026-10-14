@@ -6,6 +6,7 @@ from business_object.review import Review
 from business_object.user import User
 from dao.db_connection import DBConnection
 from utils.singleton import Singleton
+from utils.log_utils import log
 
 
 class ReviewDao(metaclass=Singleton):
@@ -46,16 +47,17 @@ class ReviewDao(metaclass=Singleton):
             status=row["status"],
             date_added=row["date_added"],
             date_read=row["date_read"],
-            rating=row["rating"],
+            rating=row["rating"]
         )
         return Review(
             review_id=row["review_id"],
             reading=reading,
             text=row["text"],
-            publication_date=row["publication_date"],
+            publication_date=row["publication_date"]
         )
-		@log
-    def create(self, review: Review) -> Review:
+
+#	@log  # ruff: ignore[tab-indentation]
+    def create(self, review: Review) -> Review:  # ruff: ignore[blank-line-between-methods]
         """Insert a review. The unique constraint enforces one per reading."""
         with DBConnection().connection as connection:
             with connection.cursor() as cursor:
