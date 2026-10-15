@@ -3,7 +3,8 @@
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from schema.book_model import BookModel, BookSearchResultModel, BookDetailModel
+from controller.dependencies import get_current_user
+from schema.book_model import BookDetailModel, BookModel, BookSearchResultModel
 from service.book_service import BookService
 from service.user_service import User
 from utils.log_utils import get_logger
@@ -65,9 +66,9 @@ async def find_by_id(book_id: int, book_service=Depends(get_book_service)):
     return book
 
 
-@router.get("", response_model=list[BookModel], tags=["Books"])
+@router.get("", response_model=list[BookSearchResultModel], tags=["Books"])
 async def search_books(q: str,
-# current_user: User = Depends(get_current_user),
+current_user: User = Depends(get_current_user),
 book_service=Depends(get_book_service)):
     """Search books in OpenLibrary
 

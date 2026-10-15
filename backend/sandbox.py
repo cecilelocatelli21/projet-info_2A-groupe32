@@ -15,15 +15,15 @@ openlibraryclient = OpenLibraryClient()
 # for b in book_list:
 #     print(b)
 
-# book_list = openlibraryclient.search_by_author("Flaubert")
-# for b in book_list:
-#     print(b)
+book_list = openlibraryclient.search_by_author("Flaubert")
+for b in book_list:
+    print(b)
 
-book_details = openlibraryclient.get_work_details("OL258850W")
-print(book_details)
+# book_details = openlibraryclient.get_work_details("OL258850W")
+# print(book_details)
 
 # get_work dans openlibrary.py
-# book = openlibraryclient.get_work("OL258850W")
+# book = openlibraryclient.get_work("OL10263W")
 # print(book)
 # print(book.work_id + " " + book.title + " " + book.authors + " " + book.cover_url)
 # print(book.as_list())
