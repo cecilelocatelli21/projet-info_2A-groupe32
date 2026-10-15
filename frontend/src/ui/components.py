@@ -46,18 +46,23 @@ def status_chip(status: str) -> str:
 
 def cover(book: Book, entry: LibraryEntry | None = None, info: bool = True) -> str:
     """Cover with a generated artwork underneath: a missing image never shows as a broken one."""
-    img = f"<img src='{escape(book.cover_url)}' loading='lazy' alt=''>" if book.cover_url else ""
+    img = ""
+    url = (book.cover_url or "").strip()
+    if url.lower().startswith(("http://", "https://")):
+        # A CSS background (not an <img>): when the image cannot be loaded nothing is drawn, so the
+        # generated artwork underneath stays visible instead of a broken-image icon.
+        safe = url.translate({ord(c): f"%{ord(c):02X}" for c in "'\"()<> \n\r\t"})
+        img = f"<div class='cv-img' style=\"background-image:url('{escape(safe)}')\"></div>"
     chip = status_chip(entry.status) if entry else ""
     detail = ""
     if info:
         rate = f"<span>★ {book.rating:.1f}</span> · " if book.rating else ""
-        detail = (
-            f"<div class='cv-info'><b>{escape(book.title)}</b>{rate}{escape(book.authors_label)}</div>"
-        )
+        author = escape(", ".join(book.authors))  # nothing invented when the backend gives no author
+        detail = f"<div class='cv-info'><b>{escape(book.title)}</b>{rate}{author}</div>"
     return (
         f"<div class='cv' style='--h:{_hue(book.work_id)}'>"
         f"<div class='cv-art'><span class='cv-t'>{escape(book.title)}</span>"
-        f"<span class='cv-a'>{escape(book.authors_label)}</span></div>{img}{chip}{detail}</div>"
+        f"<span class='cv-a'>{escape(', '.join(book.authors))}</span></div>{img}{chip}{detail}</div>"
     )
 
 
@@ -73,7 +78,7 @@ def book_card(book: Book, scope: str, entry: LibraryEntry | None = None, meta: b
         if meta:
             html(
                 f"<div class='card-meta'><b>{escape(book.title)}</b>"
-                f"<span>{escape(book.authors_label)}</span></div>"
+                f"<span>{escape(', '.join(book.authors))}</span></div>"
             )
         if st.button(f"Ouvrir {book.title}", key=f"open_{scope}_{book.work_id}"):
             open_book(book.work_id)

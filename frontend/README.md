@@ -86,3 +86,14 @@ The **format on save** with [Ruff](https://docs.astral.sh/ruff/) is enabled by d
 * **Demo (Camille)**: `auth.session.demo_login()`; no token, no call to the backend, demo data only.
   Disable it with `EXLIBRIS_ENABLE_DEMO_LOGIN=false`. Real and demo sessions never share state.
 * Unauthenticated users only get the login page (`st.navigation` only registers the other pages once logged in).
+
+## Book search
+
+Typing in the navbar search box (Enter / leaving the field: Streamlit sends nothing on each keystroke)
+opens *Découvrir* and calls `GET /books?q=<text>` ("Search Books", `q` required) through the existing
+`utils.api_client` (`BACKEND_URL`). `requests` encodes spaces and special characters. Each result is
+`{book_id, work_id, title, authors, cover_url}`; `authors` is joined with " et ", `book_id` is null for books
+not stored yet, `cover_url` may be null. The backend answers **404 when nothing matches** (shown as "no result");
+500 / unreachable is shown as "Recherche indisponible". Answers are cached per session. The demo user keeps
+searching the local demo catalogue (no API call). Covers are CSS backgrounds over a generated cover, so a
+missing or unloadable image never shows as a broken icon.

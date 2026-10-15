@@ -6,12 +6,13 @@ book descriptions and ratings) is simply not advertised in ``supports`` and the 
 
 from __future__ import annotations
 
+import re
 from datetime import date
 
 import streamlit as st
 
 from auth import session
-from data.errors import BusinessRuleError, DataUnavailable
+from data.errors import BusinessRuleError, DataUnavailable, NotFound
 from data.models import Book, LibraryEntry, Person, Profile, Review, Row
 from data.repository import Repository
 from data.search import filter_books
@@ -39,12 +40,13 @@ def _call(method: str, path: str, **kwargs):
         raise DataUnavailable(f"{status or 'network'}: {data}")
     if status in (400, 403, 404, 409, 422):
         detail = data.get("detail") if isinstance(data, dict) else data
-        raise BusinessRuleError(str(detail))
+        raise (NotFound if status == 404 else BusinessRuleError)(str(detail))
     return data
 
 
 def _book(raw: dict) -> Book:
-    authors = tuple(a.strip() for a in (raw.get("authors") or "").split(",") if a.strip())
+    # the backend joins several authors with ", " (stored books) or " et " (OpenLibrary search)
+    authors = tuple(a.strip() for a in re.split(r",| et ", raw.get("authors") or "") if a.strip())
     return Book(
         work_id=raw["work_id"],
         title=raw.get("title") or "Sans titre",
@@ -112,15 +114,43 @@ class ApiRepository(Repository):
     def featured(self) -> list[Book]:
         return self.catalog()[:4]
 
+    def _search_remote(self, query: str) -> list[Book]:
+        """``GET /books?q=<query>`` (Search Books). Answers are kept for the session so that the reruns
+        triggered by the filters do not call the backend again. 404 means "no result"."""
+        cache = st.session_state.setdefault("_search_cache", {})
+        key = query.casefold()
+        if key in cache:
+            return cache[key]
+        try:
+            raw = _call("get", "/books", params={"q": query})  # requests encodes spaces and special characters
+        except NotFound:
+            raw = []
+        if not isinstance(raw, list):
+            raise DataUnavailable("réponse inattendue du serveur (une liste de livres était attendue)")
+        books = [_book(b) for b in raw if isinstance(b, dict) and b.get("work_id")]
+        known = st.session_state.setdefault("_book_cache", {})
+        known.update({b.work_id: b for b in books})  # results are not always stored in the database
+        if len(cache) >= 30:
+            cache.pop(next(iter(cache)))
+        cache[key] = books
+        return books
+
     def search(self, query="", genres=(), authors=(), sort="relevance") -> list[Book]:
-        # GET /books?q= exists but returns OpenLibrary results (not the stored catalogue) -> local filtering on the stored books
-        return filter_books(self.catalog(), query, genres, authors, sort)
+        query = (query or "").strip()
+        if not query:  # no keyword: the usual stored catalogue
+            return filter_books(self.catalog(), "", genres, authors, sort)
+        books = self._search_remote(query)
+        if sort != "relevance":
+            return filter_books(books, "", genres, authors, sort)
+        wanted = set(authors)  # relevance = order given by the backend, kept as is
+        return [b for b in books if not wanted or wanted.intersection(b.authors)]
 
     def get_book(self, work_id: str) -> Book | None:
         try:
             return _book(_call("get", f"/books/{work_id}"))
         except BusinessRuleError:
-            return None
+            # a search result is not necessarily stored in our database (GET /books/{work_id} -> 404)
+            return st.session_state.get("_book_cache", {}).get(work_id)
 
     def book_reviews(self, work_id: str) -> list[Review]:
         if not backend_reviews_enabled():

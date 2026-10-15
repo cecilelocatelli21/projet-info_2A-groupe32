@@ -96,7 +96,7 @@ hr {border-color:var(--line) !important;}
 .cv-art::before {content:""; position:absolute; left:11%; right:11%; top:42%; height:1px; background:rgba(255,255,255,.35);}
 .cv-t {font-family:var(--serif); font-weight:700; font-size:1.05rem; line-height:1.15; color:#fff; text-shadow:0 1px 6px rgba(0,0,0,.4);}
 .cv-a {font-size:.68rem; letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.75);}
-.cv img {position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block;}
+.cv .cv-img {position:absolute; inset:0; background-size:cover; background-position:center; background-repeat:no-repeat;}
 .cv-info {position:absolute; inset:auto 0 0 0; padding:2.6rem .7rem .7rem; opacity:0; transition:opacity .25s;
   background:linear-gradient(0deg, rgba(0,0,0,.92), transparent); font-size:.76rem; color:#fff;}
 .cv-info b {display:block; font-size:.88rem; line-height:1.2; margin-bottom:.15rem;}

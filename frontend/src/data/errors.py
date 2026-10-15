@@ -7,3 +7,7 @@ class DataUnavailable(Exception):
 
 class BusinessRuleError(Exception):
     """The backend (or the demo mirror of it) refused the action because of a business rule."""
+
+
+class NotFound(BusinessRuleError):
+    """HTTP 404: the resource does not exist (for a search: nothing matches)."""
