@@ -22,14 +22,6 @@ class OpenLibraryClient(metaclass=Singleton):
         Returns:
             A list of books corresponding to the response given by OpenLibrary
         """
-        ## request effectue déjà ce découpage + gère les accent et caractères spéciaux en passant query en paramètres
-        # # We cut the sentence written by the user into words that we insert into a html query for OpenLibrary
-        # words_list = query.split(" ")
-        # words_query = ""
-        # for w in words_list:
-        #     words_query = f"{words_query}{w}+"
-        # words_query = words_query[:-1]
-        # # words_query is a string corresponding at what we have to put in the html query for the search
 
         raw_json = self._get(
             path="/search.json",
@@ -86,7 +78,7 @@ class OpenLibraryClient(metaclass=Singleton):
             }
             None if OpenLibrary does not know this work_id.
         """
- 
+
         raw_json = self._get(f"/works/{work_id}.json")
         if raw_json is None:
             return None
@@ -96,8 +88,8 @@ class OpenLibraryClient(metaclass=Singleton):
         if isinstance(description, dict):
             description = description.get("value")
         work_details = {
-            "subjects" : raw_json.get("subjects",[]),
-            "description" : description
+            "subjects": raw_json.get("subjects", []),
+            "description": description
         }
         return work_details
 

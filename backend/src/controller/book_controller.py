@@ -19,7 +19,7 @@ def get_book_service():
     return BookService()
 
 
-@router.get("/", response_model=list[BookModel], tags=["Books"])
+@router.get("/find_all/", response_model=list[BookModel], tags=["Books"])
 async def find_all(book_service=Depends(get_book_service)):
     """List all books.
     Returns:
@@ -30,11 +30,13 @@ async def find_all(book_service=Depends(get_book_service)):
     return books_list
 
 
-@router.get("/{work_id}", response_model=BookModel, tags=["Books"])
-async def find_by_work_id(work_id: str, book_service=Depends(get_book_service)):
+@router.get("/work/{work_id}", response_model=BookModel, tags=["Books"])
+async def find_by_work_id(work_id: str,
+current_user=Depends(get_current_user),
+book_service=Depends(get_book_service)):
     """Find a book by its ID used in OpenLibrary.
     Args:
-        work_id (str)
+        work_id (str): OpenLibrary identifier of the work (e.g. "OL45804W").
         book_service (BookService): The service used to interact with user data
     Returns:
         BookModel: The book data if found
@@ -66,7 +68,7 @@ async def find_by_id(book_id: int, book_service=Depends(get_book_service)):
     return book
 
 
-@router.get("", response_model=list[BookSearchResultModel], tags=["Books"])
+@router.get("/", response_model=list[BookSearchResultModel], tags=["Books"])
 async def search_books(q: str,
 current_user: User = Depends(get_current_user),
 book_service=Depends(get_book_service)):
@@ -86,10 +88,23 @@ book_service=Depends(get_book_service)):
 
     return books
 
-# @router.get("/{work_id}", response_model=BookDetailModel, tags=["Books"])
-# async def get_book(work_id: str,
-# current_user: User = Depends(get_current_user),
-# book_service=Depends(get_book_service)):
-#     """Search books in OpenLibrary
-#     """
-#     ...
+@router.get("/{work_id}", response_model=BookDetailModel, tags=["Books"])
+async def get_book(work_id: str,
+current_user: User = Depends(get_current_user),
+book_service=Depends(get_book_service)) -> dict:
+    """Search books in OpenLibrary and send more details for this book that what our local database contains
+
+        Args:
+            work_id (str): OpenLibrary identifier of the work (e.g. "OL45804W").
+            current_user (User): the current user who is doing this research
+            book_service (BookService): The service used to interact with user data
+        Returns:
+            A dictionnary containing all details for the target book.
+    """
+
+    logger.info("Execute a research into OpenLibrary to get details for a book (function get_book)")
+    book_details = book_service.get_book_details(work_id)
+    if book_details is None:
+        raise HTTPException(status_code=404, detail="The work id has not been found in OpenLibrary.")
+
+    return book_details

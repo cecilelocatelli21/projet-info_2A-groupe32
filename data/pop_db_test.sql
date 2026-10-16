@@ -1,16 +1,7 @@
-INSERT INTO player(id_player, username, password, elo, email, pokemon_fan) VALUES
-(999, 'admin',     '0000',  null,  'admin@project.io',      null),
-(998, 'a',         'a',     1200,  'a@ensai.fr',           true),
-(997, 'maurice',   '1234',  1000,  'maurice@ensai.fr',     true),
-(996, 'batricia',  '9876',  1500,  'bat@project.io',       false),
-(995, 'miguel',    'abcd',  1300,  'miguel@project.io',    true),
-(994, 'gilbert',   'toto',  1100,  'gilbert@project.io',   false),
-(993, 'junior',    'aaaa',  1200,  'junior@project.io',    true);
-
-INSERT INTO book(work_id, title, authors) VALUES
+INSERT INTO book(work_id, title, authors, cover_url) VALUES
 ('OL10263W', 'le petit prince', 'Antoine de Saint-Exupéry','https://covers.openlibrary.org/b/olid/OL10264W-M.jpg'),
-('OL30053009W', 'Du côté de chez Swann', 'Marcel Proust'),
-('OL29549062W', 'À l''ombre des jeunes filles en fleurs', 'Marcel Proust');
+('OL30053009W', 'Du côté de chez Swann', 'Marcel Proust', 'https://covers.openlibrary.org/b/ID/8890152-M.jpg'),
+('OL29549062W', 'À l''ombre des jeunes filles en fleurs', 'Marcel Proust', 'https://covers.openlibrary.org/b/ID/15008027-M.jpg');
 
 INSERT INTO user_table(username, email, password_hash) VALUES
 ('Moussa', 'moussa.soulama@eleve.ensai.fr', '1234'),
