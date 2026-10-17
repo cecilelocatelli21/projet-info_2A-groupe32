@@ -71,6 +71,11 @@ class UserDao(metaclass=Singleton):
         """Get one user by its username."""
         return self._find_one("username", username)
 
+    @log
+    def find_by_email(self, email: str) -> User | None:
+        """Get one user by its email."""
+        return self._find_one("email", email)
+
     # pas de log pour find by token ?
     def find_by_token(self, token: str) -> User | None:
         """Not decorated with @log so that tokens never end up in the logs."""

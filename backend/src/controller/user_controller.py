@@ -26,7 +26,7 @@ from service.user_service import UserService
 from utils.exceptions import ConflictError, ForbiddenError, NotFoundError
 from utils.log_utils import get_logger
 
-router = APIRouter(tags=["User"])
+router = APIRouter()
 
 logger = get_logger(__name__)
 
