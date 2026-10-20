@@ -128,7 +128,6 @@ class ReadingService:
         """
         return self.reading_dao.find_by_user(user_id, status)
 
-
     @log
     def update_reading(
         self,

@@ -134,3 +134,52 @@ class BookDao(metaclass=Singleton):
                 books_list.append(self._row_to_book(row))
 
         return books_list
+
+    @log
+    def find_popular_books(
+        self, user_id: int, limit: int = 10
+    ) -> list[dict]:
+        """Return popular books not already in the user's library.
+
+        Args:
+            user_id: ID of the user receiving recommendations.
+            limit: Maximum number of books to return.
+
+        Returns:
+            List of books with their average rating and rating count.
+        """
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        SELECT
+                            b.book_id,
+                            b.work_id,
+                            b.title,
+                            b.authors,
+                            b.cover_url,
+                            p.average_rating,
+                            p.rating_count
+                        FROM popular_books p
+                        JOIN book b ON b.book_id = p.book_id
+                        WHERE NOT EXISTS (
+                            SELECT 1
+                            FROM reading r
+                            WHERE r.book_id = b.book_id
+                              AND r.user_id = %(user_id)s
+                        )
+                        ORDER BY
+                            p.average_rating DESC,
+                            p.rating_count DESC,
+                            b.title ASC
+                        LIMIT %(limit)s;
+                        """,
+                        {"user_id": user_id, "limit": limit},
+                    )
+                    rows = cursor.fetchall()
+        except Exception as e:
+            logger.error(e)
+            raise
+
+        return [dict(row) for row in rows]
