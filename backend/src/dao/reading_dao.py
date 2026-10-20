@@ -183,38 +183,44 @@ class ReadingDao(metaclass=Singleton):
         return reading
 
     @log
-    def update(self, reading: Reading) -> bool:             # status, date_read, rating
-        """ Update a reading
-
-        Arg :
-            reading : Reading
-        Return :
-            bool :
-                True if it's succesfull, false otherwise
-        """
-
+    def update(self, reading: Reading) -> bool:
+        """Update a reading and refresh popular books if needed."""
         try:
-            with DBConnection.connection as connection:
-                with connection.cursor as cursor:
-                    cursor.excute(
-                        "UPDATE INTO Reading                                        "
-                        "status = %(status)s                                         "
-                        "date_read = %(date_read)s                                         "
-                        "rating = %(rating)s)                                                   "
-                        "WHERE reading_id = %(reading_id)s;                                      ",
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        UPDATE reading
+                        SET status = %(status)s,
+                            date_read = %(date_read)s,
+                            rating = %(rating)s
+                        WHERE reading_id = %(reading_id)s;
+                        """,
                         {
+                            "reading_id": reading.reading_id,
                             "status": reading.status,
                             "date_read": reading.date_read,
-                            "rating": reading.rating
+                            "rating": reading.rating,
                         },
                     )
-                    nb_row = cursor.rowcount
 
-        except Exception as e:
-            logger.error(e)
+                    updated = cursor.rowcount == 1
+
+                    if updated:
+                        cursor.execute(
+                            "REFRESH MATERIALIZED VIEW popular_books;"
+                        )
+
+                connection.commit()
+
+        except Exception:
+            logger.exception(
+                "Failed to update reading %s",
+                reading.reading_id,
+            )
             raise
-        return nb_row == 1
 
+        return updated
 
     @log
     def delete(self, reading_id: int) -> bool:
@@ -240,38 +246,35 @@ class ReadingDao(metaclass=Singleton):
 
     @log
     def average_rating_by_book(self, book_id: int) -> float | None:
-        """ Average rating by book
-
-        Arg:
-            book_id : int
-                id of book
-        Returns:
-            float: the average ration of book
-            None: if book not found in table reading
-        """
-
+        """Return the average rating of a completed book."""
         try:
             with DBConnection().connection as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "SELECT AVG(rating) AS average_rating FROM reading       "
-                        "WHERE book_id = %(book_id)s AND status IN ('read', 'abandoned')"
-                        "GROUP BY book_id",
-                        {
-                            "book_id": book_id
-                        },
+                        """
+                        SELECT AVG(rating) AS average_rating
+                        FROM reading
+                        WHERE book_id = %(book_id)s
+                          AND status = 'read'
+                          AND rating IS NOT NULL;
+                        """,
+                        {"book_id": book_id},
                     )
-                    res = cursor.fetchone()
-        except Exception as e:
-            logger.error(e)
+                    row = cursor.fetchone()
+        except Exception:
+            logger.exception(
+                "Failed to calculate average rating for book %s",
+                book_id,
+            )
             raise
-        avg_rating = None
-        if res:
-            avg_rating = res["average_rating"]
-        return avg_rating
+
+        if row is None or row["average_rating"] is None:
+            return None
+
+        return float(row["average_rating"])
 
     @log
-    def count_by_user(self, user_id: int) -> int | None :
+    def count_by_user(self, user_id: int) -> int | None:
         """ Count number of books in library by user_id
 
         Arg:

@@ -2,6 +2,7 @@ from datetime import date
 from typing import Literal
 
 from pydantic import BaseModel, Field
+
 from schema.book_model import BookModel
 
 ReadingStatus = Literal[

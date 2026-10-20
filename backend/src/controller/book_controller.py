@@ -1,10 +1,10 @@
 # controller/book_controller.py
 
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from controller.dependencies import get_current_user
-from schema.book_model import BookDetailModel, BookModel, BookSearchResultModel
+from schema.book_model import BookDetailModel, BookModel, BookSearchResultModel, PopularBookModel
 from service.book_service import BookService
 from service.user_service import User
 from utils.log_utils import get_logger
@@ -108,3 +108,41 @@ book_service=Depends(get_book_service)) -> dict:
         raise HTTPException(status_code=404, detail="The work id has not been found in OpenLibrary.")
 
     return book_details
+
+
+@router.get(
+    "/recommendations",
+    response_model=list[PopularBookModel],
+    tags=["Books"],
+)
+async def get_popular_books(
+    limit: int = Query(default=10, ge=1, le=50),
+    current_user: User = Depends(get_current_user),
+    book_service=Depends(get_book_service),
+) -> list[PopularBookModel]:
+    """
+    Retrieve popular book recommendations for the authenticated user.
+
+    Popular books are ranked by their average rating, number of ratings,
+    and title. Books already present in the user's library are excluded.
+
+    Args:
+        limit (int): Maximum number of books to return.
+            Defaults to 10. Must be between 1 and 50.
+        current_user (User): Authenticated user obtained from the access token.
+        book_service: Service responsible for retrieving popular books.
+
+    Returns:
+        list[PopularBookModel]: A list of popular books. Each book contains
+        its ID, Open Library work ID, title, authors, cover URL,
+        average rating, and number of ratings. Returns an empty list
+        if no recommendations are available.
+    """
+    logger.info("Get popular book recommendations")
+
+    books = book_service.get_popular_books(
+        user_id=current_user.user_id,
+        limit=limit,
+    )
+
+    return books

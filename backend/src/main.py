@@ -16,8 +16,8 @@ from controller import (
     login_controller,
     player_controller,
     reading_controller,
-    user_controller,
     review_controller,
+    user_controller,
 )
 from utils.env_variables import display_values, load_environment_variables
 from utils.log_utils import LogMiddleware, get_logger, initialize_logs

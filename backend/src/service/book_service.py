@@ -146,3 +146,11 @@ class BookService:
                 or None if no user has rated this book yet.
         """
         return ReadingDao().average_rating_by_book(book_id)
+
+    @log
+    def get_popular_books(self, user_id: int, limit: int = 10) -> list[dict]:
+        """Return popular books not already in the user's library."""
+        return BookDao().find_popular_books(
+            user_id=user_id,
+            limit=limit,
+        )

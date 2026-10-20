@@ -47,3 +47,13 @@ class BookDetailModel(BaseModel):
     description: str | None = None
     editions: list[EditionModel] = []
     average_rating: float | None = None
+
+
+class PopularBookModel(BaseModel):
+    book_id: int
+    work_id: str
+    title: str
+    authors: str
+    cover_url: str | None
+    average_rating: float
+    rating_count: int
