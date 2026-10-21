@@ -90,7 +90,7 @@ class UserService:
         """Checks that user_id exists and is the current user's account.
         Existence is checked first, so an unknown id gives 404 rather than 403.
         """
-        user = self.get_by_id(user_id)
+        user = self.find_by_id(user_id)
         if current_user.user_id != user.user_id:
             raise ForbiddenError("You can only modify your own account.")
         return user
