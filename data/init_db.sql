@@ -64,6 +64,35 @@ CREATE TABLE reading (
     UNIQUE(user_id, book_id)            -- A book appears only once in the reading list of one user
 );
 
+
+
+
+-----------------------------------------------------
+-- Popular books (materialized view)
+-----------------------------------------------------
+DROP MATERIALIZED VIEW IF EXISTS popular_books CASCADE;
+
+CREATE MATERIALIZED VIEW popular_books AS
+SELECT
+    b.book_id,
+    b.work_id,
+    b.title,
+    b.authors,
+    b.cover_url,
+    AVG(r.rating) AS average_rating,
+    COUNT(r.rating) AS rating_count
+FROM book b
+JOIN reading r ON r.book_id = b.book_id
+WHERE r.status = 'read'
+  AND r.rating IS NOT NULL
+GROUP BY
+    b.book_id,
+    b.work_id,
+    b.title,
+    b.authors,
+    b.cover_url
+HAVING COUNT(r.rating) >= 2;
+
 -----------------------------------------------------
 -- Review
 -----------------------------------------------------
