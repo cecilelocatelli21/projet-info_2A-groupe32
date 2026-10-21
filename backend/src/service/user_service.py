@@ -57,13 +57,16 @@ class UserService:
         return UserDao().update(user)
 
     @log
-    def update(self, user) -> User:
+    def update_profile(self, user: User, bio: str | None = None,
+                       email: str | None = None) -> User:
         """Updates an existing user's information.
         Args:
             User object containing updated information.
         Returns:
             The updated User object, or None if the update failed.
         """
+        user.bio = bio
+        user.email = email
         return user if UserDao().update(user) else None
 
     @log
