@@ -12,11 +12,11 @@ from collections.abc import Iterable
 from data.models import Book
 
 SORT_LABELS = {
-    "relevance": "Pertinence",
-    "rating": "Mieux notés",
-    "recent": "Plus récents",
-    "title": "Titre (A → Z)",
-    "author": "Auteur (A → Z)",
+    "relevance": "Relevance",
+    "rating": "Top rated",
+    "recent": "Most recent",
+    "title": "Title (A → Z)",
+    "author": "Author (A → Z)",
 }
 
 

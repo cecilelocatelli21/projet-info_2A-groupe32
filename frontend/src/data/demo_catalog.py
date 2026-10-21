@@ -19,241 +19,241 @@ from utils.settings import demo_covers_mode
 
 DEMO_PREFIX = "demo-"
 
-GENRE_SF = "Science-fiction"
-GENRE_DYSTOPIA = "Dystopie"
+GENRE_SF = "Science Fiction"
+GENRE_DYSTOPIA = "Dystopian"
 GENRE_FANTASY = "Fantasy"
-GENRE_CLASSICS = "Classiques"
-GENRE_CRIME = "Policier & Thriller"
-GENRE_CONTEMPORARY = "Roman contemporain"
-GENRE_YOUTH = "Jeunesse"
-GENRE_ESSAYS = "Essais & Société"
-GENRE_ADVENTURE = "Aventure"
+GENRE_CLASSICS = "Classics"
+GENRE_CRIME = "Crime & Thriller"
+GENRE_CONTEMPORARY = "Contemporary Fiction"
+GENRE_YOUTH = "Young Readers"
+GENRE_ESSAYS = "Essays & Society"
+GENRE_ADVENTURE = "Adventure"
 
 # slug, title, authors, year, genres, isbn13, pages, publisher, rating, ratings count, description
 _RAW_BOOKS = [
     (
         "petit-prince", "Le Petit Prince", ("Antoine de Saint-Exupéry",), 1943,
         (GENRE_CLASSICS, GENRE_YOUTH), "9782070612758", 96, "Gallimard", 4.3, 18420,
-        "Un aviateur échoué dans le désert rencontre un petit garçon venu d'une autre planète. "
-        "Un conte poétique sur l'amitié, la perte et ce qui compte vraiment.",
+        "An aviator stranded in the desert meets a little boy from another planet. "
+        "A poetic tale about friendship, loss and what truly matters.",
     ),
     (
         "1984", "1984", ("George Orwell",), 1949, (GENRE_DYSTOPIA, GENRE_SF),
         "9780451524935", 328, "Signet Classics", 4.2, 25310,
-        "Dans un monde surveillé en permanence, Winston tente de préserver sa pensée libre face à "
-        "un pouvoir qui réécrit le passé. Un classique glaçant sur la vérité et le contrôle.",
+        "In a world under constant surveillance, Winston tries to keep his thoughts free from "
+        "a regime that rewrites the past. A chilling classic about truth and control.",
     ),
     (
         "dune", "Dune", ("Frank Herbert",), 1965, (GENRE_SF,),
         "9780441013593", 688, "Ace", 4.3, 21980,
-        "Sur la planète désertique Arrakis, seule source de l'épice la plus précieuse de "
-        "l'univers, le jeune Paul Atréides voit sa famille entraînée dans une guerre de pouvoir "
-        "et de destin.",
+        "On the desert planet Arrakis, the only source of the universe's most precious spice, "
+        "young Paul Atreides sees his family dragged into a war of power "
+        "and destiny.",
     ),
     (
         "fahrenheit-451", "Fahrenheit 451", ("Ray Bradbury",), 1953, (GENRE_DYSTOPIA,),
         "9781451673319", 249, "Simon & Schuster", 4.0, 12750,
-        "Guy Montag est pompier : son métier consiste à brûler les livres. Jusqu'au jour où il "
-        "commence à s'interroger sur ce qu'il détruit.",
+        "Guy Montag is a fireman whose job is to burn books. Until the day he "
+        "starts questioning what he is destroying.",
     ),
     (
         "brave-new-world", "Brave New World", ("Aldous Huxley",), 1932, (GENRE_DYSTOPIA,),
         "9780060850524", 288, "Harper Perennial", 3.9, 9840,
-        "Une société stable et heureuse en apparence, fondée sur le conditionnement et le "
-        "plaisir. Un homme venu de l'extérieur en révèle le prix.",
+        "A society that looks stable and happy, built on conditioning and "
+        "pleasure. An outsider reveals its price.",
     ),
     (
         "hobbit", "The Hobbit", ("J.R.R. Tolkien",), 1937, (GENRE_FANTASY, GENRE_ADVENTURE),
         "9780547928227", 300, "Mariner Books", 4.3, 19500,
-        "Bilbon Sacquet, hobbit casanier, se retrouve embarqué avec treize nains et un magicien "
-        "pour reconquérir un trésor gardé par un dragon.",
+        "Bilbo Baggins, a homebody hobbit, is swept away with thirteen dwarves and a wizard "
+        "to reclaim a treasure guarded by a dragon.",
     ),
     (
         "name-of-the-wind", "The Name of the Wind", ("Patrick Rothfuss",), 2007,
         (GENRE_FANTASY,), "9780756404741", 662, "DAW Books", 4.5, 14200,
-        "Kvothe, aubergiste discret, raconte sa propre légende : l'enfant prodige, la troupe de "
-        "saltimbanques, la quête de l'Université et du nom du vent.",
+        "Kvothe, a quiet innkeeper, tells his own legend: the child prodigy, the troupe of "
+        "travelling performers, the quest for the University and the name of the wind.",
     ),
     (
         "mistborn", "Mistborn: The Final Empire", ("Brandon Sanderson",), 2006,
         (GENRE_FANTASY,), "9780765311788", 541, "Tor Books", 4.4, 11780,
-        "Dans un empire dominé depuis mille ans par un tyran immortel, une jeune voleuse "
-        "découvre un pouvoir étrange et rejoint une conspiration pour le renverser.",
+        "In an empire ruled for a thousand years by an immortal tyrant, a young thief "
+        "discovers a strange power and joins a conspiracy to overthrow him.",
     ),
     (
         "game-of-thrones", "A Game of Thrones", ("George R. R. Martin",), 1996,
         (GENRE_FANTASY,), "9780553593716", 835, "Bantam", 4.3, 24100,
-        "Sur le continent de Westeros, les grandes familles se disputent le Trône de fer tandis "
-        "qu'une menace ancienne se réveille au nord.",
+        "On the continent of Westeros, the great houses fight over the Iron Throne while "
+        "an ancient threat awakens in the north.",
     ),
     (
         "hunger-games", "The Hunger Games", ("Suzanne Collins",), 2008,
         (GENRE_DYSTOPIA, GENRE_YOUTH), "9780439023528", 374, "Scholastic", 4.1, 28000,
-        "Dans un pays divisé en districts, Katniss se porte volontaire pour un jeu télévisé "
-        "mortel imposé par le Capitole. Survivre, c'est aussi garder son humanité.",
+        "In a country divided into districts, Katniss volunteers for a deadly televised game "
+        "imposed by the Capitol. Surviving also means keeping your humanity.",
     ),
     (
         "harry-potter-1", "Harry Potter à l'école des sorciers", ("J.K. Rowling",), 1997,
         (GENRE_FANTASY, GENRE_YOUTH), "9782070518425", 308, "Gallimard Jeunesse", 4.5, 31200,
-        "Le jour de ses onze ans, Harry apprend qu'il est un sorcier et entre à Poudlard, où "
-        "l'attendent amitiés, mystères et un passé qu'il ignorait.",
+        "On his eleventh birthday, Harry learns he is a wizard and enters Hogwarts, where "
+        "friendship, mysteries and a past he never knew await him.",
     ),
     (
         "neuromancer", "Neuromancer", ("William Gibson",), 1984, (GENRE_SF,),
         "9780441569595", 271, "Ace", 3.9, 7600,
-        "Case, pirate informatique déchu, est recruté pour une dernière mission dans la matrice. "
-        "Le roman fondateur du cyberpunk.",
+        "Case, a washed-up hacker, is recruited for one last job in the matrix. "
+        "The foundational novel of cyberpunk.",
     ),
     (
         "foundation", "Foundation", ("Isaac Asimov",), 1951, (GENRE_SF,),
         "9780553293357", 255, "Bantam Spectra", 4.2, 10300,
-        "Alors que l'Empire galactique s'effondre, un mathématicien met en place un plan pour "
-        "réduire la durée des siècles de chaos à venir.",
+        "As the Galactic Empire collapses, a mathematician sets in motion a plan to "
+        "shorten the coming centuries of chaos.",
     ),
     (
         "left-hand-of-darkness", "The Left Hand of Darkness", ("Ursula K. Le Guin",), 1969,
         (GENRE_SF,), "9780441478125", 304, "Ace", 4.1, 6400,
-        "Un envoyé terrien visite une planète glacée où les habitants n'ont pas de genre fixe. "
-        "Une réflexion sur l'altérité, la loyauté et l'amitié.",
+        "An envoy from Earth visits an icy planet whose inhabitants have no fixed gender. "
+        "A reflection on otherness, loyalty and friendship.",
     ),
     (
         "martian", "The Martian", ("Andy Weir",), 2011, (GENRE_SF,),
         "9780553418026", 369, "Broadway Books", 4.4, 17900,
-        "Seul sur Mars après un accident, l'astronaute Mark Watney doit s'appuyer sur sa "
-        "débrouillardise et son humour pour survivre jusqu'aux secours.",
+        "Alone on Mars after an accident, astronaut Mark Watney must rely on his "
+        "resourcefulness and humor to survive until rescue.",
     ),
     (
         "project-hail-mary", "Project Hail Mary", ("Andy Weir",), 2021, (GENRE_SF,),
         "9780593135204", 476, "Ballantine Books", 4.6, 15200,
-        "Un professeur se réveille seul dans un vaisseau, sans souvenir de sa mission : sauver "
-        "la Terre d'une menace venue du Soleil.",
+        "A teacher wakes up alone on a spaceship with no memory of his mission: save "
+        "the Earth from a threat coming from the Sun.",
     ),
     (
         "pride-and-prejudice", "Pride and Prejudice", ("Jane Austen",), 1813,
         (GENRE_CLASSICS,), "9780141439518", 480, "Penguin Classics", 4.3, 21500,
-        "Elizabeth Bennet et le fier M. Darcy : un chassé-croisé de préjugés, d'ironie et de "
-        "sentiments dans l'Angleterre du début du XIXe siècle.",
+        "Elizabeth Bennet and the proud Mr. Darcy: a push and pull of prejudice, irony and "
+        "feelings in early nineteenth-century England.",
     ),
     (
         "jane-eyre", "Jane Eyre", ("Charlotte Brontë",), 1847, (GENRE_CLASSICS,),
         "9780141441146", 532, "Penguin Classics", 4.1, 11200,
-        "Orpheline au caractère fier, Jane devient gouvernante à Thornfield Hall, où le maître "
-        "des lieux cache un lourd secret.",
+        "A proud-spirited orphan, Jane becomes a governess at Thornfield Hall, where its "
+        "master hides a heavy secret.",
     ),
     (
         "frankenstein", "Frankenstein", ("Mary Shelley",), 1818, (GENRE_CLASSICS, GENRE_SF),
         "9780141439471", 288, "Penguin Classics", 3.9, 10100,
-        "Le jeune Victor Frankenstein donne vie à une créature qu'il abandonne aussitôt. Un "
-        "récit gothique sur la responsabilité du créateur.",
+        "Young Victor Frankenstein gives life to a creature he immediately abandons. A "
+        "gothic tale about the creator's responsibility.",
     ),
     (
         "dracula", "Dracula", ("Bram Stoker",), 1897, (GENRE_CLASSICS,),
         "9780141439846", 488, "Penguin Classics", 4.0, 9300,
-        "Un jeune clerc se rend en Transylvanie chez un comte énigmatique. Le roman qui a fixé "
-        "le mythe du vampire moderne.",
+        "A young clerk travels to Transylvania to visit an enigmatic count. The novel that set "
+        "the myth of the modern vampire.",
     ),
     (
         "great-gatsby", "The Great Gatsby", ("F. Scott Fitzgerald",), 1925, (GENRE_CLASSICS,),
         "9780743273565", 180, "Scribner", 3.9, 24600,
-        "Dans l'Amérique des années folles, un voisin mystérieux organise des fêtes somptueuses "
-        "pour retrouver un amour perdu.",
+        "In Jazz Age America, a mysterious neighbor throws lavish parties "
+        "to win back a lost love.",
     ),
     (
         "to-kill-a-mockingbird", "To Kill a Mockingbird", ("Harper Lee",), 1960,
         (GENRE_CLASSICS,), "9780061120084", 336, "Harper Perennial", 4.3, 27300,
-        "Dans le Sud des États-Unis des années 1930, une petite fille observe le procès d'un "
-        "homme noir injustement accusé, défendu par son père avocat.",
+        "In the American South of the 1930s, a little girl watches the trial of a "
+        "Black man unjustly accused, defended by her father, a lawyer.",
     ),
     (
         "etranger", "L'Étranger", ("Albert Camus",), 1942, (GENRE_CLASSICS,),
         "9782070360024", 186, "Gallimard", 4.0, 15600,
-        "Meursault enterre sa mère sans larmes, puis commet un acte qui le conduit devant un "
-        "tribunal. Un roman de l'absurde, sec et lumineux.",
+        "Meursault buries his mother without tears, then commits an act that leads him before a "
+        "court. A novel of the absurd, dry and luminous.",
     ),
     (
         "la-peste", "La Peste", ("Albert Camus",), 1947, (GENRE_CLASSICS,),
         "9782070360420", 336, "Gallimard", 4.1, 9100,
-        "Oran est frappée par une épidémie de peste. Un médecin et ses compagnons font face, "
-        "chacun à sa manière, à ce fléau.",
+        "Oran is struck by a plague epidemic. A doctor and his companions each face "
+        "this scourge in their own way.",
     ),
     (
         "hundred-years-of-solitude", "One Hundred Years of Solitude",
         ("Gabriel García Márquez",), 1967, (GENRE_CLASSICS,), "9780060883287", 417,
         "Harper Perennial", 4.1, 13900,
-        "L'histoire de la famille Buendía et du village imaginaire de Macondo, entre merveilleux, "
-        "solitude et cycles de l'histoire.",
+        "The story of the Buendía family and the imaginary village of Macondo, between the marvelous, "
+        "solitude and the cycles of history.",
     ),
     (
         "alchemist", "The Alchemist", ("Paulo Coelho",), 1988, (GENRE_CONTEMPORARY,),
         "9780062315007", 208, "HarperOne", 3.9, 21800,
-        "Un jeune berger andalou part vers les pyramides à la recherche d'un trésor et découvre "
-        "sa propre légende personnelle.",
+        "A young Andalusian shepherd sets off for the pyramids in search of a treasure and discovers "
+        "his own personal legend.",
     ),
     (
         "gone-girl", "Gone Girl", ("Gillian Flynn",), 2012, (GENRE_CRIME,),
         "9780307588371", 415, "Crown", 4.1, 18900,
-        "Le jour de leur anniversaire de mariage, Amy disparaît. Les soupçons se portent sur son "
-        "mari. Un thriller psychologique aux revirements multiples.",
+        "On their wedding anniversary, Amy disappears. Suspicion falls on her "
+        "husband. A psychological thriller full of twists.",
     ),
     (
         "dragon-tattoo", "The Girl with the Dragon Tattoo", ("Stieg Larsson",), 2005,
         (GENRE_CRIME,), "9780307949486", 644, "Vintage Crime", 4.1, 14800,
-        "Un journaliste et une hackeuse hors norme enquêtent sur la disparition, quarante ans "
-        "plus tôt, de l'héritière d'une grande famille industrielle.",
+        "A journalist and an extraordinary hacker investigate the disappearance, forty years "
+        "earlier, of the heiress of a great industrial family.",
     ),
     (
         "and-then-there-were-none", "And Then There Were None", ("Agatha Christie",), 1939,
         (GENRE_CRIME, GENRE_CLASSICS), "9780062073488", 272, "William Morrow", 4.3, 17200,
-        "Dix inconnus sont invités sur une île isolée. Un à un, ils disparaissent selon une "
-        "comptine macabre. Le huis clos de référence.",
+        "Ten strangers are invited to an isolated island. One by one, they die following a "
+        "macabre nursery rhyme. The definitive locked-room mystery.",
     ),
     (
         "orient-express", "Murder on the Orient Express", ("Agatha Christie",), 1934,
         (GENRE_CRIME,), "9780062693662", 288, "William Morrow", 4.2, 14100,
-        "Bloqué par la neige, le train de luxe voit un passager assassiné. Hercule Poirot doit "
-        "démêler les mensonges de tous les voyageurs.",
+        "Snowbound, the luxury train sees a passenger murdered. Hercule Poirot must "
+        "untangle the lies of every traveler.",
     ),
     (
         "midnight-library", "The Midnight Library", ("Matt Haig",), 2020, (GENRE_CONTEMPORARY,),
         "9780525559474", 304, "Viking", 4.0, 12600,
-        "Entre la vie et la mort, Nora découvre une bibliothèque où chaque livre est une vie "
-        "qu'elle aurait pu mener.",
+        "Between life and death, Nora discovers a library where every book is a life "
+        "she could have lived.",
     ),
     (
         "circe", "Circe", ("Madeline Miller",), 2018, (GENRE_FANTASY, GENRE_CONTEMPORARY),
         "9780316556347", 393, "Little, Brown", 4.3, 11800,
-        "La nymphe Circé, reléguée sur une île, apprend la magie et croise des figures de la "
-        "mythologie grecque. Une odyssée vue par celle qu'on oublie.",
+        "The nymph Circe, banished to an island, learns witchcraft and crosses paths with figures of "
+        "Greek mythology. An odyssey seen through the eyes of the one who gets forgotten.",
     ),
     (
         "normal-people", "Normal People", ("Sally Rooney",), 2018, (GENRE_CONTEMPORARY,),
         "9781984822178", 266, "Hogarth", 3.8, 9200,
-        "Marianne et Connell, au lycée puis à l'université, se rapprochent et s'éloignent sans "
-        "cesse. Une histoire d'amour et de classe sociale.",
+        "Marianne and Connell, in high school and then at university, keep drifting together and apart. "
+        "A story of love and social class.",
     ),
     (
         "sapiens", "Sapiens", ("Yuval Noah Harari",), 2011, (GENRE_ESSAYS,),
         "9780062316097", 464, "Harper", 4.4, 18300,
-        "Une histoire de l'humanité, des chasseurs-cueilleurs à nos sociétés numériques, qui "
-        "interroge nos croyances collectives.",
+        "A history of humankind, from hunter-gatherers to our digital societies, that "
+        "questions our collective beliefs.",
     ),
     (
         "educated", "Educated", ("Tara Westover",), 2018, (GENRE_ESSAYS,),
         "9780399590504", 352, "Random House", 4.5, 15500,
-        "Élevée dans une famille survivaliste, Tara n'entre en classe qu'à dix-sept ans. Un "
-        "récit d'émancipation par l'éducation.",
+        "Raised in a survivalist family, Tara doesn't set foot in a classroom until she is seventeen. A "
+        "memoir of emancipation through education.",
     ),
     (
         "atomic-habits", "Atomic Habits", ("James Clear",), 2018, (GENRE_ESSAYS,),
         "9780735211292", 320, "Avery", 4.4, 21400,
-        "Une méthode concrète pour construire de bonnes habitudes et se défaire des mauvaises "
-        "grâce à de petits changements répétés.",
+        "A practical method for building good habits and breaking bad ones "
+        "through small, repeated changes.",
     ),
     (
         "catcher-in-the-rye", "The Catcher in the Rye", ("J.D. Salinger",), 1951,
         (GENRE_CLASSICS,), "9780316769488", 277, "Little, Brown", 3.8, 15100,
-        "Quelques jours d'errance à New York pour Holden Caulfield, adolescent révolté contre le "
-        "monde des adultes.",
+        "A few days of wandering through New York for Holden Caulfield, a teenager in revolt against the "
+        "world of adults.",
     ),
 ]
 
@@ -311,8 +311,8 @@ DEMO_USER_ID = 0
 DEMO_USERNAME = "camille.demo"
 DEMO_DISPLAY_NAME = "Camille"
 DEMO_BIO = (
-    "Dévoreuse de science-fiction et de classiques. Toujours trois livres en cours, "
-    "une pile à lire qui ne diminue jamais."
+    "Devourer of science fiction and classics. Always three books in progress, "
+    "and a to-read pile that never shrinks."
 )
 DEMO_MEMBER_SINCE = date(2025, 3, 14)
 
@@ -339,34 +339,34 @@ _DEMO_LIBRARY = [
 # Reviews written by the demo user: slug -> text
 _DEMO_MY_REVIEWS = {
     "1984": (
-        "Un livre qui ne vieillit pas. La fin m'a laissée sans voix pendant plusieurs jours : "
-        "à relire tous les cinq ans pour voir ce qui a changé autour de nous."
+        "A book that never ages. The ending left me speechless for several days: "
+        "worth rereading every five years to see what has changed around us.",
     ),
     "petit-prince": (
-        "Je l'avais lu enfant sans rien comprendre. Adulte, chaque page frappe juste. "
-        "Court, mais on ne le referme pas indemne."
+        "I read it as a child and understood nothing. As an adult, every page hits home. "
+        "Short, but you don't close it unscathed.",
     ),
     "pride-and-prejudice": (
-        "Les dialogues sont d'une finesse incroyable et l'ironie d'Austen n'a pas pris une "
-        "ride. Darcy reste insupportable puis irrésistible, comme prévu."
+        "The dialogue is incredibly sharp and Austen's irony hasn't aged a day. "
+        "Darcy remains insufferable and then irresistible, as expected.",
     ),
     "martian": (
-        "Efficace, drôle et étonnamment pédagogue. J'ai lu les cent dernières pages d'une "
-        "traite, un dimanche."
+        "Efficient, funny and surprisingly educational. I read the last hundred pages in "
+        "one sitting, on a Sunday.",
     ),
     "game-of-thrones": (
-        "Univers impressionnant mais trop de personnages pour moi à ce moment-là. "
-        "Je réessaierai peut-être plus tard."
+        "An impressive world, but too many characters for me at that point. "
+        "I may try again later.",
     ),
 }
 
 _FRIENDS = [
-    Person("lea_p", 11, "Lectrice de polars, thé noir et plaids."),
-    Person("marc.lit", 12, "Un roman par semaine, sans exception."),
-    Person("ines.reads", 13, "Fantasy, SF et chroniques de lecture."),
-    Person("thomas_b", 14, "Classiques d'abord, le reste ensuite."),
-    Person("nora_pages", 15, "Je note tout. Absolument tout."),
-    Person("julien.k", 16, "Essais, histoire, un peu de BD."),
+    Person("lea_p", 11, "Crime fiction reader, black tea and blankets."),
+    Person("marc.lit", 12, "One novel a week, no exceptions."),
+    Person("ines.reads", 13, "Fantasy, SF and reading journals."),
+    Person("thomas_b", 14, "Classics first, everything else after."),
+    Person("nora_pages", 15, "I rate everything. Absolutely everything."),
+    Person("julien.k", 16, "Essays, history, a bit of comics."),
 ]
 
 _ME = Person(DEMO_USERNAME, DEMO_USER_ID, DEMO_BIO)
@@ -442,72 +442,72 @@ _FRIEND_EXTRAS = {
 # Reviews by other (fictional) readers: slug -> [(author, rating, text, likes, date)]
 _OTHER_REVIEWS = {
     "dune": [
-        ("ines.reads", 5, "Une immersion totale. Le monde est si dense qu'on en sort ébloui et "
-         "un peu perdu, dans le bon sens.", 24, date(2026, 5, 2)),
-        ("marc.lit", 4, "Lent à démarrer, impossible à lâcher ensuite. Les passages sur "
-         "l'écologie sont brillants.", 11, date(2026, 3, 18)),
+        ("ines.reads", 5, "Total immersion. The world is so dense you come out dazzled and "
+         "a little lost, in the best way.", 24, date(2026, 5, 2)),
+        ("marc.lit", 4, "Slow to start, impossible to put down after that. The passages on "
+         "ecology are brilliant.", 11, date(2026, 3, 18)),
     ],
     "1984": [
-        ("thomas_b", 5, "Indispensable. La novlangue est l'idée la plus terrifiante de la "
-         "littérature du XXe siècle.", 31, date(2026, 1, 9)),
-        ("lea_p", 4, "Sombre, bien sûr, mais d'une lucidité qui fait mal.", 8, date(2025, 11, 4)),
+        ("thomas_b", 5, "Essential. Newspeak is the most terrifying idea in "
+         "twentieth-century literature.", 31, date(2026, 1, 9)),
+        ("lea_p", 4, "Dark, of course, but with a clarity that hurts.", 8, date(2025, 11, 4)),
     ],
     "project-hail-mary": [
-        ("nora_pages", 5, "Mon livre de l'année. Je n'en dis rien de plus pour ne pas gâcher "
-         "le plaisir de la découverte.", 42, date(2026, 6, 21)),
-        ("julien.k", 5, "Drôle, émouvant, intelligent. Une vraie leçon d'amitié.", 17,
+        ("nora_pages", 5, "My book of the year. I won't say more so as not to spoil "
+         "the joy of discovery.", 42, date(2026, 6, 21)),
+        ("julien.k", 5, "Funny, moving, smart. A real lesson in friendship.", 17,
          date(2026, 7, 1)),
     ],
     "pride-and-prejudice": [
-        ("lea_p", 5, "Chaque relecture me révèle un nouveau trait d'humour.", 14,
+        ("lea_p", 5, "Every reread reveals a new touch of humor.", 14,
          date(2026, 2, 12)),
-        ("thomas_b", 4, "Un monument, mais surtout un très bon moment de lecture.", 6,
+        ("thomas_b", 4, "A monument, but above all a really good read.", 6,
          date(2025, 12, 2)),
     ],
     "circe": [
-        ("ines.reads", 5, "Une écriture sensuelle et patiente. J'ai relu mon vieux manuel de "
-         "mythologie juste après.", 19, date(2026, 4, 8)),
-        ("nora_pages", 4, "Beau, un peu long au milieu mais tellement bien porté.", 5,
+        ("ines.reads", 5, "Sensual, patient writing. I went back to my old mythology "
+         "textbook right after.", 19, date(2026, 4, 8)),
+        ("nora_pages", 4, "Beautiful, a bit long in the middle but so well carried.", 5,
          date(2026, 4, 30)),
     ],
     "martian": [
-        ("marc.lit", 5, "Du suspense avec des équations. Qui l'eût cru ?", 13, date(2025, 10, 7)),
-        ("julien.k", 4, "Très divertissant. Le ton sarcastique du héros est parfait.", 4,
+        ("marc.lit", 5, "Suspense with equations. Who would have thought?", 13, date(2025, 10, 7)),
+        ("julien.k", 4, "Very entertaining. The hero's sarcastic tone is perfect.", 4,
          date(2025, 12, 28)),
     ],
     "etranger": [
-        ("thomas_b", 4, "Court et dérangeant. La plage reste une des scènes les plus "
-         "étranges que j'aie lues.", 9, date(2026, 3, 3)),
+        ("thomas_b", 4, "Short and unsettling. The beach remains one of the strangest "
+         "scenes I have ever read.", 9, date(2026, 3, 3)),
     ],
     "gone-girl": [
-        ("lea_p", 4, "Les revirements sont bien ficelés, l'ambiance glaçante.", 10,
+        ("lea_p", 4, "The twists are well crafted, the atmosphere chilling.", 10,
          date(2025, 9, 14)),
-        ("nora_pages", 3, "Efficace mais je n'ai aimé aucun personnage, ce qui était sûrement "
-         "voulu.", 3, date(2025, 10, 1)),
+        ("nora_pages", 3, "Effective but I didn't like a single character, which was surely "
+         "intentional.", 3, date(2025, 10, 1)),
     ],
     "sapiens": [
-        ("julien.k", 5, "Ça donne envie de relire l'histoire autrement. Quelques "
-         "raccourcis, mais très stimulant.", 22, date(2026, 2, 2)),
+        ("julien.k", 5, "It makes you want to reread history differently. A few "
+         "shortcuts, but very stimulating.", 22, date(2026, 2, 2)),
     ],
     "name-of-the-wind": [
-        ("ines.reads", 5, "La musique de la prose, tout simplement.", 27, date(2026, 5, 22)),
-        ("marc.lit", 4, "Un début magistral. Vivement la suite… un jour.", 12,
+        ("ines.reads", 5, "The music of the prose, plain and simple.", 27, date(2026, 5, 22)),
+        ("marc.lit", 4, "A masterful opening. Can't wait for the sequel... someday.", 12,
          date(2026, 6, 9)),
     ],
     "hobbit": [
-        ("thomas_b", 5, "Parfait pour commencer la fantasy, un livre-refuge.", 15,
+        ("thomas_b", 5, "Perfect for getting into fantasy, a comfort read.", 15,
          date(2026, 1, 26)),
     ],
     "foundation": [
-        ("julien.k", 4, "Des idées géniales, des personnages un peu en retrait. Très "
-         "bon quand même.", 7, date(2026, 4, 14)),
+        ("julien.k", 4, "Brilliant ideas, characters a bit in the background. Still "
+         "very good.", 7, date(2026, 4, 14)),
     ],
     "midnight-library": [
-        ("nora_pages", 4, "Doux et réconfortant, parfait pour une journée grise.", 9,
+        ("nora_pages", 4, "Gentle and comforting, perfect for a gray day.", 9,
          date(2026, 2, 19)),
     ],
     "educated": [
-        ("lea_p", 5, "Bouleversant et très bien raconté. Je l'ai offert trois fois.", 18,
+        ("lea_p", 5, "Heartbreaking and very well told. I have gifted it three times.", 18,
          date(2026, 3, 27)),
     ],
 }

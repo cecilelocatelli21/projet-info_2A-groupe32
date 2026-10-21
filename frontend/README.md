@@ -16,52 +16,69 @@ Then you have to be in the *frontend* folder to launch:
 
 ```
 src/
-  app.py            entry point: theme + navigation (login page, or the 5 pages once logged in)
-  views/            login, home (hero + shelves), discover, library, profile, book
-  ui/               theme.py (the whole visual identity) and components.py (navbar, hero, cards...)
-  auth/session.py   demo login (isolated) and real login (POST /login/), logout
+  app.py            entry point: theme + navigation (visitor pages, or the 5 pages once logged in)
+  views/            landing (public home), login, signup, home, discover, library, profile, book
+  ui/               theme.py (the whole visual identity) and components.py (navbars, hero, cards...)
+  auth/session.py   real login (POST /login/), real signup (POST /user/users), logout, demo login (off)
+  api/              one module per backend vertical (routes written here only)
   data/             what the views see: Repository (contract), ApiRepository (real backend),
-                    DemoRepository (fictitious data), FallbackRepository (API + demo catalogue),
+                    DemoRepository (fictitious data), FallbackRepository (API + sample catalogue),
                     factory.py (picks the source), search.py (local search/filter/sort)
-  utils/            API client (unchanged contract), logs, settings (environment switches)
+  utils/            API client (sends `Authorization: Bearer <token>`), logs, settings
   pages/            former template pages (players/game), no longer in the navigation
 ```
 
-Views never talk to the API or to the demo data directly: they only use a `Repository`.
-Demo and real data are never merged. A demo session only sees demo data (kept in the Streamlit
-session, nothing is sent to the backend). The only exception is the read-only *catalogue* fallback
-when the API cannot be reached; a banner says so.
+The whole interface is in English.
+
+### Navigation
+
+* **Visitor** (not logged in): `landing` (public home, Netflix-style: hero, shelves of books, call to
+  action), `login`, `signup`. Protected pages are not registered, so `/library`, `/profile`... show the
+  public home to a logged-out user.
+* **Logged in**: `home`, `discover`, `library`, `profile` (`/profile?user=<id>` = public profile of anyone),
+  `book`. Log out from the avatar menu: the local session is erased and the visitor home is shown.
+
+### Backend routes really used
+
+| What | Route |
+| --- | --- |
+| Log in | `POST /login/` body `{username, password}` -> `{id_user, username, access_token}` |
+| Create account | `POST /user/users` body `{username, email, password}` -> 201 `{user_id, username, bio, email}` (409 username/email taken, 422 invalid). No token is returned: the user is sent to the login page |
+| Public books (visitor home) | `GET /books/find_all/` (no token needed) |
+| Search (needs token) | `GET /books/?q=<text>` (`q` required, 404 = nothing found) |
+| Book details | `GET /books/{work_id}` |
+| Library | `POST /readings`, `GET /users/{id}/readings`, `PATCH /readings/{id}`, `DELETE /readings/{id}` |
+| Profile / follows | `GET /user/users/{id}`, `GET /users/{id}/followers`, `GET /users/{id}/following`, `POST`/`DELETE /users/{id}/follow` |
+| Reviews / likes | `/review/books/{work_id}/reviews`, `/review/readings/{id}/review`, `/review/reviews/{id}`, `/review/users/{id}/reviews`, `/review/reviews/{id}/like` |
+
+Every protected call sends `Authorization: Bearer <access_token>` (the token is kept in `st.session_state`,
+never displayed nor logged; the password is only used for the login / signup call).
 
 ### Environment switches
 
 | Variable | Default | Effect |
 | --- | --- | --- |
-| `EXLIBRIS_ENABLE_DEMO_LOGIN` | `true` | one-click demo login; set `false` once real authentication is ready |
-| `EXLIBRIS_DATA_SOURCE` | `auto` | `auto`: API then demo catalogue if unreachable; `api`: API only; `demo`: no API call |
+| `BACKEND_URL` | `http://localhost:5000` | URL of the backend |
+| `PASSWORD_MIN_LENGTH` | `8` | same variable as the backend, used by the signup form |
+| `EXLIBRIS_ENABLE_DEMO_LOGIN` | `false` | `true` adds a one-click demo login (fictitious data, no backend call) |
+| `EXLIBRIS_DATA_SOURCE` | `auto` | `auto`: API then sample catalogue if unreachable; `api`: API only; `demo`: no API call |
+| `EXLIBRIS_BACKEND_REVIEWS` | `true` | `false` hides reviews and likes |
 | `EXLIBRIS_DEMO_COVERS` | `remote` | `generated`: never request Open Library covers (offline demo) |
 
-### Public profiles, likes and follows
+Covers are CSS backgrounds over a generated cover, so a missing or unloadable image never shows as a
+broken icon. A browser refresh starts a new Streamlit session: the user logs in again. The backend has no
+`POST /logout` route yet: logging out forgets the token on the front side only.
 
-`views/profile.py` is the only profile page: `/profil` is the connected user, `/profil?user=<id>`
-is the public profile of anyone (no follow needed). Usernames (reviews, followers, following) are
-buttons calling `ui.open_profile(user_id)`. Likes and the Follow button are independent of what a
-profile shows.
+### Known backend limitations (at the time of writing)
 
-Real backend today: profile (`GET /user/{id}`), followers/following, follow/unfollow work.
-Reviews and likes use the backend routes (`/books/{work_id}/reviews`, `/users/{id}/reviews`,
-`/readings/{id}/review`, `/reviews/{id}/like`); set `EXLIBRIS_BACKEND_REVIEWS=false` to hide them.
-The backend does not say which reviews the connected user already liked: the front remembers it for
-the session. Still unavailable: account creation date and `GET /users/{id}/readings`
-(`ReadingDao` of the backend is not working yet).
-
-### Still to connect (backend side)
-
-- `GET /book/search` (search is local for now), book description/genres/average rating,
-  reviews (`/readings/{id}/review`, `/books/{work_id}/reviews`), likes, recommendations.
-- The login route currently returns `id_player`; the front accepts it or `user_id`.
-- The auth token is sent as `Authorization: Bearer ...` (what the backend expects).
-
-Note: a browser refresh starts a new Streamlit session, so the user must log in again.
+* `POST /user/users` answers 500 because `UserService.create_account` calls `UserDao.find_by_email`, which is
+  missing from `user_dao.py`.
+* `PATCH /readings/{id}` (change status / rate) answers 500 on a database built from `data/init_db.sql`: the
+  materialized view `popular_books` that `ReadingDao.update` refreshes is created nowhere.
+* `GET /user/users?username=` answers 500 (`UserService.search` is missing): the user search is not in the navigation.
+* The user router is mounted under `/user` in `main.py`, hence `/user/users` instead of the documented `/users`.
+* The book search and book details go through Open Library: if it is unreachable the pages show a clear
+  message instead of results.
 
 ## ⚒️ Debugging & Logs
 
@@ -75,25 +92,3 @@ The frontend maintains its own logging system to track user interactions and API
 ### Code quality
 
 The **format on save** with [Ruff](https://docs.astral.sh/ruff/) is enabled by default in the workspace (cf. *.vscode/settings.json*).
-
-## Login and session
-
-* **Real login**: `POST /login/` (JSON `{"username", "password"}`) answers `{"id_user", "username", "access_token"}`.
-  The token is kept in `st.session_state` (server side, per browser session), sent as
-  `Authorization: Bearer <token>` on every call, and checked right after login on a protected route
-  (`GET /users/{id}/reviews`). The password is never stored nor logged. A 401 later on logs the user out
-  with an explanation. A browser refresh starts a new Streamlit session: the user logs in again.
-* **Demo (Camille)**: `auth.session.demo_login()`; no token, no call to the backend, demo data only.
-  Disable it with `EXLIBRIS_ENABLE_DEMO_LOGIN=false`. Real and demo sessions never share state.
-* Unauthenticated users only get the login page (`st.navigation` only registers the other pages once logged in).
-
-## Book search
-
-Typing in the navbar search box (Enter / leaving the field: Streamlit sends nothing on each keystroke)
-opens *Découvrir* and calls `GET /books?q=<text>` ("Search Books", `q` required) through the existing
-`utils.api_client` (`BACKEND_URL`). `requests` encodes spaces and special characters. Each result is
-`{book_id, work_id, title, authors, cover_url}`; `authors` is joined with " et ", `book_id` is null for books
-not stored yet, `cover_url` may be null. The backend answers **404 when nothing matches** (shown as "no result");
-500 / unreachable is shown as "Recherche indisponible". Answers are cached per session. The demo user keeps
-searching the local demo catalogue (no API call). Covers are CSS backgrounds over a generated cover, so a
-missing or unloadable image never shows as a broken icon.

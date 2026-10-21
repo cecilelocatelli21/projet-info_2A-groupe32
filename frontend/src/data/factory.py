@@ -34,9 +34,9 @@ class FallbackRepository(ApiRepository):
             books = super().catalog()
             if books:
                 return books
-            reason = "Le catalogue du serveur est vide."
+            reason = "The server catalogue is empty."
         except (DataUnavailable, BusinessRuleError) as exc:
-            reason = f"Serveur injoignable ou route indisponible ({exc})."
+            reason = f"The server is unreachable or the route is unavailable ({exc})."
         if data_source() == "api":
             return []
         self.degraded, self.degraded_reason = True, reason
