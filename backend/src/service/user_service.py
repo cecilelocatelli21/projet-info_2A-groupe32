@@ -57,7 +57,7 @@ class UserService:
         return UserDao().update(user)
 
     @log
-    def update_profile(self, user: User, bio: str | None = None,
+    def update_profile(self, current_user: User, user_id: int, bio: str | None = None,
                        email: str | None = None) -> User:
         """Updates an existing user's information.
         Args:
@@ -65,9 +65,13 @@ class UserService:
         Returns:
             The updated User object, or None if the update failed.
         """
+        user = self._get_own_account(current_user, user_id)
         if bio is not None:
             user.bio = bio
-        if email is not None:
+        if email is not None and email != user.email:
+            other = UserDao().find_by_email(email)
+            if other is not None:
+                raise ConflictError(f"Email '{email}' is already used.")
             user.email = email
         return user if UserDao().update(user) else None
 
@@ -96,6 +100,8 @@ class UserService:
         Existence is checked first, so an unknown id gives 404 rather than 403.
         """
         user = self.find_by_id(user_id)
+        if user is None:
+            raise NotFoundError(f"User {user_id} not found.")
         if current_user.user_id != user.user_id:
             raise ForbiddenError("You can only modify your own account.")
         return user
@@ -119,3 +125,7 @@ class UserService:
     def delete_account(self, current_user: User, user_id: int) -> bool:
         user = self._get_own_account(current_user, user_id)
         return UserDao().delete(user.user_id)
+
+    @log
+    def search(self, pattern: str) -> list[User]:
+        return UserDao().search_by_username(pattern)

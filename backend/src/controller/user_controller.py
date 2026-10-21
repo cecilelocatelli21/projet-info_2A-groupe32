@@ -70,8 +70,8 @@ def _to_public_model(u: User) -> UserPublicModel:
 def create_user(u: UserModel, user_service=Depends(get_user_service)):
     """Create a new user.
     Args:
-        u (UserModel): The player data to create.
-        user_service (UserService): The service used to interact with player data.
+        u (UserModel): The user data to create.
+        user_service (UserService): The service used to interact with our data.
     Returns:
         UserReadModel: The newly created user data.
     Raises:
@@ -93,16 +93,11 @@ def create_user(u: UserModel, user_service=Depends(get_user_service)):
 # -------Pour un utilisateur connecté--------------
 
 
-@router.get("/", response_model=list[UserReadModel], tags=["Users"])
-async def find_all_users(user_service=Depends(get_user_service)):
-    """List all users.
-    Returns:
-        list[UserReadModel]: A list of all registered users.
-    """
+@router.get("/users/all", response_model=list[UserPublicModel], tags=["Users"])
+def find_all_users(user_service=Depends(get_user_service), _: User = Depends(get_current_user)):
+    """List all users (public view, without emails)."""
     logger.info("List all users")
-    users_list = user_service.find_all()
-    return users_list
-
+    return [_to_public_model(u) for u in user_service.find_all()]
 
 @router.get("/users", response_model=list[UserPublicModel])
 def search_users(
@@ -123,6 +118,10 @@ def search_users(
     logger.info("Search users")
     return [_to_public_model(u) for u in user_service.search(username)]
 
+@router.get("/users/me", response_model=UserReadModel)
+def read_me(current_user: User = Depends(get_current_user)):
+    """Returns the logged-in user's own profile, with the email."""
+    return _to_read_model(current_user)
 
 @router.get("/users/{user_id}", response_model=UserPublicModel)
 def user_by_id(
@@ -176,9 +175,8 @@ def update_user(
     logger.info("Update user")
 
     try:
-        user = user_service.find_by_id(user_id)
-        user_updated = user_service.update_profile(
-            user, bio=changes.bio, email=changes.email
+        user = user_service.update_profile(
+            current_user, user_id, bio=changes.bio, email=changes.email
         )
     except NotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
@@ -186,7 +184,7 @@ def update_user(
         raise HTTPException(status_code=403, detail=str(e)) from e
     except ConflictError as e:
         raise HTTPException(status_code=409, detail=str(e)) from e
-    return _to_read_model(user_updated)
+    return _to_read_model(user)
 
 
 # Changer mdp

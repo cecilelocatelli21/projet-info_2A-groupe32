@@ -36,27 +36,24 @@ app = FastAPI(title="My Webservice")
 
 app.add_middleware(LogMiddleware)
 
-
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     """
-    Intercepts Pydantic 422 errors to log them.
+    Intercepts Pydantic 422 errors to log them (without the request body,
+    which may contain a password).
     """
-    body = await request.body()
-    body_str = body.decode() if body else "empty body"
-
-    logger.error(f"Validation Error\nErrors: {exc.errors()}\nBody: {body_str}")
+    logger.error(f"Validation Error\nErrors: {exc.errors()}")
 
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={"detail": exc.errors(), "body": body_str},
+        content={"detail": exc.errors()},
     )
 
 
 app.include_router(book_controller.router, prefix="/books", tags=["Books"])
-app.include_router(user_controller.router, prefix="/user", tags=["Users"])
+app.include_router(user_controller.router, tags=["Users"])
 app.include_router(player_controller.router, prefix="/player", tags=["Players"])
-app.include_router(login_controller.router, prefix="/login", tags=["Login"])
+app.include_router(login_controller.router, tags=["Login"])
 app.include_router(review_controller.router, prefix="/review", tags=["Reviews"])
 app.include_router(game_controller.router, prefix="/game", tags=["Games"])
 app.include_router(follow_controller.router, tags=["Follow"])

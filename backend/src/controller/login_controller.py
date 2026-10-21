@@ -1,5 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 
+from business_object.user import User
+from controller.dependencies import get_current_user
 from schema.user_model import UserLoginModel
 from service.user_service import UserService
 from utils.log_utils import get_logger
@@ -14,7 +16,7 @@ def get_user_service():
     return UserService()
 
 
-@router.post("/", tags=["Login"])
+@router.post("/login", tags=["Login"])
 def login(credentials: UserLoginModel, service=Depends(get_user_service)):
     """Authenticates a user.
     Args:
@@ -33,7 +35,12 @@ def login(credentials: UserLoginModel, service=Depends(get_user_service)):
         }
     raise HTTPException(status_code=401, detail="Invalid credentials")
 
-def logout():
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT, tags=["Login"])
+def logout(current_user: User = Depends(get_current_user), service=Depends(get_user_service)):
+    """Logs out the current user by erasing their token.
+    Raises:
+        HTTPException: 401 if the token is missing or invalid
     """
-    """
-    ...
+    logger.info("Logout")
+    service.logout(current_user)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
