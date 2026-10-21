@@ -206,12 +206,12 @@ class ReadingDao(metaclass=Singleton):
 
                     updated = cursor.rowcount == 1
 
-                    if updated:
-                        cursor.execute(
-                            "REFRESH MATERIALIZED VIEW popular_books;"
-                        )
+                #     if updated:
+                #         cursor.execute(
+                #             "REFRESH MATERIALIZED VIEW popular_books;"
+                #         )
 
-                connection.commit()
+                # connection.commit()
 
         except Exception:
             logger.exception(
