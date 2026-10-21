@@ -47,7 +47,7 @@ class UserService:
         Not used by create_account, which calls find_by_username directly.
 
         Args:
-            (str): username to check
+            username (str): username to check
         Returns:
             True if the username already exists in the database.
         """
@@ -136,9 +136,9 @@ class UserService:
         Existence is checked first, so an unknown id gives 404 rather than 403.
 
         Args:
-            curent_user (User): the logged-in user, given by get_current_user
+            current_user (User): the logged-in user, given by get_current_user
             user_id (int): id of the targeted account
-        Return:
+        Returns:
             User: the targeted account, read from the database
         Raises:
             NotFoundError: if no user has this user_id
@@ -159,7 +159,7 @@ class UserService:
         A field left to None is not changed.
 
         Args:
-            curent_user (User): the logged-in user, given by get_current_user
+            current_user (User): the logged-in user, given by get_current_user
             user_id (int): id of the account to modify, must be current_user's
             bio (str | None): new bio
             email (str | None): new email, must not be already used by another account
