@@ -65,8 +65,10 @@ class UserService:
         Returns:
             The updated User object, or None if the update failed.
         """
-        user.bio = bio
-        user.email = email
+        if bio is not None:
+            user.bio = bio
+        if email is not None:
+            user.email = email
         return user if UserDao().update(user) else None
 
     @log

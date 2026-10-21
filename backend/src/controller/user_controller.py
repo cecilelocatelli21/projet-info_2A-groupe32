@@ -174,9 +174,11 @@ def update_user(
         HTTPException: 409 if the new email is already used by another account
     """
     logger.info("Update user")
+
     try:
-        user = user_service.update_profile(
-            current_user, user_id, bio=changes.bio, email=changes.email
+        user = user_service.find_by_id(user_id)
+        user_updated = user_service.update_profile(
+            user, bio=changes.bio, email=changes.email
         )
     except NotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
@@ -184,7 +186,7 @@ def update_user(
         raise HTTPException(status_code=403, detail=str(e)) from e
     except ConflictError as e:
         raise HTTPException(status_code=409, detail=str(e)) from e
-    return _to_read_model(user)
+    return _to_read_model(user_updated)
 
 
 # Changer mdp
