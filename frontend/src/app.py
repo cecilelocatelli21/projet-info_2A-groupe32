@@ -22,14 +22,21 @@ get_page_logger("exlibris")
 inject_css()
 
 if session.is_logged_in():
+    # logged-in user: the whole app (the visitor pages are not registered, so they cannot be opened)
     pages = [
-        st.Page("views/home.py", title="Accueil", icon="🏠", url_path="accueil", default=True),
-        st.Page("views/discover.py", title="Découvrir", icon="🔎", url_path="decouvrir"),
-        st.Page("views/library.py", title="Ma bibliothèque", icon="📚", url_path="bibliotheque"),
-        st.Page("views/profile.py", title="Profil", icon="👤", url_path="profil"),
-        st.Page("views/book.py", title="Fiche livre", icon="📖", url_path="livre"),
+        st.Page("views/home.py", title="Home", icon="🏠", url_path="home", default=True),
+        st.Page("views/discover.py", title="Discover", icon="🔎", url_path="discover"),
+        st.Page("views/library.py", title="My Library", icon="📚", url_path="library"),
+        st.Page("views/profile.py", title="Profile", icon="👤", url_path="profile"),
+        st.Page("views/book.py", title="Book", icon="📖", url_path="book"),
     ]
 else:
-    pages = [st.Page("views/login.py", title="Connexion", icon="📖", url_path="connexion", default=True)]
+    # visitor: public landing page (default), login and account creation. Protected pages are not
+    # registered here, so a logged-out user typing /library lands on the public home page.
+    pages = [
+        st.Page("views/landing.py", title="Ex-Libris", icon="📖", url_path="welcome", default=True),
+        st.Page("views/login.py", title="Log in", icon="🔑", url_path="login"),
+        st.Page("views/signup.py", title="Create account", icon="✨", url_path="signup"),
+    ]
 
 st.navigation(pages, position="hidden").run()

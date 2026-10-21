@@ -49,7 +49,7 @@ def _book(raw: dict) -> Book:
     authors = tuple(a.strip() for a in re.split(r",| et ", raw.get("authors") or "") if a.strip())
     return Book(
         work_id=raw["work_id"],
-        title=raw.get("title") or "Sans titre",
+        title=raw.get("title") or "Untitled",
         authors=authors,
         cover_url=raw.get("cover_url"),
         book_id=raw.get("book_id"),
@@ -109,7 +109,8 @@ class ApiRepository(Repository):
 
     # ---- catalogue ----------------------------------------------------------------------
     def catalog(self) -> list[Book]:
-        return [_book(b) for b in _call("get", "/books/") or []]
+        # GET /books/ is the keyword search (q is required): the stored catalogue is GET /books/find_all/
+        return [_book(b) for b in _call("get", "/books/find_all/") or []]
 
     def featured(self) -> list[Book]:
         return self.catalog()[:4]
@@ -126,7 +127,7 @@ class ApiRepository(Repository):
         except NotFound:
             raw = []
         if not isinstance(raw, list):
-            raise DataUnavailable("réponse inattendue du serveur (une liste de livres était attendue)")
+            raise DataUnavailable("unexpected server response (a list of books was expected)")
         books = [_book(b) for b in raw if isinstance(b, dict) and b.get("work_id")]
         known = st.session_state.setdefault("_book_cache", {})
         known.update({b.work_id: b for b in books})  # results are not always stored in the database
@@ -148,14 +149,23 @@ class ApiRepository(Repository):
     def get_book(self, work_id: str) -> Book | None:
         try:
             return _book(_call("get", f"/books/{work_id}"))
-        except BusinessRuleError:
-            # a search result is not necessarily stored in our database (GET /books/{work_id} -> 404)
-            return st.session_state.get("_book_cache", {}).get(work_id)
+        except (BusinessRuleError, DataUnavailable) as exc:
+            # 404: a search result is not necessarily stored in our database. 5xx / unreachable: the
+            # details come from OpenLibrary; the book as listed (title, authors, cover) is still shown.
+            known = st.session_state.get("_book_cache", {}).get(work_id)
+            if known is None and isinstance(exc, DataUnavailable):
+                try:
+                    known = next((b for b in self.catalog() if b.work_id == work_id), None)
+                except (BusinessRuleError, DataUnavailable):
+                    known = None
+                if known is None:
+                    raise
+            return known
 
     def book_reviews(self, work_id: str) -> list[Review]:
         if not backend_reviews_enabled():
             return []  # no review route in the backend yet
-        return [_review(r) for r in _call("get", f"/books/{work_id}/reviews") or []]
+        return [_review(r) for r in _call("get", f"/review/books/{work_id}/reviews") or []]
 
     def home_rows(self) -> list[Row]:
         books = self.catalog()
@@ -165,9 +175,9 @@ class ApiRepository(Repository):
         except DataUnavailable:  # library route failing: the catalogue is still shown
             reading = []
         if reading:
-            rows.append(Row("continue", "Reprendre sa lecture", reading))
+            rows.append(Row("continue", "Continue Reading", reading))
         if books:
-            rows.append(Row("discover", "À découvrir", books))
+            rows.append(Row("discover", "Discover", books))
         return rows
 
     # ---- library ------------------------------------------------------------------------
@@ -189,7 +199,7 @@ class ApiRepository(Repository):
     def set_status(self, work_id: str, status: str) -> LibraryEntry:
         entry = self.entry(work_id)
         if entry is None:
-            raise BusinessRuleError("Ce livre n'est pas dans ta bibliothèque.")
+            raise BusinessRuleError("This book is not in your library.")
         return _entry(_call("patch", f"/readings/{entry.reading_id}", json={"status": status}))
 
     def remove_from_library(self, work_id: str) -> None:
@@ -201,16 +211,16 @@ class ApiRepository(Repository):
     def save_review(self, work_id: str, rating: int | None, text: str) -> None:
         entry = self.entry(work_id)
         if entry is None:
-            raise BusinessRuleError("Ce livre n'est pas dans ta bibliothèque.")
+            raise BusinessRuleError("This book is not in your library.")
         if rating is not None:
             _call("patch", f"/readings/{entry.reading_id}", json={"rating": rating})
         if text.strip() and backend_reviews_enabled():
-            path = f"/readings/{entry.reading_id}/review"
+            path = f"/review/readings/{entry.reading_id}/review"
             try:
                 _call("post", path, json={"text": text})
             except BusinessRuleError:  # 409: a review already exists for this reading -> edit it
                 existing = _call("get", path)
-                _call("put", f"/reviews/{existing['review_id']}", json={"text": text})
+                _call("put", f"/review/reviews/{existing['review_id']}", json={"text": text})
 
     def my_reviews(self) -> list[Review]:
         return self.user_reviews(None)
@@ -219,7 +229,7 @@ class ApiRepository(Repository):
         if not backend_reviews_enabled():
             return []
         uid = self._user_id if user_id is None else user_id
-        return [_review(r) for r in _call("get", f"/users/{uid}/reviews") or []]
+        return [_review(r) for r in _call("get", f"/review/users/{uid}/reviews") or []]
 
     def profile(self, user_id: int | None = None) -> Profile | None:
         uid = self._user_id if user_id is None else user_id
@@ -233,10 +243,10 @@ class ApiRepository(Repository):
                 return ()
 
         try:
-            raw = _call("get", f"/user/{uid}")
+            raw = _call("get", f"/user/users/{uid}")  # user router is mounted under /user in main.py
         except BusinessRuleError:  # 404: unknown user
             return None
-        # Only public fields are read: GET /user/{id} also returns the e-mail, never displayed.
+        # Only public fields are read: GET /user/users/{id} only returns public fields (no e-mail).
         return Profile(
             user_id=uid,
             username=raw["username"],
@@ -249,8 +259,8 @@ class ApiRepository(Repository):
     # ---- likes & follows ----------------------------------------------------------------
     def toggle_like(self, review: Review) -> None:
         if not backend_reviews_enabled():
-            raise BusinessRuleError("Les likes ne sont pas encore disponibles sur le serveur.")
-        path = f"/reviews/{review.review_id}/like"
+            raise BusinessRuleError("Likes are not available on the server yet.")
+        path = f"/review/reviews/{review.review_id}/like"
         if review.liked_by_me:
             _call("delete", path)
             _liked_ids().discard(review.review_id)

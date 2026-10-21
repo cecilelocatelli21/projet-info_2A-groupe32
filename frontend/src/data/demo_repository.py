@@ -123,7 +123,7 @@ class DemoRepository(Repository):
 
         reading = [e.book for e in self.library("in progress")]
         if reading:
-            rows.append(Row("continue", "Reprendre sa lecture", reading))
+            rows.append(Row("continue", "Continue Reading", reading))
 
         affinities = self._affinities()
         candidates = [b for b in books if b.work_id not in in_library]
@@ -132,29 +132,29 @@ class DemoRepository(Repository):
             key=lambda b: (-(sum(affinities.get(g, 0) for g in b.genres) + (b.rating or 0) / 10)),
         )
         top_genres = [g for g, _ in sorted(affinities.items(), key=lambda kv: -kv[1])[:2]]
-        subtitle = ("D'après tes lectures : " + " et ".join(top_genres).lower()) if top_genres else None
-        rows.append(Row("reco", "Nos recommandations", ranked[:14], subtitle))
+        subtitle = ("Based on your reading: " + " and ".join(top_genres).lower()) if top_genres else None
+        rows.append(Row("reco", "Our Recommendations", ranked[:14], subtitle))
 
         rows.append(
             Row(
                 "popular",
-                "Les incontournables",
+                "Must-Reads",
                 sorted(books, key=lambda b: -b.ratings_count)[:14],
             )
         )
         rows.append(
             Row(
                 "top",
-                "Les mieux notés",
+                "Top Rated",
                 sorted(books, key=lambda b: (-(b.rating or 0), -b.ratings_count))[:14],
             )
         )
         shuffled = sorted(candidates, key=lambda b: zlib.crc32(b.work_id.encode()))
-        rows.append(Row("discover", "À découvrir", shuffled[:14]))
+        rows.append(Row("discover", "Discover", shuffled[:14]))
         rows.append(
             Row(
                 "recent",
-                "Les dernières découvertes",
+                "Latest Discoveries",
                 sorted(books, key=lambda b: -(b.published or 0))[:14],
             )
         )
