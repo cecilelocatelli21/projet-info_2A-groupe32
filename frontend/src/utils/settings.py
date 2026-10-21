@@ -7,13 +7,13 @@ EXLIBRIS_DATA_SOURCE
     ``demo``: never call the API, everything comes from the demo data.
 
 EXLIBRIS_ENABLE_DEMO_LOGIN
-    ``true`` (default) shows the one-click demo login. Set to ``false`` once real authentication
-    is ready: the demo mode disappears from the login page.
+    ``false`` (default): only the real login is offered. Set to ``true`` to add a one-click demo
+    login (fictitious account and data, no token, no call to the backend) to the login page.
 
 EXLIBRIS_BACKEND_REVIEWS
-    ``false`` (default): the backend has no review/like routes yet, the front does not call them
-    (reviews and likes are shown as "coming soon"). Set to ``true`` once the routes of
-    doc/Ex-Libris — Endpoints de l'API.md (Reviews, Likes) are implemented.
+    ``true`` (default): reviews and likes use the backend routes, which are mounted under the
+    ``/review`` prefix (``/review/books/{work_id}/reviews``, ``/review/readings/{id}/review``,
+    ``/review/reviews/{id}/like``...). Set to ``false`` to hide them.
 
 EXLIBRIS_DEMO_COVERS
     ``remote`` (default): demo books use Open Library cover URLs (an elegant generated cover is
@@ -37,7 +37,7 @@ def data_source() -> str:
 
 
 def demo_login_enabled() -> bool:
-    return _flag("EXLIBRIS_ENABLE_DEMO_LOGIN", True)
+    return _flag("EXLIBRIS_ENABLE_DEMO_LOGIN", False)
 
 
 def demo_covers_mode() -> str:
@@ -46,4 +46,4 @@ def demo_covers_mode() -> str:
 
 
 def backend_reviews_enabled() -> bool:
-    return _flag("EXLIBRIS_BACKEND_REVIEWS", False)
+    return _flag("EXLIBRIS_BACKEND_REVIEWS", True)

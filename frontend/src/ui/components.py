@@ -13,6 +13,9 @@ from data.models import STATUS_LABELS, Book, LibraryEntry, Review
 from data.repository import Repository
 
 PAGES = {
+    "landing": "views/landing.py",
+    "login": "views/login.py",
+    "signup": "views/signup.py",
     "home": "views/home.py",
     "discover": "views/discover.py",
     "library": "views/library.py",
@@ -80,7 +83,7 @@ def book_card(book: Book, scope: str, entry: LibraryEntry | None = None, meta: b
                 f"<div class='card-meta'><b>{escape(book.title)}</b>"
                 f"<span>{escape(', '.join(book.authors))}</span></div>"
             )
-        if st.button(f"Ouvrir {book.title}", key=f"open_{scope}_{book.work_id}"):
+        if st.button(f"Open {book.title}", key=f"open_{scope}_{book.work_id}"):
             open_book(book.work_id)
 
 
@@ -117,8 +120,8 @@ def page_header(title: str, subtitle: str = "") -> None:
 def source_banner(repo: Repository) -> None:
     if repo.degraded:
         html(
-            "<div class='banner'>Le catalogue du serveur est indisponible : "
-            "une sélection de livres de démonstration est affichée en attendant. "
+            "<div class='banner'>The server catalogue is unavailable: "
+            "a selection of demo books is shown in the meantime. "
             f"<small>({escape(repo.degraded_reason or '')})</small></div>"
         )
 
@@ -127,38 +130,52 @@ def navbar(current: str) -> None:
     """Top bar shared by every page. Typing in the search box leads to the discover page."""
     with st.container(horizontal=True, key="nav", vertical_alignment="center"):
         html("<div class='brand'><i></i>Ex-Libris</div>")
-        st.page_link(PAGES["home"], label="Accueil")
-        st.page_link(PAGES["discover"], label="Découvrir")
-        st.page_link(PAGES["library"], label="Ma bibliothèque")
-        st.page_link(PAGES["profile"], label="Profil")
+        st.page_link(PAGES["home"], label="Home")
+        st.page_link(PAGES["discover"], label="Discover")
+        st.page_link(PAGES["library"], label="My Library")
+        st.page_link(PAGES["profile"], label="Profile")
         st.space("stretch")
         query = st.text_input(
-            "Rechercher",
+            "Search",
             key=f"nav_search_{current}",
             value=st.session_state.get("search_q", ""),
-            placeholder="Rechercher un titre, un auteur…",
+            placeholder="Search by title or author…",
             label_visibility="collapsed",
             width=300,
         )
         if session.is_demo():
-            html("<span class='demo-pill'>Démo</span>")
+            html("<span class='demo-pill'>Demo</span>")
         with st.popover(session.display_name()[:1].upper()):
             html(f"<b>{escape(session.display_name())}</b>")
             html(f"<div class='session-state'>{escape(session.status_label())}</div>")
-            if st.button("Mon profil", key="menu_profile", width="stretch"):
+            if st.button("My profile", key="menu_profile", width="stretch"):
                 open_profile(None)
             if session.is_demo() and st.button(
-                "Réinitialiser la démo", key="menu_reset", width="stretch"
+                "Reset demo", key="menu_reset", width="stretch"
             ):
                 st.session_state.pop("demo_state", None)
                 st.rerun()
-            if st.button("Se déconnecter", key="menu_logout", type="primary", width="stretch"):
-                session.logout()
-                st.rerun()
+            if st.button("Log out", key="menu_logout", type="primary", width="stretch"):
+                session.sign_out()
+                st.rerun()  # app.py now registers the visitor pages: the public home opens
     if query != st.session_state.get("search_q", ""):
         st.session_state["search_q"] = query
         if query and current != "discover":
             st.switch_page(PAGES["discover"])
+
+
+def public_navbar(current: str) -> None:
+    """Top bar for visitors (not logged in): brand, Log in, Create account."""
+    with st.container(horizontal=True, key="nav", vertical_alignment="center"):
+        html("<div class='brand'><i></i>Ex-Libris</div>")
+        if current != "landing":
+            st.page_link(PAGES["landing"], label="Home")
+        st.space("stretch")
+        if current != "login":
+            st.page_link(PAGES["login"], label="Log in")
+        if current != "signup":
+            if st.button("Create account", key="nav_signup", type="primary"):
+                st.switch_page(PAGES["signup"])
 
 
 def clear_search() -> None:
@@ -176,7 +193,7 @@ def hero(book: Book, repo: Repository) -> None:
     genres = " · ".join(escape(g) for g in book.genres[:2])
     html(
         f"""<div class='hero'>{bg}<div class='hero-in'><div class='hero-copy'>
-        <div class='hero-kicker'>À la une{' · ' + genres if genres else ''}</div>
+        <div class='hero-kicker'>Featured{' · ' + genres if genres else ''}</div>
         <h1>{escape(book.title)}</h1>
         <div class='hero-author'>{escape(book.authors_label)}{f' · {book.published}' if book.published else ''}</div>
         <div style='margin-bottom:.6rem'>{stars(book.rating, book.ratings_count)}</div>
@@ -185,11 +202,11 @@ def hero(book: Book, repo: Repository) -> None:
     )
     entry = repo.entry(book.work_id)
     with st.container(horizontal=True, key="hero_actions"):
-        if st.button("▶  Découvrir le livre", type="primary", key="hero_open"):
+        if st.button("▶  View book", type="primary", key="hero_open"):
             open_book(book.work_id)
         if entry:
-            st.button("✓ Dans ma bibliothèque", key="hero_in", disabled=True)
-        elif st.button("＋  Ajouter à ma bibliothèque", key="hero_add"):
+            st.button("✓ In my library", key="hero_in", disabled=True)
+        elif st.button("＋  Add to my library", key="hero_add"):
             add_book(repo, book)
             st.rerun()
 
@@ -198,12 +215,12 @@ def add_book(repo: Repository, book: Book, status: str = "to read") -> bool:
     """Add to the library with user feedback. Returns True on success."""
     try:
         repo.add_to_library(book.work_id, status)
-        st.toast(f"« {book.title} » ajouté à ta bibliothèque", icon="📚")
+        st.toast(f"“{book.title}” added to your library", icon="📚")
         return True
     except BusinessRuleError as exc:
         st.toast(str(exc), icon="⚠️")
     except DataUnavailable:
-        st.toast("Le serveur ne répond pas, réessaie dans un instant.", icon="⚠️")
+        st.toast("The server is not responding. Please try again in a moment.", icon="⚠️")
     return False
 
 
@@ -261,14 +278,14 @@ def review_card(review: Review, repo: Repository | None = None, scope: str = "r"
                     label,
                     key=f"like_{scope}_{review.review_id}",
                     type="primary" if review.liked_by_me else "secondary",
-                    help="Retirer mon like" if review.liked_by_me else "J'aime cette critique",
+                    help="Remove my like" if review.liked_by_me else "Like this review",
                 ):
                     try:
                         repo.toggle_like(review)
                     except BusinessRuleError as exc:
                         st.toast(str(exc), icon="⚠️")
                     except DataUnavailable:
-                        st.toast("Le serveur ne répond pas, réessaie dans un instant.", icon="⚠️")
+                        st.toast("The server is not responding. Please try again in a moment.", icon="⚠️")
                     st.rerun()
             else:
                 html(f"<small style='color:var(--muted)'>♥ {review.likes}</small>")
@@ -279,6 +296,6 @@ def safe(call, default=None):
     try:
         return call()
     except DataUnavailable as exc:
-        empty("Serveur indisponible", "Impossible de joindre le serveur pour le moment.")
-        st.caption(f"Détail technique : {exc}")
+        empty("Server unavailable", "We cannot reach the server right now.")
+        st.caption(f"Technical detail: {exc}")
         return default

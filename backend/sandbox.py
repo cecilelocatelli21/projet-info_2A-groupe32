@@ -4,6 +4,7 @@ from business_object.book import Book
 from business_object.user import User
 from client.openlibrary_client import OpenLibraryClient
 from dao.book_dao import BookDao
+import controller.book_controller
 from service.book_service import BookService
 from utils.env_variables import load_environment_variables
 
@@ -11,13 +12,17 @@ load_environment_variables()   # Required to load the variables needed (env) to 
 
 openlibraryclient = OpenLibraryClient()
 
+service = BookService()
+book_details = service.get_book_details("c")
+print(book_details)
+
 # book_list = openlibraryclient.search("Madame Bovary")
 # for b in book_list:
 #     print(b)
 
-book_list = openlibraryclient.search_by_author("Flaubert")
-for b in book_list:
-    print(b)
+# book_list = openlibraryclient.search_by_author("Flaubert")
+# for b in book_list:
+#     print(b)
 
 # book_details = openlibraryclient.get_work_details("OL258850W")
 # print(book_details)

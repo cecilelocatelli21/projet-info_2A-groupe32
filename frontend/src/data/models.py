@@ -13,10 +13,10 @@ from datetime import date
 # Same vocabulary as the backend (schema/reading_model.py)
 STATUSES = ("to read", "in progress", "read", "abandoned")
 STATUS_LABELS = {
-    "to read": "À lire",
-    "in progress": "En cours",
-    "read": "Lu",
-    "abandoned": "Abandonné",
+    "to read": "Want to Read",
+    "in progress": "Currently Reading",
+    "read": "Read",
+    "abandoned": "Did Not Finish",
 }
 # Business rule (reading_service.update_reading): rating and review need a final status
 RATING_STATUSES = ("read", "abandoned")
@@ -41,7 +41,7 @@ class Book:
 
     @property
     def authors_label(self) -> str:
-        return ", ".join(self.authors) if self.authors else "Auteur inconnu"
+        return ", ".join(self.authors) if self.authors else "Unknown author"
 
     @property
     def main_genre(self) -> str | None:

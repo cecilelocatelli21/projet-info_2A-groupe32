@@ -9,19 +9,19 @@ from ui import components as ui
 
 repo = get_repository()
 ui.navbar("library")
-ui.page_header("Ma bibliothèque", "Ta collection, là où tu en es dans tes lectures.")
+ui.page_header("My Library", "Your collection, and where you are in each book.")
 
 entries = ui.safe(repo.library, [])
 counts = {s: sum(e.status == s for e in entries) for s in STATUSES}
 
 c1, c2, c3 = st.columns([2, 2, 1.4])
-text = c1.text_input("Filtrer", placeholder="Titre ou auteur dans ma bibliothèque", label_visibility="collapsed")
+text = c1.text_input("Filter", placeholder="Title or author in my library", label_visibility="collapsed")
 all_genres = sorted({g for e in entries for g in e.book.genres})
-genres = c2.multiselect("Genres", all_genres, placeholder="Tous les genres", label_visibility="collapsed")
+genres = c2.multiselect("Genres", all_genres, placeholder="All genres", label_visibility="collapsed")
 sort = c3.selectbox(
-    "Trier",
+    "Sort",
     ["added", "title", "rating"],
-    format_func={"added": "Ajout récent", "title": "Titre (A → Z)", "rating": "Ma note"}.get,
+    format_func={"added": "Recently added", "title": "Title (A → Z)", "rating": "My rating"}.get,
     label_visibility="collapsed",
 )
 
@@ -43,13 +43,13 @@ def visible(items):
     return out
 
 
-tabs = st.tabs([f"Tous · {len(entries)}"] + [f"{STATUS_LABELS[s]} · {counts[s]}" for s in STATUSES])
+tabs = st.tabs([f"All · {len(entries)}"] + [f"{STATUS_LABELS[s]} · {counts[s]}" for s in STATUSES])
 for tab, status in zip(tabs, [None, *STATUSES], strict=True):
     with tab:
         items = visible([e for e in entries if status is None or e.status == status])
         if items:
             ui.grid(f"lib{status or 'all'}".replace(" ", ""), [(e.book, e if status is None else None) for e in items])
         elif entries:
-            ui.empty("Rien ici pour l'instant", "Aucun livre ne correspond à ces filtres.")
+            ui.empty("Nothing here yet", "No book matches these filters.")
         else:
-            ui.empty("Ta bibliothèque est vide", "Ajoute ton premier livre depuis l'accueil ou « Découvrir ».")
+            ui.empty("Your library is empty", "Add your first book from Home or Discover.")

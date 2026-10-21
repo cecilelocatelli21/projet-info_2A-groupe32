@@ -32,7 +32,7 @@ class APIClient:
         # Retrieve the token stored in Streamlit's session_state
         token = st.session_state.get("access_token")
         if token:
-            headers["X-Auth-Token"] = token
+            headers["Authorization"] = f"Bearer {token}"  # what get_current_user (backend) reads
         return headers
 
     def _request(self, method: str, path: str, **kwargs):

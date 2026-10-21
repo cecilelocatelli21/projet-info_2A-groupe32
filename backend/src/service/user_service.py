@@ -57,13 +57,18 @@ class UserService:
         return UserDao().update(user)
 
     @log
-    def update(self, user) -> User:
+    def update_profile(self, user: User, bio: str | None = None,
+                       email: str | None = None) -> User:
         """Updates an existing user's information.
         Args:
             User object containing updated information.
         Returns:
             The updated User object, or None if the update failed.
         """
+        if bio is not None:
+            user.bio = bio
+        if email is not None:
+            user.email = email
         return user if UserDao().update(user) else None
 
     @log
@@ -90,7 +95,7 @@ class UserService:
         """Checks that user_id exists and is the current user's account.
         Existence is checked first, so an unknown id gives 404 rather than 403.
         """
-        user = self.get_by_id(user_id)
+        user = self.find_by_id(user_id)
         if current_user.user_id != user.user_id:
             raise ForbiddenError("You can only modify your own account.")
         return user
