@@ -30,7 +30,7 @@ class EditionModel(BaseModel):
 
     title: str | None = None
     publisher: str | None = None
-    publish_date: datetime | None = None
+    publish_date: str | None = None
     number_of_pages: int | None = None
     isbn: str | None = None
 
