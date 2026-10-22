@@ -13,6 +13,7 @@ from utils.log_utils import get_logger, log
 
 logger = get_logger(__name__)
 
+
 class ReadingService:
     """Class containing business logic for Reading."""
 
@@ -21,8 +22,7 @@ class ReadingService:
         self.book_service = BookService()
 
     @log
-    def create(self, user: User, work_id: str,
-               status: str = "to read") -> Reading:
+    def create(self, user: User, work_id: str, status: str = "to read") -> Reading:
         """Create a reading and add a book to the user's library.
 
         Args:
@@ -41,29 +41,18 @@ class ReadingService:
             book = self.book_service.get_or_create_by_work_id(work_id)
 
             if book is None:
-                logger.error(
-                    "Book not found with work_id=%s",
-                    work_id
-                )
-                raise NotFoundError(
-                    f"Book with work_id '{work_id}' not found"
-                )
+                logger.error("Book not found with work_id=%s", work_id)
+                raise NotFoundError(f"Book with work_id '{work_id}' not found")
 
-            existing_reading = self.reading_dao.find_by_user_and_book(
-                user.user_id,
-                book.book_id
-            )
+            existing_reading = self.reading_dao.find_by_user_and_book(user.user_id, book.book_id)
 
             if existing_reading is not None:
                 logger.error(
-                    "Book already exists in user's library: "
-                    "user_id=%s, book_id=%s",
+                    "Book already exists in user's library: user_id=%s, book_id=%s",
                     user.user_id,
-                    book.book_id
+                    book.book_id,
                 )
-                raise ConflictError(
-                    "This book is already in the user's library"
-                )
+                raise ConflictError("This book is already in the user's library")
 
             reading = Reading(
                 user=user,
@@ -71,16 +60,14 @@ class ReadingService:
                 status=status,
                 date_added=date.today(),
                 date_read=None,
-                rating=None
+                rating=None,
             )
 
             created = self.reading_dao.create(reading)
 
             if not created:
                 logger.error(
-                    "Failed to create reading: user_id=%s, book_id=%s",
-                    user.user_id,
-                    book.book_id
+                    "Failed to create reading: user_id=%s, book_id=%s", user.user_id, book.book_id
                 )
                 raise ValueError("Reading could not be created")
 
@@ -109,11 +96,7 @@ class ReadingService:
             raise
 
     @log
-    def get_library(
-        self,
-        user_id: int,
-        status: str | None = None
-    ) -> list[Reading]:
+    def get_library(self, user_id: int, status: str | None = None) -> list[Reading]:
         """Get the books in a user's library.
 
         The library can optionally be filtered by reading status.
@@ -135,7 +118,7 @@ class ReadingService:
         reading_id: int,
         status: str | None = None,
         rating: int | None = None,
-        date_read: date | None = None
+        date_read: date | None = None,
     ) -> Reading:
         """Update a reading belonging to a user.
 
@@ -166,46 +149,29 @@ class ReadingService:
             reading = self.reading_dao.find_by_id(reading_id)
 
             if reading is None:
-                logger.error(
-                    "Reading not found: reading_id=%s",
-                    reading_id
-                )
-                raise NotFoundError(
-                    f"Reading with id '{reading_id}' not found"
-                )
+                logger.error("Reading not found: reading_id=%s", reading_id)
+                raise NotFoundError(f"Reading with id '{reading_id}' not found")
 
             # 2. Check ownership
             if reading.user.user_id != user.user_id:
                 logger.error(
-                    "User %s attempted to update reading %s "
-                    "owned by user %s",
+                    "User %s attempted to update reading %s owned by user %s",
                     user.user_id,
                     reading_id,
-                    reading.user.user_id
+                    reading.user.user_id,
                 )
-                raise ForbiddenError(
-                    "You are not allowed to update this reading"
-                )
+                raise ForbiddenError("You are not allowed to update this reading")
 
             # 3. Determine the final status
-            final_status = (
-                status if status is not None
-                else reading.status
-            )
+            final_status = status if status is not None else reading.status
 
             # 4. Check rating business rule
-            if rating is not None and final_status not in (
-                "read",
-                "abandoned"
-            ):
+            if rating is not None and final_status not in ("read", "abandoned"):
                 logger.error(
-                    "Invalid rating for status=%s: reading_id=%s",
-                    final_status,
-                    reading_id
+                    "Invalid rating for status=%s: reading_id=%s", final_status, reading_id
                 )
                 raise ValueError(
-                    "A rating can only be given to a reading "
-                    "with status 'read' or 'abandoned'"
+                    "A rating can only be given to a reading with status 'read' or 'abandoned'"
                 )
 
             # 5. Update status
@@ -226,13 +192,8 @@ class ReadingService:
             updated = self.reading_dao.update(reading)
 
             if not updated:
-                logger.error(
-                    "Failed to update reading: reading_id=%s",
-                    reading_id
-                )
-                raise ValueError(
-                    "Reading could not be updated"
-                )
+                logger.error("Failed to update reading: reading_id=%s", reading_id)
+                raise ValueError("Reading could not be updated")
 
             return reading
 
@@ -241,11 +202,7 @@ class ReadingService:
             raise
 
     @log
-    def delete_reading(
-        self,
-        user: User,
-        reading_id: int
-    ) -> bool:
+    def delete_reading(self, user: User, reading_id: int) -> bool:
         """Delete a reading from a user's library.
 
         Only the owner of the reading can delete it.
@@ -266,38 +223,25 @@ class ReadingService:
             reading = self.reading_dao.find_by_id(reading_id)
 
             if reading is None:
-                logger.error(
-                    "Reading not found: reading_id=%s",
-                    reading_id
-                )
-                raise NotFoundError(
-                    f"Reading with id '{reading_id}' not found"
-                )
+                logger.error("Reading not found: reading_id=%s", reading_id)
+                raise NotFoundError(f"Reading with id '{reading_id}' not found")
 
             # 2. Check ownership
             if reading.user.user_id != user.user_id:
                 logger.error(
-                    "User %s attempted to delete reading %s "
-                    "owned by user %s",
+                    "User %s attempted to delete reading %s owned by user %s",
                     user.user_id,
                     reading_id,
-                    reading.user.user_id
+                    reading.user.user_id,
                 )
-                raise ForbiddenError(
-                    "You are not allowed to delete this reading"
-                )
+                raise ForbiddenError("You are not allowed to delete this reading")
 
             # 3. Delete
             deleted = self.reading_dao.delete(reading_id)
 
             if not deleted:
-                logger.error(
-                    "Failed to delete reading: reading_id=%s",
-                    reading_id
-                )
-                raise ValueError(
-                    "Reading could not be deleted"
-                )
+                logger.error("Failed to delete reading: reading_id=%s", reading_id)
+                raise ValueError("Reading could not be deleted")
 
             return True
 

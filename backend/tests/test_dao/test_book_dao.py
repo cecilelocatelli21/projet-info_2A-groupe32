@@ -11,7 +11,6 @@ from utils.security import hash_password
 
 
 @pytest.fixture(scope="session", autouse=True)
-
 def setup_test_environment():
     """Initialize test data"""
     with patch.dict(os.environ, {"POSTGRES_SCHEMA": "project_test_dao"}):
@@ -64,7 +63,12 @@ def test_create_ok():
     """Successfully create a Book"""
 
     # GIVEN
-    book = Book(work_id="work id", title="titre", authors="authors of the book", cover_url="http://cover of the book")
+    book = Book(
+        work_id="work id",
+        title="titre",
+        authors="authors of the book",
+        cover_url="http://cover of the book",
+    )
 
     # WHEN
     creation_ok = BookDao().create(book)
@@ -82,7 +86,12 @@ def test_create_ko_book_already_exists():
     """Fail to create a Book - the book does already exist"""
 
     # GIVEN
-    book = Book(work_id="work id", title="titre", authors="authors of the book", cover_url="http://cover of the book")
+    book = Book(
+        work_id="work id",
+        title="titre",
+        authors="authors of the book",
+        cover_url="http://cover of the book",
+    )
 
     # WHEN / THEN
     with pytest.raises(psycopg2.Error):
@@ -96,7 +105,12 @@ def test_create_ko_book_work_null():
     """Fail to create a Book - the work_id is null"""
 
     # GIVEN
-    book = Book(work_id=None, title="titre", authors="authors of the book", cover_url="http://cover of the book")
+    book = Book(
+        work_id=None,
+        title="titre",
+        authors="authors of the book",
+        cover_url="http://cover of the book",
+    )
 
     # WHEN / THEN
     with pytest.raises(psycopg2.Error):

@@ -5,12 +5,7 @@ from pydantic import BaseModel, Field
 
 from schema.book_model import BookModel
 
-ReadingStatus = Literal[
-    "to read",
-    "in progress",
-    "read",
-    "abandoned"
-]
+ReadingStatus = Literal["to read", "in progress", "read", "abandoned"]
 
 
 class ReadingCreateModel(BaseModel):
@@ -20,11 +15,7 @@ class ReadingCreateModel(BaseModel):
 
 class ReadingUpdateModel(BaseModel):
     status: ReadingStatus | None = None
-    rating: int | None = Field(
-        default=None,
-        ge=0,
-        le=5
-    )
+    rating: int | None = Field(default=None, ge=0, le=5)
     date_read: date | None = None
 
 

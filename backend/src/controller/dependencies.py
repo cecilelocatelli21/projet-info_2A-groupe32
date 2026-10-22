@@ -13,8 +13,10 @@ Any route reserved to logged-in users adds:
 security = HTTPBearer(auto_error=False)
 
 
-def get_current_user(credentials: HTTPAuthorizationCredentials | None = Depends(security),) -> User:
-    """ Check the token of a user """
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
+) -> User:
+    """Check the token of a user"""
     if credentials is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

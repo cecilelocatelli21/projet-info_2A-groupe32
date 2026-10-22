@@ -63,7 +63,7 @@ class ResetDatabase(metaclass=Singleton):
         # Apply password hashing to all users
         for u in UserDao().find_all():
             u.password = hash_password(u.password_hash, u.username)
-            #UserDao().update(u)
+            # UserDao().update(u)
 
         return True
 

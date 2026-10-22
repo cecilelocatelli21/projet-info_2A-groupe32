@@ -34,8 +34,8 @@ class ReadingDao(metaclass=Singleton):
                             "status": reading.status,
                             "date_added": reading.date_added,
                             "date_read": reading.date_read,
-                            "rating": reading.rating
-                        }
+                            "rating": reading.rating,
+                        },
                     )
                     res = cursor.fetchone()
         except Exception as e:
@@ -51,7 +51,7 @@ class ReadingDao(metaclass=Singleton):
 
     @log
     def find_by_id(self, reading_id: int) -> Reading | None:
-        """ Find a reading by id_reading.
+        """Find a reading by id_reading.
         Arg:
             reading_id : int
                 id permit to indentify the reading.
@@ -65,11 +65,8 @@ class ReadingDao(metaclass=Singleton):
             with DBConnection().connection as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "SELECT * FROM reading       "
-                        "WHERE reading_id = %(reading_id)s",
-                        {
-                            "reading_id": reading_id
-                        },
+                        "SELECT * FROM reading       WHERE reading_id = %(reading_id)s",
+                        {"reading_id": reading_id},
                     )
                     res = cursor.fetchone()
         except Exception as e:
@@ -80,21 +77,19 @@ class ReadingDao(metaclass=Singleton):
             user = UserDao().find_by_id(res["user_id"])
             book = BookDao().find_by_id(res["book_id"])
             reading = Reading(
-                    reading_id=res["reading_id"],
-                    user=user,
-                    book=book,
-                    status=res["status"],
-                    date_added=res["date_added"],
-                    date_read=res["date_read"],
-                    rating=res["rating"]
+                reading_id=res["reading_id"],
+                user=user,
+                book=book,
+                status=res["status"],
+                date_added=res["date_added"],
+                date_read=res["date_read"],
+                rating=res["rating"],
             )
 
         return reading
 
     @log
-    def find_by_user(
-        self, user_id: int, status: str | None = None
-    ) -> list[Reading]:
+    def find_by_user(self, user_id: int, status: str | None = None) -> list[Reading]:
         """Find all readings of a user, optionally filtered by status."""
 
         try:
@@ -138,8 +133,7 @@ class ReadingDao(metaclass=Singleton):
 
     @log
     def find_by_user_and_book(self, user_id: int, book_id: int) -> Reading | None:
-
-        """ Find a reading by user_id and book_id.
+        """Find a reading by user_id and book_id.
         Arg:
             user_id : int
                 id permit to indentify the user.
@@ -157,27 +151,26 @@ class ReadingDao(metaclass=Singleton):
                     cursor.execute(
                         "SELECT * FROM reading       "
                         "WHERE user_id = %(user_id)s AND book_id= %(book_id)s",
-                        {
-                            "user_id": user_id,
-                            "book_id": book_id
-                        },
+                        {"user_id": user_id, "book_id": book_id},
                     )
-                    res = cursor.fetchone()     # it's expected one line because user_id and book_id are unique
+                    res = (
+                        cursor.fetchone()
+                    )  # it's expected one line because user_id and book_id are unique
         except Exception as e:
             logger.error(e)
             raise
         reading = None
         if res:
             user = UserDao().find_by_id(res["user_id"])
-            book = BookDao().find_by_id(res["book_id"]) 
+            book = BookDao().find_by_id(res["book_id"])
             reading = Reading(
-                    reading_id=res["reading_id"],
-                    user=user,
-                    book=book,
-                    status=res["status"],
-                    date_added=res["date_added"],
-                    date_read=res["date_read"],
-                    rating=res["rating"]
+                reading_id=res["reading_id"],
+                user=user,
+                book=book,
+                status=res["status"],
+                date_added=res["date_added"],
+                date_read=res["date_read"],
+                rating=res["rating"],
             )
 
         return reading
@@ -275,7 +268,7 @@ class ReadingDao(metaclass=Singleton):
 
     @log
     def count_by_user(self, user_id: int) -> int | None:
-        """ Count number of books in library by user_id
+        """Count number of books in library by user_id
 
         Arg:
             user_id : int
@@ -292,9 +285,7 @@ class ReadingDao(metaclass=Singleton):
                         "SELECT COUNT(*) AS nb_book FROM reading       "
                         "WHERE user_id = %(user_id)s "
                         "GROUP BY user_id",
-                        {
-                            "user_id": user_id
-                        },
+                        {"user_id": user_id},
                     )
                     res = cursor.fetchone()
         except Exception as e:
@@ -306,9 +297,11 @@ class ReadingDao(metaclass=Singleton):
         return nbr_books
 
     @log
-    def find_by_users(self, user_ids: list[int], min_rating: int | None = None) -> list[Reading] : # pour les recommandations
+    def find_by_users(
+        self, user_ids: list[int], min_rating: int | None = None
+    ) -> list[Reading]:  # pour les recommandations
         pass
 
     @log
-    def _row_to_reading(self, row: dict) -> Reading:        # privée
+    def _row_to_reading(self, row: dict) -> Reading:  # privée
         pass

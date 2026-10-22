@@ -52,7 +52,6 @@ class FollowDao(metaclass=Singleton):
 
         return following_list
 
-
     @log
     def find_followers(self, user_id: int) -> list[User]:
         """List the users who follow a given user.

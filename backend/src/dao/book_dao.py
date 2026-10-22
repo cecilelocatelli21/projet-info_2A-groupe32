@@ -30,8 +30,8 @@ class BookDao(metaclass=Singleton):
                             "work_id": book.work_id,
                             "title": book.title,
                             "authors": book.authors,
-                            "cover_url": book.cover_url
-                        }
+                            "cover_url": book.cover_url,
+                        },
                     )
                     connection.commit()
                     res = cursor.fetchone()
@@ -52,8 +52,8 @@ class BookDao(metaclass=Singleton):
             work_id=row["work_id"],
             title=row["title"],
             authors=row["authors"],
-            cover_url=row["cover_url"]
-            )
+            cover_url=row["cover_url"],
+        )
 
     @log
     def find_by_work_id(self, work_id: str) -> Book:
@@ -70,7 +70,7 @@ class BookDao(metaclass=Singleton):
                         "SELECT *                            "
                         "  FROM book                       "
                         " WHERE work_id = %(work_id)s;   ",
-                        {"work_id": work_id}
+                        {"work_id": work_id},
                     )
                     row = cursor.fetchone()
         except Exception as e:
@@ -95,10 +95,7 @@ class BookDao(metaclass=Singleton):
             with DBConnection().connection as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "SELECT *"
-                        "  FROM book"
-                        "  WHERE book_id = %(book_id)s;",
-                        {"book_id": book_id}
+                        "SELECT *  FROM book  WHERE book_id = %(book_id)s;", {"book_id": book_id}
                     )
                     row = cursor.fetchone()
         except Exception as e:
@@ -117,11 +114,7 @@ class BookDao(metaclass=Singleton):
         try:
             with DBConnection().connection as connection:
                 with connection.cursor() as cursor:
-                    cursor.execute(
-                        "SELECT *"
-                        "  FROM book"
-                        "  ORDER BY book_id;"
-                    )
+                    cursor.execute("SELECT *  FROM book  ORDER BY book_id;")
                     res = cursor.fetchall()
         except Exception as e:
             logger.error(e)
@@ -136,9 +129,7 @@ class BookDao(metaclass=Singleton):
         return books_list
 
     @log
-    def find_popular_books(
-        self, user_id: int, limit: int = 10
-    ) -> list[dict]:
+    def find_popular_books(self, user_id: int, limit: int = 10) -> list[dict]:
         """Return popular books not already in the user's library.
 
         Args:

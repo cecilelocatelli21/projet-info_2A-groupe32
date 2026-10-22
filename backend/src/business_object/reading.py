@@ -47,7 +47,4 @@ class Reading:
         Returns:
             str: A string containing the book title, status and rating.
         """
-        return (
-            f"Reading({self.book.title}, status: {self.status}, "
-            f"rating: {self.rating})"
-        )
+        return f"Reading({self.book.title}, status: {self.status}, rating: {self.rating})"

@@ -10,7 +10,6 @@ from service.book_service import BookService
 
 @pytest.fixture(scope="session", autouse=True)
 
-
 # def test_get_or_create_by_work_id():
 #     """Find a Book based on work_id or create this book"""
 
@@ -39,6 +38,7 @@ def test_get_book_details_no_work():
     # WHEN / THEN
     assert work_id == "OL11111111111W"
     assert bookservice.get_book_details(work_id) is None
+
 
 def test_get_book_details_work_ok():
     """Get details for a book with OpenLibrary data"""

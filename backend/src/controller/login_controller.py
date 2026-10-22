@@ -35,6 +35,7 @@ def login(credentials: UserLoginModel, service=Depends(get_user_service)):
         }
     raise HTTPException(status_code=401, detail="Invalid credentials")
 
+
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT, tags=["Login"])
 def logout(current_user: User = Depends(get_current_user), service=Depends(get_user_service)):
     """Logs out the current user by erasing their token.

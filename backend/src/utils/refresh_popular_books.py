@@ -9,9 +9,7 @@ def refresh_popular_books() -> None:
     try:
         with DBConnection().connection as connection:
             with connection.cursor() as cursor:
-                cursor.execute(
-                    "REFRESH MATERIALIZED VIEW popular_books;"
-                )
+                cursor.execute("REFRESH MATERIALIZED VIEW popular_books;")
             connection.commit()
 
         logger.info("Materialized view popular_books refreshed.")
@@ -25,5 +23,5 @@ if __name__ == "__main__":
     refresh_popular_books()
 # actu code : cd ~/work/projet-info_2A-groupe32/backend
 
-#PYTHONPATH=src uv run python -c \
-#"from dao.reading_dao import ReadingDao; print(ReadingDao().average_rating_by_book(1))"
+# PYTHONPATH=src uv run python -c \
+# "from dao.reading_dao import ReadingDao; print(ReadingDao().average_rating_by_book(1))"

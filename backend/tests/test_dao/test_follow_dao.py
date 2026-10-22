@@ -271,8 +271,12 @@ def test_delete_ok():
     """An existing subscription is deleted, only in the given direction"""
 
     # GIVEN: Anne-Camille (5) follows Moussa (1), and Moussa follows Anne-Camille
-    FollowDao().create(Follow(follower=make_user(5), followed=make_user(1), follow_date=date.today()))
-    FollowDao().create(Follow(follower=make_user(1), followed=make_user(5), follow_date=date.today()))
+    FollowDao().create(
+        Follow(follower=make_user(5), followed=make_user(1), follow_date=date.today())
+    )
+    FollowDao().create(
+        Follow(follower=make_user(1), followed=make_user(5), follow_date=date.today())
+    )
 
     try:
         # WHEN
@@ -306,4 +310,6 @@ def test_delete_keeps_other_subscriptions():
         assert deleted is True
         assert [u.username for u in FollowDao().find_following(3)] == ["Arnaud", "Axel"]
     finally:
-        FollowDao().create(Follow(follower=make_user(3), followed=make_user(2), follow_date=date.today()))
+        FollowDao().create(
+            Follow(follower=make_user(3), followed=make_user(2), follow_date=date.today())
+        )

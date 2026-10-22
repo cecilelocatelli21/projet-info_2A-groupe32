@@ -152,10 +152,11 @@ class UserService:
         return user
 
     @log
-    def update_profile(self, current_user: User, user_id: int, bio: str | None = None,
-                       email: str | None = None) -> User:
+    def update_profile(
+        self, current_user: User, user_id: int, bio: str | None = None, email: str | None = None
+    ) -> User:
         """Updates the bio and/or the email of the logged-in user's own account.
- 
+
         A field left to None is not changed.
 
         Args:
@@ -185,9 +186,9 @@ class UserService:
         self, current_user: User, user_id: int, old_password: str, new_password: str
     ) -> bool:
         """Changes the password of the logged-in user's own account.
- 
+
         The old password is checked before the new one is hashed and saved.
- 
+
         Args:
             current_user (User): the logged-in user, given by get_current_user
             user_id (int): id of the account to modify, must be current_user's
@@ -213,10 +214,10 @@ class UserService:
     @log
     def delete_account(self, current_user: User, user_id: int) -> bool:
         """Deletes the logged-in user's own account.
- 
+
         Their readings, reviews, likes and follows are deleted with it
         (ON DELETE CASCADE in the database).
- 
+
         Args:
             current_user (User): the logged-in user, given by get_current_user
             user_id (int): id of the account to delete, must be current_user's
@@ -228,4 +229,3 @@ class UserService:
         """
         user = self._get_own_account(current_user, user_id)
         return UserDao().delete(user.user_id)
-

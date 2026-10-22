@@ -99,6 +99,7 @@ def find_all_users(user_service=Depends(get_user_service), _: User = Depends(get
     logger.info("List all users")
     return [_to_public_model(u) for u in user_service.find_all()]
 
+
 @router.get("/users", response_model=list[UserPublicModel])
 def search_users(
     username: str = "", user_service=Depends(get_user_service), _: User = Depends(get_current_user)
@@ -118,10 +119,12 @@ def search_users(
     logger.info("Search users")
     return [_to_public_model(u) for u in user_service.search(username)]
 
+
 @router.get("/users/me", response_model=UserReadModel)
 def read_me(current_user: User = Depends(get_current_user)):
     """Returns the logged-in user's own profile, with the email."""
     return _to_read_model(current_user)
+
 
 @router.get("/users/{user_id}", response_model=UserPublicModel)
 def user_by_id(

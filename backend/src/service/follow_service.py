@@ -62,7 +62,9 @@ class FollowService:
             raise ValueError("A user cannot follow himself.")
 
         if FollowDao().exists(user.user_id, followed_id):
-            raise ConflictError(f"User (id={user.user_id}) already follows user (id={followed_id}).")
+            raise ConflictError(
+                f"User (id={user.user_id}) already follows user (id={followed_id})."
+            )
 
         return FollowDao().create(Follow(user, followed, date.today()))
 
@@ -78,6 +80,8 @@ class FollowService:
             NotFoundError: if the user does not follow followed_id
         """
         if not FollowDao().delete(user.user_id, followed_id):
-            raise NotFoundError(f"User (id={user.user_id}) does not follow user (id={followed_id}).")
+            raise NotFoundError(
+                f"User (id={user.user_id}) does not follow user (id={followed_id})."
+            )
 
         return True

@@ -23,12 +23,7 @@ class OpenLibraryClient(metaclass=Singleton):
             A list of books corresponding to the response given by OpenLibrary
         """
 
-        raw_json = self._get(
-            path="/search.json",
-            params={
-                "q": query,
-                "limit": limit}
-        )
+        raw_json = self._get(path="/search.json", params={"q": query, "limit": limit})
         if raw_json is None:
             return []
 
@@ -87,10 +82,7 @@ class OpenLibraryClient(metaclass=Singleton):
         description = raw_json.get("description")
         if isinstance(description, dict):
             description = description.get("value")
-        work_details = {
-            "subjects": raw_json.get("subjects", []),
-            "description": description
-        }
+        work_details = {"subjects": raw_json.get("subjects", []), "description": description}
         return work_details
 
     @log
@@ -109,32 +101,30 @@ class OpenLibraryClient(metaclass=Singleton):
             }
             None if OpenLibrary does not know this work_id.
         """
-        raw_json = self._get(
-            path=f"/works/{work_id}/editions.json",
-            params={"limit": limit}
-        )
+        raw_json = self._get(path=f"/works/{work_id}/editions.json", params={"limit": limit})
         if raw_json is None:
             return None
 
         editions = []
         for entry in raw_json.get("entries", []):
             # publishers, isbn10, isbn13 are lists: we keep the first value
-            publishers = entry.get("publishers",[])
+            publishers = entry.get("publishers", [])
             publisher = publishers[0] if publishers else None
 
             isbns = entry.get("isbn_13") or entry.get("isbn_10") or []
             isbn = isbns[0] if isbns else None
 
-            editions.append({
-                "title": entry.get("title"),
-                "publisher": publisher,
-                "publish_date": entry.get("publish_date"),
-                "number_of_pages": entry.get("number_of_pages"),
-                "isbn": isbn
-            })
+            editions.append(
+                {
+                    "title": entry.get("title"),
+                    "publisher": publisher,
+                    "publish_date": entry.get("publish_date"),
+                    "number_of_pages": entry.get("number_of_pages"),
+                    "isbn": isbn,
+                }
+            )
 
         return {"total": raw_json.get("size", len(editions)), "editions": editions}
-
 
     @log
     def search_by_author(self, author: str, limit: int = 20) -> list[Book]:
@@ -147,11 +137,7 @@ class OpenLibraryClient(metaclass=Singleton):
             A list of books written by this author
             An empty list if nothing has been found
         """
-        raw_json = self._get(
-            path="/search.json",
-            params={
-                "author": author,
-                "limit": limit})
+        raw_json = self._get(path="/search.json", params={"author": author, "limit": limit})
 
         if raw_json is None:
             return []
@@ -164,14 +150,12 @@ class OpenLibraryClient(metaclass=Singleton):
     @log
     def _get_author_name(self, author_key: str) -> str | None:
         """get the author name from the author key obtained in OpenLibrary
-    Args:
-        author_key (str)
-    Returns:
-        author_name (str): The name of the author whose author_key is the key
+        Args:
+            author_key (str)
+        Returns:
+            author_name (str): The name of the author whose author_key is the key
         """
-        raw_json = self._get(
-            path=f"/authors/{author_key}.json"
-        )
+        raw_json = self._get(path=f"/authors/{author_key}.json")
         if raw_json is None:
             return None
         # author_name can be found under "personal_name" or "name"
@@ -224,7 +208,6 @@ class OpenLibraryClient(metaclass=Singleton):
             book_list.append(book)
 
         return book_list
-
 
     @log
     def _get(self, path: str, params: dict | None = None) -> dict | None:

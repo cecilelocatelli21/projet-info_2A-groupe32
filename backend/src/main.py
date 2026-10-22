@@ -36,6 +36,7 @@ app = FastAPI(title="My Webservice")
 
 app.add_middleware(LogMiddleware)
 
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     """
@@ -52,7 +53,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 app.include_router(book_controller.router, prefix="/books", tags=["Books"])
 app.include_router(user_controller.router, tags=["Users"])
-app.include_router(player_controller.router, prefix="/player", tags=["Players"])
+# app.include_router(player_controller.router, prefix="/player", tags=["Players"])
 app.include_router(login_controller.router, tags=["Login"])
 app.include_router(review_controller.router, prefix="/review", tags=["Reviews"])
 app.include_router(game_controller.router, prefix="/game", tags=["Games"])

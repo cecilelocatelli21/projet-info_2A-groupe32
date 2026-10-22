@@ -74,18 +74,18 @@ class BookService:
             "description": None,
             "editions_count": 0,
             "editions": [],
-            "average_rating": None
-            }
+            "average_rating": None,
+        }
         # Subjects and description may be missing
         work_details = client.get_work_details(work_id)
         if work_details is not None:
-            details["subjects"] = work_details.get("subjects",[])
+            details["subjects"] = work_details.get("subjects", [])
             details["description"] = work_details.get("description")
         # Editions may be missing
         editions_data = client.get_editions(work_id)
         if editions_data is not None:
-            details["editions_count"] = editions_data.get("total",0)
-            details["editions"] = editions_data.get("editions",[])
+            details["editions_count"] = editions_data.get("total", 0)
+            details["editions"] = editions_data.get("editions", [])
         # 2. Information from our database
         book_in_database = BookDao().find_by_work_id(work_id)
         if book_in_database is not None:
