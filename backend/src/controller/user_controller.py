@@ -87,6 +87,8 @@ def create_user(u: UserModel, user_service=Depends(get_user_service)):
         )
     except ConflictError as e:
         raise HTTPException(status_code=409, detail=str(e)) from e
+    if user is None:
+        raise HTTPException(status_code=500, detail="...")
     return _to_read_model(user)
 
 
@@ -187,6 +189,8 @@ def update_user(
         raise HTTPException(status_code=403, detail=str(e)) from e
     except ConflictError as e:
         raise HTTPException(status_code=409, detail=str(e)) from e
+    if user is None:
+        raise HTTPException(status_code=500, detail="...")
     return _to_read_model(user)
 
 

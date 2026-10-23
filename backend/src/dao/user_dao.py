@@ -101,6 +101,7 @@ class UserDao(metaclass=Singleton):
 
     @log
     def create(self, user: User) -> User:
+        
         try:
             with DBConnection().connection as connection:
                 with connection.cursor() as cursor:
