@@ -26,108 +26,80 @@ def test_get_book_work_id_not_found():
 
     # GIVEN
     service = MagicMock()
-    service.get_book_details.return_value = {"error": "notfound", "key": "/works/OL29103511111W"}
+    service.get_book_details.return_value = None #{"error": "notfound", "key": "/works/OL29103511111W"}
     override_service(service)
+    app.dependency_overrides[get_current_user] = lambda: User(
+        user_id=1, username="test", email="t@mail.fr", password_hash="h", bio=None
+    )
 
     # WHEN
-    response = client.get("/books/OL29103511111W")
+    response = client.get("/OL29103511111W")
 
     # THEN
     assert response.status_code == 404
-    assert response.json() == {"detail": "Not Found"}
-    # service.get_book_details.assert_called_once_with(1)
+    assert response.json() == {'detail': 'The work id has not been found in OpenLibrary.'}
+    service.get_book_details.assert_called_once_with("OL29103511111W")
 
 
 def test_get_book_ok():
     """The result is ok, we get what was expected"""
 
     # GIVEN
-    OpenLibraryClient()._get = MagicMock(return_value={
-        "lc_classifications": ["PR2829.A3 L533 1908"],
-        "description": "Shakespeare's tragedy of jealousy and suspicion presented scene by scene in comic book format.",
+    service = MagicMock()
+    service.get_book_details.return_value={
+        "work_id": "OL258850W",
+        "book_id": 4,
         "title": "Othello",
-        "covers": [7165018, 5249002],
-        "first_sentence": {"type": "/type/text", "value": "RODERIGO Tush, never tell me!"},
-        "subject_places": ["Venice (Italy)", "Cyprus"],
-        "first_publish_date": "August 7, 2006",
-        "subject_people": [
-            "William Shakespeare (1564-1616)",
-            "Othello (Fictitious character from Shakespeare)",
-        ],
-        "location": "/works/OL258850W",
-        "key": "/works/OL258850W",
-        "authors": [{"author": {"key": "/authors/OL9388A"}, "type": {"key": "/type/author_role"}}],
-        "excerpts": [
-            {"excerpt": "RODERIGO Tush, never tell me!"},
-            {
-                "excerpt": "Roderigo and lago rouse Brabantio from his bed to tell him of Desdemona's rebellion."
-            },
-        ],
+        "authors": "William Shakespeare",
+        "cover_url": "https://ebookzy.com/othello/",
         "subjects": ["Classics", "Shakespeare"],
-        "type": {"key": "/type/work"},
-        "subject_times": ["16th century"],
-        "links": [
-            {
-                "title": "Othello-Ebookzy",
-                "url": "https://ebookzy.com/othello/",
-                "type": {"key": "/type/link"},
-            },
-            {
-                "title": "Amazon.com",
-                "url": "https://www.amazon.com/Othello-Hardcover-Library-William-Shakespeare/dp/9354992099/ref=sr_1_1?crid=1Q5D4KWPQ9UE4&dib=eyJ2IjoiMSJ9.KRteP4yVHuOKnzgkOqgXTU6VOkUshyflhEQSV6hdpSU.clQZtduPuKkQAAH19ONZHyN6WhHhz0WHmQtxlDowNgY&dib_tag=se&keywords=9354992099&nsdOptOutParam=true&qid=1777888800&s=books&sprefix=9354992099%2Cstripbooks-intl-ship%2C342&sr=1-1",
-                "type": {"key": "/type/link"},
-            },
-            {
-                "title": "Online Books Page",
-                "url": "https://onlinebooks.library.upenn.edu/webbin/gutbook/lookup?num=7185",
-                "type": {"key": "/type/link"},
-            },
-        ],
-        "genres": ["/tags/OL167T", "/tags/OL174T"],
-        "latest_revision": 75,
-        "revision": 75,
-        "created": {"type": "/type/datetime", "value": "2009-10-24T02:04:29.654597"},
-        "last_modified": {"type": "/type/datetime", "value": "2026-09-24T05:52:05.186926"},
-    }
+        "description": "Shakespeare's tragedy of jealousy and suspicion presented scene by scene in comic book format.",
+        "editions_count": 0,
+        "editions": [],
+        "average_rating": 4.3}
+    override_service(service)
+    app.dependency_overrides[get_current_user] = lambda: User(
+        user_id=1, username="test", email="t@mail.fr", password_hash="h", bio=None
     )
 
     # WHEN
-    print("coucou1")
-    response = client.get("/books/OL258850W")
-    print(response)
+    response = client.get("/OL258850W")
+    print(response.status_code, response.text, response.json())
     json = response.json()
-    print("coucou3")
 
     # THEN
-    # assert response.status_code == 200
+    assert response.status_code == 200
     assert json["title"] == "Othello"
-    # service.get_book_details.assert_called_once_with(1)
+    service.get_book_details.assert_called_once_with("OL258850W")
 
 
 def test_find_by_id_ok():
     """The result is ok, we get what was expected"""
 
     # GIVEN
-    BookService().find_by_id = MagicMock(return_value={
-        "book_id": 3,
-        "work_id": "OL29549062W",
-        "title": "À l'ombre des jeunes filles en fleurs",
-        "authors": "Marcel Proust",
-        "cover_url": "https://covers.openlibrary.org/b/olid/OL10264W-M.jpg"
-        }
+    service = MagicMock()
+    service.find_by_id.return_value= Book(book_id=3,
+                                            work_id= "OL29549062W",
+                                            title="À l'ombre des jeunes filles en fleurs",
+                                            authors="Marcel Proust",
+                                            cover_url="https://covers.openlibrary.org/b/olid/OL10264W-M.jpg")
+
+    override_service(service)
+    app.dependency_overrides[get_current_user] = lambda: User(
+        user_id=1, username="test", email="t@mail.fr", password_hash="h", bio=None
     )
 
     # WHEN
     print("coucou1")
-    response = client.get("/books/id/", params={"book_id": 3})
-    print(response)
+    response = client.get("/id/3") #
+    print(response.status_code, response.text, response.json())
     json = response.json()
     print("coucou3")
 
     # THEN
-    # assert response.status_code == 200
+    assert response.status_code == 200
     assert json["book_id"] == 3
-    # service.get_book_details.assert_called_once_with(1)
+    service.find_by_id.assert_called_once_with(3)
 
 
 def test_find_all_ok():
@@ -137,15 +109,15 @@ def test_find_all_ok():
     # GIVEN
     service = MagicMock()
     service.find_all.return_value = [
-        Book(work_id="OL10263W", title="le petit prince", authors="Antoine de Saint-Exupéry"),
-        Book(work_id="OL30053009W", title="Du côté de chez Swann", authors="Marcel Proust"),
+        Book(book_id=1, work_id="OL10263W", title="le petit prince", authors="Antoine de Saint-Exupéry"),
+        Book(book_id=2, work_id="OL30053009W", title="Du côté de chez Swann", authors="Marcel Proust"),
     ]
     override_service(service)
 
     # WHEN
     print("coucou31")
-    response = client.get("/books/find_all")
-    print(response)
+    response = client.get("/find_all/")
+    print(response.status_code, response.text)
     print("coucou32")
 
     # THEN
