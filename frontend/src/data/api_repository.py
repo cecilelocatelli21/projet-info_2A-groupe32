@@ -7,13 +7,14 @@ book descriptions and ratings) is simply not advertised in ``supports`` and the 
 from __future__ import annotations
 
 import re
+from dataclasses import replace
 from datetime import date
 
 import streamlit as st
 
 from auth import session
 from data.errors import BusinessRuleError, DataUnavailable, NotFound
-from data.models import Book, LibraryEntry, Person, Profile, Review, Row
+from data.models import Book, Edition, LibraryEntry, Person, Profile, Review, Row
 from data.repository import Repository
 from data.search import filter_books
 from utils.api_client import api_client
@@ -56,6 +57,37 @@ def _book(raw: dict) -> Book:
     )
 
 
+def _book_detail(raw: dict) -> Book:
+    """Maps a ``BookDetailModel`` (``GET /books/{work_id}``). Only fields really present are used:
+    ``subjects`` become the book's categories, ``average_rating`` its rating. Nothing is invented."""
+    base = _book(raw)
+    editions = tuple(
+        e
+        for e in (
+            Edition(
+                title=(x.get("title") or None),
+                publisher=(x.get("publisher") or None),
+                publish_date=(x.get("publish_date") or None),
+                pages=x.get("number_of_pages") or None,
+                isbn=(x.get("isbn") or None),
+            )
+            for x in (raw.get("editions") or [])
+            if isinstance(x, dict)
+        )
+        if not e.is_empty
+    )
+    subjects = tuple(dict.fromkeys(str(s).strip() for s in (raw.get("subjects") or []) if str(s).strip()))
+    description = raw.get("description")
+    return replace(
+        base,
+        description=description.strip() if isinstance(description, str) and description.strip() else None,
+        genres=subjects,
+        rating=raw.get("average_rating"),
+        editions=editions,
+        detailed=True,
+    )
+
+
 def _entry(raw: dict) -> LibraryEntry:
     return LibraryEntry(
         reading_id=raw["reading_id"],
@@ -86,9 +118,24 @@ def _review(raw: dict) -> Review:
         created=date.fromisoformat(created[:10]) if created else None,
         likes=raw.get("likes", 0),
         liked_by_me=raw["review_id"] in _liked_ids(),
+        reading_id=raw.get("reading_id"),
         book_title=book.get("title"),
         is_mine=raw.get("user_id") == st.session_state.get("user_id"),
     )
+
+
+def _reviews_with_ratings(raws: list[dict]) -> list[Review]:
+    """A review has no rating of its own: it lives on the reading the review belongs to. The authors'
+    libraries (``GET /users/{id}/readings``) give it, one request per author, so the stars shown next
+    to a review are the real ones. If a library cannot be read the review is shown without stars."""
+    ratings: dict[int, int | None] = {}
+    for uid in {r.get("user_id") for r in raws if r.get("user_id") is not None}:
+        try:
+            for reading in _call("get", f"/users/{uid}/readings") or []:
+                ratings[reading["reading_id"]] = reading.get("rating")
+        except (BusinessRuleError, DataUnavailable):
+            continue
+    return [_review({**r, "rating": ratings.get(r.get("reading_id"))}) for r in raws]
 
 
 class ApiRepository(Repository):
@@ -96,7 +143,7 @@ class ApiRepository(Repository):
 
     @property
     def supports(self) -> frozenset[str]:  # type: ignore[override]
-        base = {"social", "library", "follow"}
+        base = {"social", "library", "follow", "user_search"}
         return frozenset(base | ({"reviews", "likes"} if backend_reviews_enabled() else set()))
 
     @property
@@ -147,25 +194,34 @@ class ApiRepository(Repository):
         return [b for b in books if not wanted or wanted.intersection(b.authors)]
 
     def get_book(self, work_id: str) -> Book | None:
+        """Book page data: ``GET /books/{work_id}`` (needs the token; the backend asks Open Library).
+
+        The detailed answer is kept for the session so that the reruns triggered by the page's own
+        buttons do not call Open Library again. If the details cannot be obtained (404: not stored /
+        unknown to Open Library, 5xx or unreachable) the book as it was listed (title, authors, cover)
+        is returned with ``detailed=False`` and the page says so. Nothing is invented."""
+        cache = st.session_state.setdefault("_detail_cache", {})
+        if work_id in cache:
+            return cache[work_id]
         try:
-            return _book(_call("get", f"/books/{work_id}"))
+            book = _book_detail(_call("get", f"/books/{work_id}"))
+            cache[work_id] = book
+            return book
         except (BusinessRuleError, DataUnavailable) as exc:
-            # 404: a search result is not necessarily stored in our database. 5xx / unreachable: the
-            # details come from OpenLibrary; the book as listed (title, authors, cover) is still shown.
             known = st.session_state.get("_book_cache", {}).get(work_id)
-            if known is None and isinstance(exc, DataUnavailable):
+            if known is None:
                 try:
                     known = next((b for b in self.catalog() if b.work_id == work_id), None)
                 except (BusinessRuleError, DataUnavailable):
                     known = None
-                if known is None:
-                    raise
+            if known is None and isinstance(exc, DataUnavailable):
+                raise
             return known
 
     def book_reviews(self, work_id: str) -> list[Review]:
         if not backend_reviews_enabled():
             return []  # no review route in the backend yet
-        return [_review(r) for r in _call("get", f"/review/books/{work_id}/reviews") or []]
+        return _reviews_with_ratings(_call("get", f"/review/books/{work_id}/reviews") or [])
 
     def home_rows(self) -> list[Row]:
         books = self.catalog()
@@ -214,6 +270,7 @@ class ApiRepository(Repository):
             raise BusinessRuleError("This book is not in your library.")
         if rating is not None:
             _call("patch", f"/readings/{entry.reading_id}", json={"rating": rating})
+            st.session_state.get("_detail_cache", {}).pop(work_id, None)  # the average rating changed
         if text.strip() and backend_reviews_enabled():
             path = f"/review/readings/{entry.reading_id}/review"
             try:
@@ -222,6 +279,23 @@ class ApiRepository(Repository):
                 existing = _call("get", path)
                 _call("put", f"/review/reviews/{existing['review_id']}", json={"text": text})
 
+    def update_review(self, review: Review, rating: int | None, text: str) -> None:
+        """Edits an existing review in place (never creates another one).
+
+        ``PUT /review/reviews/{id}`` takes the text only (``ReviewCreateModel``: ``text``, nothing else) and
+        the backend checks the author. The rating is not part of a review: it belongs to the reading, so it
+        is changed with ``PATCH /readings/{reading_id}``. The text is saved first: if the rating then fails,
+        the error says so, and nothing is displayed as saved that is not."""
+        if not text.strip():
+            raise BusinessRuleError("A review cannot be empty.")
+        _call("put", f"/review/reviews/{review.review_id}", json={"text": text.strip()})
+        if rating is not None and rating != review.rating and review.reading_id is not None:
+            try:
+                _call("patch", f"/readings/{review.reading_id}", json={"rating": rating})
+            except BusinessRuleError as exc:
+                raise BusinessRuleError(f"Your text was saved, but the rating could not be changed: {exc}") from exc
+            st.session_state.get("_detail_cache", {}).pop(review.work_id, None)  # the average rating changed
+
     def my_reviews(self) -> list[Review]:
         return self.user_reviews(None)
 
@@ -229,7 +303,7 @@ class ApiRepository(Repository):
         if not backend_reviews_enabled():
             return []
         uid = self._user_id if user_id is None else user_id
-        return [_review(r) for r in _call("get", f"/review/users/{uid}/reviews") or []]
+        return _reviews_with_ratings(_call("get", f"/review/users/{uid}/reviews") or [])
 
     def profile(self, user_id: int | None = None) -> Profile | None:
         uid = self._user_id if user_id is None else user_id
@@ -243,10 +317,10 @@ class ApiRepository(Repository):
                 return ()
 
         try:
-            raw = _call("get", f"/user/users/{uid}")  # user router is mounted under /user in main.py
+            raw = _call("get", f"/users/{uid}")
         except BusinessRuleError:  # 404: unknown user
             return None
-        # Only public fields are read: GET /user/users/{id} only returns public fields (no e-mail).
+        # Only public fields are read: GET /users/{id} only returns public fields (no e-mail).
         return Profile(
             user_id=uid,
             username=raw["username"],
@@ -255,6 +329,18 @@ class ApiRepository(Repository):
             followers=people(f"/users/{uid}/followers"),
             following=people(f"/users/{uid}/following"),
         )
+
+    def search_users(self, username: str = "") -> list[Person]:
+        """``GET /users?username=<text>``: usernames containing the text (case-insensitive), sorted by
+        username; an empty text lists everyone. Only the public fields (id, username, bio) are read."""
+        text = (username or "").strip()
+        cache = st.session_state.setdefault("_user_search_cache", {})
+        if text not in cache:  # the same text is not asked twice while the user stays on the page
+            raw = _call("get", "/users", params={"username": text})
+            if not isinstance(raw, list):
+                raise DataUnavailable("unexpected server response (a list of users was expected)")
+            cache[text] = [Person(p["username"], p["user_id"], p.get("bio")) for p in raw if isinstance(p, dict)]
+        return cache[text]
 
     # ---- likes & follows ----------------------------------------------------------------
     def toggle_like(self, review: Review) -> None:

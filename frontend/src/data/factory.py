@@ -28,6 +28,10 @@ class FallbackRepository(ApiRepository):
         self.degraded_reason = None
 
     def _catalog_or_demo(self):
+        """Stored books of the server, or None when the sample catalogue must be used instead.
+
+        In ``api`` mode (default) the sample catalogue is never used: an unreachable server raises
+        ``DataUnavailable`` (the page says so) and an empty catalogue is simply empty."""
         if data_source() == "demo":
             return None
         try:
@@ -36,6 +40,8 @@ class FallbackRepository(ApiRepository):
                 return books
             reason = "The server catalogue is empty."
         except (DataUnavailable, BusinessRuleError) as exc:
+            if data_source() == "api":
+                raise DataUnavailable(str(exc)) from exc
             reason = f"The server is unreachable or the route is unavailable ({exc})."
         if data_source() == "api":
             return []

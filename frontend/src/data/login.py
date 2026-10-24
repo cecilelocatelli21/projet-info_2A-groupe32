@@ -1,4 +1,4 @@
-"""Login page: real login form (POST /login/), account-created notice, optional one-click demo."""
+"""Login page: real login form (POST /login), account-created notice, optional one-click demo."""
 
 import streamlit as st
 

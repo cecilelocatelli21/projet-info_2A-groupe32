@@ -21,6 +21,8 @@ PAGES = {
     "library": "views/library.py",
     "profile": "views/profile.py",
     "book": "views/book.py",
+    "users": "views/users.py",
+    "edit_profile": "views/edit_profile.py",
 }
 
 
@@ -99,12 +101,14 @@ def shelf(key: str, title: str, books: list[Book], subtitle: str | None = None, 
             book_card(book, key, entry)
 
 
-def grid(key: str, entries: list[tuple[Book, LibraryEntry | None]], columns: int = 6) -> None:
-    for start in range(0, len(entries), columns):
-        cols = st.columns(columns, gap="medium")
-        for col, (book, entry) in zip(cols, entries[start : start + columns], strict=False):
-            with col:
-                book_card(book, f"{key}{start}", entry, meta=True)
+def grid(key: str, entries: list[tuple[Book, LibraryEntry | None]], columns: int | None = None) -> None:
+    """Covers in a responsive CSS grid (see ``st-key-grid_`` in theme.py): the number of columns follows the
+    width of the page, every cell has the same width, the gaps are regular both ways, and a hovered cover
+    grows inside its gap without moving or hiding its neighbours. Cover only: the title and the author
+    appear on the cover itself (hover / touch). ``columns`` is kept for compatibility and ignored."""
+    with st.container(horizontal=True, key=f"grid_{key}", gap=None):
+        for book, entry in entries:
+            book_card(book, key, entry)
 
 
 def empty(title: str, text: str) -> None:
@@ -133,15 +137,21 @@ def navbar(current: str) -> None:
         st.page_link(PAGES["home"], label="Home")
         st.page_link(PAGES["discover"], label="Discover")
         st.page_link(PAGES["library"], label="My Library")
+        st.page_link(PAGES["users"], label="Users")
         st.page_link(PAGES["profile"], label="Profile")
         st.space("stretch")
-        query = st.text_input(
-            "Search",
-            key=f"nav_search_{current}",
-            value=st.session_state.get("search_q", ""),
-            placeholder="Search by title or author…",
-            label_visibility="collapsed",
-            width=300,
+        # Discover has its own (single) search bar: no second one in the navbar there
+        query = (
+            st.session_state.get("search_q", "")
+            if current == "discover"
+            else st.text_input(
+                "Search",
+                key=f"nav_search_{current}",
+                value=st.session_state.get("search_q", ""),
+                placeholder="Search books by title or author…",
+                label_visibility="collapsed",
+                width=300,
+            )
         )
         if session.is_demo():
             html("<span class='demo-pill'>Demo</span>")
@@ -150,6 +160,8 @@ def navbar(current: str) -> None:
             html(f"<div class='session-state'>{escape(session.status_label())}</div>")
             if st.button("My profile", key="menu_profile", width="stretch"):
                 open_profile(None)
+            if not session.is_demo() and st.button("Edit profile", key="menu_edit_profile", width="stretch"):
+                st.switch_page(PAGES["edit_profile"])
             if session.is_demo() and st.button(
                 "Reset demo", key="menu_reset", width="stretch"
             ):
@@ -176,6 +188,38 @@ def public_navbar(current: str) -> None:
         if current != "signup":
             if st.button("Create account", key="nav_signup", type="primary"):
                 st.switch_page(PAGES["signup"])
+
+
+_DEBOUNCE_JS = """
+(function () {
+  if (window.__exlDebounce) return;
+  window.__exlDebounce = true;
+  var timer;
+  document.addEventListener('input', function (e) {
+    var el = e.target;
+    if (!el.matches || !el.matches('[class*="st-key-searchbar_"] input')) return;
+    clearTimeout(timer);
+    timer = setTimeout(function () {
+      if (document.activeElement !== el) return;
+      ['keydown', 'keypress', 'keyup'].forEach(function (type) {
+        el.dispatchEvent(new KeyboardEvent(type, {key: 'Enter', code: 'Enter', keyCode: 13, charCode: 13, which: 13, bubbles: true, cancelable: true}));
+      });
+    }, 450);
+  }, true);
+})();
+"""
+
+
+def search_bar(key: str, placeholder: str, on_clear) -> str:
+    """The one search field of the application (Discover, Users): a rounded field with a small icon, no
+    frame around it, a clear button that only exists while there is text, and a short delay (debounce)
+    after the last keystroke before the text is sent; Enter sends it at once. Returns the trimmed text."""
+    with st.container(key=f"searchbar_{key}", gap=None):
+        st.text_input("Search", key=key, placeholder=placeholder, label_visibility="collapsed")
+        if st.session_state.get(key):
+            st.button("✕", key=f"{key}_clear", type="tertiary", on_click=on_clear, help="Clear search")
+    st.html(f"<script>{_DEBOUNCE_JS}</script>", unsafe_allow_javascript=True)
+    return (st.session_state.get(key) or "").strip()
 
 
 def clear_search() -> None:
@@ -252,43 +296,97 @@ def person_row(person, scope: str) -> None:
                 html(f"<span style='color:var(--muted);font-size:.8rem'>{escape(person.bio)}</span>")
 
 
-def review_card(review: Review, repo: Repository | None = None, scope: str = "r", book: Book | None = None) -> None:
-    """A review: clickable author, rating, date, text and a like button tied to the connected user.
+def _failure_toast(exc: Exception) -> None:
+    if isinstance(exc, DataUnavailable):
+        st.toast("The server is not responding. Please try again in a moment.", icon="⚠️")
+    else:
+        st.toast(str(exc), icon="⚠️")
 
-    With ``book`` (profile page) the cover is shown on the left and opens the book page."""
-    with st.container(key=f"rev_{scope}_{review.review_id}"):
+
+@st.dialog("Edit your review", width="medium")
+def edit_review_dialog(review: Review, repo: Repository) -> None:
+    """Edit form for the connected user's own review, prefilled with its current text and rating.
+
+    Save changes calls ``PUT /review/reviews/{id}`` (never creates another review) and Cancel just closes
+    the window. On an error the window stays open with the message and nothing is shown as saved."""
+    if review.book_title:
+        html(f"<div class='rev-book'>{escape(review.book_title)}</div>")
+    rating = st.feedback("stars", key=f"edit_stars_{review.review_id}", default=(review.rating - 1) if review.rating else None)
+    text = st.text_area(
+        "Your review",
+        value=review.text,
+        key=f"edit_text_{review.review_id}",
+        height=170,
+        max_chars=2000,
+        label_visibility="collapsed",
+        placeholder="What did you think of this book?",
+    )
+    problem = st.empty()
+    save, cancel = st.columns(2)
+    if cancel.button("Cancel", key=f"edit_cancel_{review.review_id}", width="stretch"):
+        st.rerun()  # closes the dialog; nothing was sent
+    if save.button("Save changes", key=f"edit_save_{review.review_id}", type="primary", width="stretch"):
+        if not text.strip():
+            problem.warning("Your review cannot be empty.")
+            return
+        try:
+            with st.spinner("Saving…"):
+                repo.update_review(review, None if rating is None else rating + 1, text)
+        except (BusinessRuleError, DataUnavailable) as exc:
+            problem.error(str(exc) if isinstance(exc, BusinessRuleError) else "The server is not responding. Please try again in a moment.")
+            return
+        st.toast("Review updated", icon="✍️")
+        st.rerun()
+
+
+def review_card(review: Review, repo: Repository | None = None, scope: str = "r", book: Book | None = None) -> None:
+    """One review: author (opens the profile), date, stars, text, then the actions.
+
+    Every review shares the same layout; the connected user's own reviews only get an accent (see
+    ``_mine`` in theme.py), a "You" tag and the discreet "Edit review" action, which is shown only for
+    them (the backend refuses anyone else anyway: 403). With ``book`` (profile page) the cover is shown on
+    the left and opens the book page."""
+    suffix = "_mine" if review.is_mine else ""
+    with st.container(key=f"rev_{scope}_{review.review_id}{suffix}"):
         left, right = st.columns([1, 6], gap="medium") if book else (None, st.container())
         if left is not None:
             with left:
                 book_card(book, f"rv{scope}{review.review_id}")
         with right:
-            with st.container(horizontal=True, vertical_alignment="center"):
+            with st.container(horizontal=True, vertical_alignment="center", gap="small"):
                 html(avatar(review.author or "?", small=True))
                 user_link(review.author, review.author_id, f"ulink_{scope}_{review.review_id}")
-                when = review.created.strftime("%d/%m/%Y") if review.created else ""
-                rating = f"<span class='stars'>{'★' * review.rating}</span>" if review.rating else ""
-                html(f"<span class='when'>{when}</span> {rating}")
+                if review.is_mine:
+                    html("<span class='you-tag'>You</span>")
+                st.space("stretch")
+                if review.rating:
+                    html(f"<span class='stars'>{'★' * review.rating}<span class='off'>{'★' * (5 - review.rating)}</span></span>")
+                if review.created:
+                    html(f"<span class='when'>{review.created.strftime('%b %d, %Y')}</span>")
             if book:
                 html(f"<div class='rev-book'>{escape(book.title)}</div>")
             html(f"<p class='rev-text'>{escape(review.text)}</p>")
             can_like = repo is not None and "likes" in repo.supports and review.likeable
-            if can_like and not review.is_mine:
-                label = f"{'♥' if review.liked_by_me else '♡'} {review.likes}"
-                if st.button(
-                    label,
-                    key=f"like_{scope}_{review.review_id}",
-                    type="primary" if review.liked_by_me else "secondary",
-                    help="Remove my like" if review.liked_by_me else "Like this review",
-                ):
-                    try:
-                        repo.toggle_like(review)
-                    except BusinessRuleError as exc:
-                        st.toast(str(exc), icon="⚠️")
-                    except DataUnavailable:
-                        st.toast("The server is not responding. Please try again in a moment.", icon="⚠️")
-                    st.rerun()
-            else:
-                html(f"<small style='color:var(--muted)'>♥ {review.likes}</small>")
+            with st.container(horizontal=True, vertical_alignment="center", gap="small", key=f"revact_{scope}_{review.review_id}"):
+                if review.is_mine:
+                    html(f"<span class='like-count'>♥ {review.likes}</span>")
+                    if repo is not None and st.button("✎  Edit review", key=f"edit_{scope}_{review.review_id}", type="tertiary"):
+                        edit_review_dialog(review, repo)
+                elif can_like:
+                    label = f"{'♥' if review.liked_by_me else '♡'} {review.likes}"
+                    if st.button(
+                        label,
+                        key=f"like_{scope}_{review.review_id}",
+                        type="primary" if review.liked_by_me else "secondary",
+                        help="Remove my like" if review.liked_by_me else "Like this review",
+                    ):
+                        try:
+                            repo.toggle_like(review)
+                        except (BusinessRuleError, DataUnavailable) as exc:
+                            _failure_toast(exc)
+                        st.rerun()
+                else:
+                    html(f"<span class='like-count'>♥ {review.likes}</span>")
 
 
 def safe(call, default=None):

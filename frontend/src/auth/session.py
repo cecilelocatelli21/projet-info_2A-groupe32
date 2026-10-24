@@ -1,7 +1,7 @@
 """Session handling: real login / signup / logout, plus the demo login isolated so it can be removed.
 
 To switch to real authentication only: set ``EXLIBRIS_ENABLE_DEMO_LOGIN=false``. The demo mode
-then disappears from the login page; ``api_login`` (real POST /login/) stays.
+then disappears from the login page; ``api_login`` (real POST /login) stays.
 """
 
 from __future__ import annotations
@@ -9,14 +9,13 @@ from __future__ import annotations
 import streamlit as st
 
 from api import auth
-from api.users import create_account
+from api.users import change_password, create_account, delete_account, update_profile
 from data import demo_catalog
 from utils.api_client import api_client
 
-_KEYS = (
-    "mode", "user_id", "username", "display_name", "access_token", "token_verified",
-    "player", "_repo_demo", "_liked_reviews",
-)
+# Technical keys that survive a logout (logging set-up). Everything else belongs to the session of the
+# user who has just left (token, identity, search text, cached books, flash messages...) and is erased.
+_KEEP = {"logs_initialized", "logger", "last_navigated_page"}
 
 
 def is_logged_in() -> bool:
@@ -43,10 +42,10 @@ def demo_login() -> None:
 
 
 def _verify_token(user_id, token: str) -> bool | None:
-    """Confirms that the token opens a protected route (GET /user/users/{id} needs a Bearer token).
+    """Confirms that the token opens a protected route (GET /users/{id} needs a Bearer token).
 
     True = accepted, False = refused (401), None = inconclusive (server error, route unavailable)."""
-    response = api_client.get(f"/user/users/{user_id}", headers={"Authorization": f"Bearer {token}"})
+    response = api_client.get(f"/users/{user_id}", headers={"Authorization": f"Bearer {token}"})
     status = response["status_code"]
     if status == 200:
         return True
@@ -54,11 +53,11 @@ def _verify_token(user_id, token: str) -> bool | None:
 
 
 def api_login(username: str, password: str) -> str | None:
-    """Real login: ``POST /login/`` with the JSON body {username, password}.
+    """Real login: ``POST /login`` with the JSON body {username, password}.
 
     The backend answers {"id_user", "username", "access_token"}. The password is only used for this
     call: it is neither stored nor logged. Returns an error message, or None on success."""
-    response = api_client.post("/login/", json={"username": username, "password": password})
+    response = auth.login(username, password)
     status, data = response["status_code"], response["data"]
     if status == 200 and isinstance(data, dict) and data.get("access_token"):
         user_id = data.get("user_id", data.get("id_user", data.get("id_player")))
@@ -107,7 +106,7 @@ def _validation_message(detail) -> str:
 
 
 def api_signup(username: str, email: str, password: str) -> str | None:
-    """Real account creation (``POST /user/users``, body {username, email, password}).
+    """Real account creation (``POST /users``, body {username, email, password}).
 
     The backend answers 201 with the new profile and does NOT log the user in (no token): the caller
     redirects to the login page. The password is only used for this call. Returns an error message,
@@ -143,10 +142,10 @@ def expire(message: str = "Your session has expired. Please log in again.") -> N
 
 
 def sign_out() -> None:
-    """User-initiated logout: tells the backend (best effort) then clears the local session.
+    """User-initiated logout.
 
-    ``POST /logout`` is documented but not implemented in the backend yet, so a failure (404...) is
-    ignored: the token is always forgotten on this side."""
+    1. ``POST /logout`` erases the token in the backend (best effort: a failure never blocks the logout).
+    2. Everything kept for this session is erased (see ``logout``)."""
     token = st.session_state.get("access_token")
     if token and not is_demo():
         try:
@@ -157,7 +156,70 @@ def sign_out() -> None:
 
 
 def logout() -> None:
-    """Forgets everything about the current session (local only)."""
-    for key in _KEYS:
-        st.session_state.pop(key, None)
-    st.session_state.pop("demo_state", None)
+    """Forgets everything about the current session (local only): token, identity, search text, cached
+    books and reviews, messages. Only the logging set-up is kept, so nothing private can be shown to
+    the next visitor of the same browser tab."""
+    for key in list(st.session_state.keys()):
+        if key not in _KEEP:
+            try:
+                del st.session_state[key]
+            except Exception:  # noqa: BLE001 - a widget key that cannot be removed now is dropped on rerun
+                pass
+
+
+def notify_visitor(message: str) -> None:
+    """Message shown once on the public pages (e.g. after deleting an account)."""
+    st.session_state["public_notice"] = message
+
+
+# ---- account management (all calls use the connected user's own id and token) ------------------------
+def _account_error(response: dict, what: str) -> str:
+    """Readable message for a failed account call; a 401 ends the session."""
+    status, data = response["status_code"], response["data"]
+    detail = data.get("detail") if isinstance(data, dict) else None
+    if status == 401:
+        expire()
+        return "Your session has expired. Please log in again."
+    if status == 404:
+        return "This account no longer exists."
+    if status == 403:
+        return "You can only modify your own account."
+    if status == 0:
+        return "The server is unreachable right now. Please try again in a moment."
+    if status in (400, 409) and detail:
+        return str(detail)
+    if status == 422:
+        return _validation_message(detail)
+    return f"Could not {what}: the server returned an error ({status}). Please try again later."
+
+
+def api_update_profile(bio: str | None = None, email: str | None = None) -> str | None:
+    """``PUT /users/{id}`` for the connected user. Returns an error message, or None on success."""
+    response = update_profile(st.session_state["user_id"], bio=bio, email=email)
+    if response["status_code"] == 200:
+        return None
+    if response["status_code"] == 409:
+        return "This email address is already used by another account."
+    return _account_error(response, "update your profile")
+
+
+def api_change_password(old_password: str, new_password: str) -> str | None:
+    """``PUT /users/{id}/password`` for the connected user. The passwords are only sent, never kept."""
+    response = change_password(st.session_state["user_id"], old_password, new_password)
+    if response["status_code"] == 204:
+        return None
+    if response["status_code"] == 400:
+        return "Your current password is incorrect."
+    return _account_error(response, "change your password")
+
+
+def api_delete_account() -> str | None:
+    """``DELETE /users/{id}`` for the connected user (the id comes from the session, never from input).
+
+    On success the local session is erased and a confirmation is queued for the public home page."""
+    response = delete_account(st.session_state["user_id"])
+    if response["status_code"] == 204:
+        logout()
+        notify_visitor("Your account has been permanently deleted.")
+        return None
+    return _account_error(response, "delete your account")

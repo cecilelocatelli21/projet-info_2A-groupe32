@@ -239,6 +239,14 @@ class DemoRepository(Repository):
                 is_mine=True,
             )
 
+    def update_review(self, review: Review, rating: int | None, text: str) -> None:
+        mine = next((w for w, r in self._state["reviews"].items() if r.review_id == review.review_id), None)
+        if mine is None:
+            raise BusinessRuleError("You can only edit your own reviews.")
+        if not (text or "").strip():
+            raise BusinessRuleError("A review cannot be empty.")
+        self.save_review(mine, rating, text)
+
     def my_reviews(self) -> list[Review]:
         reviews = list(self._state["reviews"].values())
         return sorted(reviews, key=lambda r: r.created or date.min, reverse=True)

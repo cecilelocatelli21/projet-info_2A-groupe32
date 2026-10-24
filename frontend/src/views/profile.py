@@ -47,6 +47,11 @@ ui.html(
 )
 ui.source_banner(repo)
 
+if is_own and not st.session_state.get("mode") == "demo":
+    st.space("xsmall")
+    if st.button("✎  Edit profile", key="profile_edit"):
+        st.switch_page(ui.PAGES["edit_profile"])
+
 if not is_own and "follow" in repo.supports:
     try:
         following = repo.is_following(user_id)

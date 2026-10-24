@@ -14,10 +14,13 @@ ui.page_header("My Library", "Your collection, and where you are in each book.")
 entries = ui.safe(repo.library, [])
 counts = {s: sum(e.status == s for e in entries) for s in STATUSES}
 
-c1, c2, c3 = st.columns([2, 2, 1.4])
-text = c1.text_input("Filter", placeholder="Title or author in my library", label_visibility="collapsed")
-all_genres = sorted({g for e in entries for g in e.book.genres})
-genres = c2.multiselect("Genres", all_genres, placeholder="All genres", label_visibility="collapsed")
+def clear_filter() -> None:
+    st.session_state["library_q"] = ""
+
+
+c1, c3 = st.columns([3, 1.1], vertical_alignment="top")
+with c1:
+    text = ui.search_bar("library_q", "Filter your library by title or author…", clear_filter)
 sort = c3.selectbox(
     "Sort",
     ["added", "title", "rating"],
@@ -32,7 +35,6 @@ def visible(items):
         e
         for e in items
         if (not q or q in normalize(e.book.title) or q in normalize(e.book.authors_label))
-        and (not genres or set(genres) & set(e.book.genres))
     ]
     if sort == "title":
         out.sort(key=lambda e: normalize(e.book.title))

@@ -1,4 +1,4 @@
-"""Login page: real login form (POST /login/), account-created notice, optional one-click demo."""
+"""Login page: real login form (POST /login), account-created notice, optional one-click demo."""
 
 import streamlit as st
 
@@ -31,6 +31,9 @@ with right:
         html("<h2 style='margin:0 0 .3rem'>Welcome back</h2>")
         html("<div class='page-sub'>Log in with your username to pick up your reading.</div>")
 
+        public_notice = st.session_state.pop("public_notice", None)
+        if public_notice:
+            st.success(public_notice)
         created = st.session_state.pop("account_created", None)
         if created:
             st.success(created)

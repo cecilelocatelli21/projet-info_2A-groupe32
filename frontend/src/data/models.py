@@ -12,14 +12,25 @@ from datetime import date
 
 # Same vocabulary as the backend (schema/reading_model.py)
 STATUSES = ("to read", "in progress", "read", "abandoned")
-STATUS_LABELS = {
-    "to read": "Want to Read",
-    "in progress": "Currently Reading",
-    "read": "Read",
-    "abandoned": "Did Not Finish",
-}
+# The backend values are also the labels shown to the user (same four words everywhere in the UI).
+STATUS_LABELS = {status: status for status in STATUSES}
 # Business rule (reading_service.update_reading): rating and review need a final status
 RATING_STATUSES = ("read", "abandoned")
+
+
+@dataclass(frozen=True)
+class Edition:
+    """One edition of a work (``EditionModel`` of ``GET /books/{work_id}``); every field may be missing."""
+
+    title: str | None = None
+    publisher: str | None = None
+    publish_date: str | None = None
+    pages: int | None = None
+    isbn: str | None = None
+
+    @property
+    def is_empty(self) -> bool:
+        return not any((self.title, self.publisher, self.publish_date, self.pages, self.isbn))
 
 
 @dataclass(frozen=True)
@@ -38,6 +49,9 @@ class Book:
     isbn: str | None = None
     book_id: int | None = None
     is_demo: bool = False
+    #: Open Library details (``GET /books/{work_id}``): True once they have been received
+    detailed: bool = False
+    editions: tuple[Edition, ...] = ()
 
     @property
     def authors_label(self) -> str:
@@ -73,6 +87,7 @@ class Review:
     is_mine: bool = False
     author_id: int | None = None  # needed to open the author's public profile
     liked_by_me: bool = False
+    reading_id: int | None = None  # the reading the review belongs to (its rating lives there)
     likeable: bool = True  # False when likes cannot be recorded (e.g. fictitious review)
 
 

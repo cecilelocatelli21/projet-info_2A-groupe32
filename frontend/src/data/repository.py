@@ -78,6 +78,10 @@ class Repository(ABC):
     @abstractmethod
     def save_review(self, work_id: str, rating: int | None, text: str) -> None: ...
 
+    def update_review(self, review: Review, rating: int | None, text: str) -> None:
+        """Edit the connected user's own review in place (text and, when it changed, the rating)."""
+        raise NotImplementedError
+
     @abstractmethod
     def my_reviews(self) -> list[Review]: ...
 
@@ -102,6 +106,10 @@ class Repository(ABC):
 
     @abstractmethod
     def unfollow(self, user_id: int) -> None: ...
+
+    def search_users(self, username: str = "") -> list:
+        """Public users whose username contains ``username`` (needs the "user_search" capability)."""
+        return []
 
     def reset(self) -> None:  # only meaningful for the demo
         return None

@@ -1,9 +1,10 @@
 """Front-end switches (read from environment variables, with safe defaults).
 
 EXLIBRIS_DATA_SOURCE
-    ``auto`` (default): use the backend API; if the catalogue cannot be fetched, fall back to the
-    read-only demo catalogue (clearly flagged in the UI).
-    ``api``: always use the API, never the demo catalogue.
+    ``api`` (default): always use the backend API, never the sample catalogue: what the backend does not
+    answer is simply not shown.
+    ``auto``: use the API; if the catalogue cannot be fetched, fall back to the read-only sample
+    catalogue (clearly flagged in the UI).
     ``demo``: never call the API, everything comes from the demo data.
 
 EXLIBRIS_ENABLE_DEMO_LOGIN
@@ -32,8 +33,8 @@ def _flag(name: str, default: bool) -> bool:
 
 
 def data_source() -> str:
-    value = os.getenv("EXLIBRIS_DATA_SOURCE", "auto").strip().lower()
-    return value if value in {"auto", "api", "demo"} else "auto"
+    value = os.getenv("EXLIBRIS_DATA_SOURCE", "api").strip().lower()
+    return value if value in {"auto", "api", "demo"} else "api"
 
 
 def demo_login_enabled() -> bool:

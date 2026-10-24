@@ -1,4 +1,4 @@
-"""Account creation page: real ``POST /user/users`` (username, email, password).
+"""Account creation page: real ``POST /users`` (username, email, password).
 
 The backend does not log the new user in (no token in the answer), so after a successful creation the
 visitor is sent to the login page with a confirmation message.

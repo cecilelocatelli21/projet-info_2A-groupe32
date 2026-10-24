@@ -27,7 +27,9 @@ if session.is_logged_in():
         st.Page("views/home.py", title="Home", icon="🏠", url_path="home", default=True),
         st.Page("views/discover.py", title="Discover", icon="🔎", url_path="discover"),
         st.Page("views/library.py", title="My Library", icon="📚", url_path="library"),
+        st.Page("views/users.py", title="Users", icon="👥", url_path="users"),
         st.Page("views/profile.py", title="Profile", icon="👤", url_path="profile"),
+        st.Page("views/edit_profile.py", title="Edit Profile", icon="⚙️", url_path="edit-profile"),
         st.Page("views/book.py", title="Book", icon="📖", url_path="book"),
     ]
 else:

@@ -3,8 +3,8 @@
 Book search and book details need a token in the backend (``GET /books/?q=`` and
 ``GET /books/{work_id}`` answer 401 without one), but ``GET /books/find_all/`` is public: the books
 stored on the server (with their covers) are shown first. A built-in sample catalogue
-(``DemoCatalog``) completes the page when the server has few books or cannot be reached; those
-shelves say so. Clicking a card invites the visitor to create an account.
+(``DemoCatalog``) only decorates the hero background, and its fictitious shelves are shown only when
+``EXLIBRIS_DATA_SOURCE`` is ``auto`` or ``demo``. Clicking a card invites the visitor to create an account.
 """
 
 from html import escape
@@ -20,6 +20,10 @@ from utils.api_client import api_client
 from utils.settings import data_source
 
 ui.public_navbar("landing")
+
+public_notice = st.session_state.pop("public_notice", None)
+if public_notice:
+    st.success(public_notice)
 
 
 def server_books() -> list[Book]:
@@ -88,24 +92,26 @@ if real:
         "Books readers have already added. Log in to search every book and open its page.",
         real[:20],
     )
-sample_shelf(
-    "lp_popular",
-    "Popular with readers",
-    "A sample selection to give you an idea of what you will find. Log in to browse everything.",
-    popular[:14],
-)
-sample_shelf(
-    "lp_classics",
-    "Timeless classics",
-    "Stories that have been opening the next book for generations.",
-    [b for b in popular if demo_catalog.GENRE_CLASSICS in b.genres][:14],
-)
-sample_shelf(
-    "lp_scifi",
-    "Science Fiction & Fantasy",
-    "Other worlds, one page away.",
-    [b for b in popular if {demo_catalog.GENRE_SF, demo_catalog.GENRE_FANTASY} & set(b.genres)][:14],
-)
+# Sample shelves are fictitious illustrations: only shown when EXLIBRIS_DATA_SOURCE is "auto" or "demo".
+if data_source() != "api":
+    sample_shelf(
+        "lp_popular",
+        "Popular with readers",
+        "A sample selection to give you an idea of what you will find. Log in to browse everything.",
+        popular[:14],
+    )
+    sample_shelf(
+        "lp_classics",
+        "Timeless classics",
+        "Stories that have been opening the next book for generations.",
+        [b for b in popular if demo_catalog.GENRE_CLASSICS in b.genres][:14],
+    )
+    sample_shelf(
+        "lp_scifi",
+        "Science Fiction & Fantasy",
+        "Other worlds, one page away.",
+        [b for b in popular if {demo_catalog.GENRE_SF, demo_catalog.GENRE_FANTASY} & set(b.genres)][:14],
+    )
 
 # ---- what you can do ---------------------------------------------------------------------------
 ui.html(
@@ -113,7 +119,7 @@ ui.html(
     <div class='shelf-title'>Everything a reader needs</div>
     <div class='lp-feats'>
       <div class='lp-feat'><i>📚</i><b>Build your library</b>
-        <p>Sort every book into Want to Read, Currently Reading, Read or Did Not Finish.</p></div>
+        <p>Sort every book as to read, in progress, read or abandoned.</p></div>
       <div class='lp-feat'><i>⭐</i><b>Rate and review</b>
         <p>Give a book a rating once you have read it, write a review and like the reviews of others.</p></div>
       <div class='lp-feat'><i>👥</i><b>Follow other readers</b>
